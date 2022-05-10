@@ -1640,6 +1640,16 @@ namespace Veldrid.OpenGLBinding
         public static void glFinish() => p_glFinish();
 
         [UnmanagedFunctionPointer(CallConv)]
+        private delegate IntPtr glFenceSync_t();
+        private static glFenceSync_t p_glFenceSync;
+        public static GLsync glFenceSync() => new(p_glFenceSync());
+
+        [UnmanagedFunctionPointer(CallConv)]
+        private delegate void glDeleteSync_t(IntPtr sync);
+        private static glDeleteSync_t p_glDeleteSync;
+        public static void glDeleteSync(GLsync sync) => p_glDeleteSync(sync.Handle);
+
+        [UnmanagedFunctionPointer(CallConv)]
         private delegate void glPushDebugGroup_t(DebugSource source, uint id, uint length, byte* message);
         private static glPushDebugGroup_t p_glPushDebugGroup;
         public static void glPushDebugGroup(DebugSource source, uint id, uint length, byte* message)
@@ -1871,6 +1881,8 @@ namespace Veldrid.OpenGLBinding
             LoadFunction("glGetFramebufferAttachmentParameteriv", out p_glGetFramebufferAttachmentParameteriv);
             LoadFunction("glFlush", out p_glFlush);
             LoadFunction("glFinish", out p_glFinish);
+            LoadFunction("glFenceSync", out p_glFenceSync);
+            LoadFunction("glDeleteSync", out p_glDeleteSync);
 
             LoadFunction("glPushDebugGroup", out p_glPushDebugGroup);
             LoadFunction("glPopDebugGroup", out p_glPopDebugGroup);

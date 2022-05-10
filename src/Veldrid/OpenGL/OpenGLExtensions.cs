@@ -64,6 +64,8 @@ namespace Veldrid.OpenGL
             ARB_uniform_buffer_object = IsExtensionSupported("GL_ARB_uniform_buffer_object");
 
             AnisotropicFilter = IsExtensionSupported("GL_EXT_texture_filter_anisotropic") || IsExtensionSupported("GL_ARB_texture_filter_anisotropic");
+
+            ARB_sync = GLVersion(3, 2) || IsExtensionSupported("GL_ARB_sync");
         }
 
         public readonly bool ARB_DirectStateAccess;
@@ -93,6 +95,7 @@ namespace Veldrid.OpenGL
         public readonly bool MultiDrawIndirect;
         public readonly bool StorageBuffers;
         public readonly bool AnisotropicFilter;
+        public readonly bool ARB_sync;
 
         /// <summary>
         /// Returns a value indicating whether the given extension is supported.

@@ -787,6 +787,11 @@ namespace Veldrid.OpenGL
             }
         }
 
+        public void InsertFence(OpenGLFence fence)
+        {
+            fence.Set();
+        }
+
         private void ActivateComputePipeline()
         {
             _graphicsPipelineActive = false;

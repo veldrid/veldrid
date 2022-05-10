@@ -136,7 +136,7 @@ namespace Veldrid.OpenGL.EntryList
             _totalEntries += 1;
         }
 
-        public void ExecuteAll(OpenGLCommandExecutor executor)
+        public void ExecuteAll(OpenGLCommandExecutor executor, OpenGLFence? fence)
         {
             int currentBlockIndex = 0;
             EntryStorageBlock block = _blocks[currentBlockIndex];
@@ -353,6 +353,11 @@ namespace Veldrid.OpenGL.EntryList
                     default:
                         throw new InvalidOperationException("Invalid entry ID: " + id);
                 }
+            }
+
+            if (fence != null)
+            {
+                executor.InsertFence(fence);
             }
         }
 

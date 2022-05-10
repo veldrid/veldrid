@@ -801,11 +801,8 @@ namespace Veldrid.OpenGL
                 OpenGLCommandList glCommandList = Util.AssertSubtype<CommandList, OpenGLCommandList>(cl);
                 OpenGLCommandEntryList entryList = glCommandList.CurrentCommands;
                 IncrementCount(glCommandList);
-                _executionThread.ExecuteCommands(entryList);
-                if (fence is OpenGLFence glFence)
-                {
-                    glFence.Set();
-                }
+
+                _executionThread.ExecuteCommands(entryList, fence as OpenGLFence);
             }
         }
 
@@ -1256,11 +1253,13 @@ namespace Veldrid.OpenGL
                         case WorkItemType.ExecuteList:
                         {
                             OpenGLCommandEntryList? list = Unsafe.As<OpenGLCommandEntryList>(workItem.Object0);
+                            OpenGLFence? fence = Unsafe.As<OpenGLFence>(workItem.Object1);
                             Debug.Assert(list != null);
+                            Debug.Assert(fence != null);
 
                             try
                             {
-                                list.ExecuteAll(_gd._commandExecutor);
+                                list.ExecuteAll(_gd._commandExecutor, fence);
                             }
                             finally
                             {
@@ -1801,12 +1800,12 @@ namespace Veldrid.OpenGL
                 EnqueueWork(ref workItem);
             }
 
-            public void ExecuteCommands(OpenGLCommandEntryList entryList)
+            public void ExecuteCommands(OpenGLCommandEntryList entryList, OpenGLFence? fence)
             {
                 CheckExceptions();
 
                 entryList.Parent.OnSubmitted(entryList);
-                ExecutionThreadWorkItem workItem = new(entryList);
+                ExecutionThreadWorkItem workItem = new(entryList, fence);
                 EnqueueWork(ref workItem);
             }
 
@@ -1970,11 +1969,11 @@ namespace Veldrid.OpenGL
                 UInt1 = 0;
             }
 
-            public ExecutionThreadWorkItem(OpenGLCommandEntryList commandList)
+            public ExecutionThreadWorkItem(OpenGLCommandEntryList commandList, OpenGLFence? fence)
             {
                 Type = WorkItemType.ExecuteList;
                 Object0 = commandList;
-                Object1 = null;
+                Object1 = fence;
 
                 UInt0 = 0;
                 UInt1 = 0;

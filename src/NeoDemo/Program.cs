@@ -13,7 +13,7 @@ namespace Veldrid.NeoDemo
             AppDomain.CurrentDomain.FirstChanceException += CurrentDomain_FirstChanceException;
             try
             {
-                await new NeoDemo().Run();
+                new NeoDemo().Run();
             }
             catch (Exception ex)
             {

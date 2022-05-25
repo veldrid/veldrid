@@ -52,8 +52,7 @@ namespace Veldrid.ImageSharp
         {
             PixelSizeInBytes = (uint)image.PixelType.BitsPerPixel / 8;
             Format = srgb ? PixelFormat.R8_G8_B8_A8_UNorm_SRgb :
-                //PixelFormat.R8_G8_B8_A8_UNorm;
-                PixelFormat.B8_G8_R8_A8_UNorm;
+                PixelFormat.R8_G8_B8_A8_UNorm;
 
             if (mipmap)
             {

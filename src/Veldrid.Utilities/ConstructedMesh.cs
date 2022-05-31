@@ -1,6 +1,7 @@
 using System;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using Veldrid;
 
 namespace Veldrid.Utilities
@@ -55,30 +56,25 @@ namespace Veldrid.Utilities
         /// Gets a centered <see cref="BoundingSphere"/> which completely encapsulates the vertices of this mesh.
         /// </summary>
         /// <returns>A <see cref="BoundingSphere"/>.</returns>
-        public unsafe BoundingSphere GetBoundingSphere()
+        public BoundingSphere GetBoundingSphere()
         {
-            fixed (VertexPositionNormalTexture* ptr = Vertices)
-            {
-                return BoundingSphere.CreateFromPoints((Vector3*)ptr, Vertices.Length, Unsafe.SizeOf<VertexPositionNormalTexture>());
-            }
+            return BoundingSphere.CreateFromPoints(
+                MemoryMarshal.AsBytes(Vertices.AsSpan()),
+                Unsafe.SizeOf<VertexPositionNormalTexture>());
         }
 
         /// <summary>
         /// Gets a centered, axis-aligned <see cref="BoundingBox"/> which completely encapsulates the vertices of this mesh.
         /// </summary>
         /// <returns>An axis-aligned <see cref="BoundingBox"/>.</returns>
-        public unsafe BoundingBox GetBoundingBox()
+        public BoundingBox GetBoundingBox()
         {
-            fixed (VertexPositionNormalTexture* ptr = Vertices)
-            {
-                return BoundingBox.CreateFromPoints(
-                    (Vector3*)ptr,
-                    Vertices.Length,
-                    Unsafe.SizeOf<VertexPositionNormalTexture>(),
-                    Quaternion.Identity,
-                    Vector3.Zero,
-                    Vector3.One);
-            }
+            return BoundingBox.CreateFromPoints(
+                MemoryMarshal.AsBytes(Vertices.AsSpan()),
+                Unsafe.SizeOf<VertexPositionNormalTexture>(),
+                Quaternion.Identity,
+                Vector3.Zero,
+                Vector3.One);
         }
 
         /// <summary>

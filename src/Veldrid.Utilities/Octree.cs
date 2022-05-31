@@ -216,7 +216,7 @@ namespace Veldrid.Utilities
             }
 
             item.Bounds = newBounds;
-            if (container.Bounds.Contains(ref item.Bounds) == ContainmentType.Contains)
+            if (container.Bounds.Contains(item.Bounds) == ContainmentType.Contains)
             {
                 // Item did not leave the node.
                 newRoot = null;
@@ -427,7 +427,7 @@ namespace Veldrid.Utilities
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void CoreGetContainedObjects(ref BoundingFrustum frustum, List<T> results, Func<T, bool>? filter)
         {
-            ContainmentType ct = frustum.Contains(ref _bounds);
+            ContainmentType ct = frustum.Contains(_bounds);
             if (ct == ContainmentType.Contains)
             {
                 CoreGetAllContainedObjects(results, filter);
@@ -437,7 +437,7 @@ namespace Veldrid.Utilities
                 for (int i = 0; i < _items.Count; i++)
                 {
                     OctreeItem<T> octreeItem = _items[i];
-                    if (frustum.Contains(ref octreeItem.Bounds) != ContainmentType.Disjoint)
+                    if (frustum.Contains(octreeItem.Bounds) != ContainmentType.Disjoint)
                     {
                         if (filter == null || filter(octreeItem.Item))
                         {
@@ -521,14 +521,14 @@ namespace Veldrid.Utilities
 
         private bool CoreAddItem(OctreeItem<T> item)
         {
-            if (Bounds.Contains(ref item.Bounds) != ContainmentType.Contains)
+            if (Bounds.Contains(item.Bounds) != ContainmentType.Contains)
             {
                 return false;
             }
 
             if (_items.Count >= MaxChildren && _children.Length == 0)
             {
-                OctreeNode<T>? newNode = SplitChildren(ref item.Bounds, null);
+                OctreeNode<T>? newNode = SplitChildren(item.Bounds, null);
                 if (newNode != null)
                 {
                     bool succeeded = newNode.CoreAddItem(item);
@@ -551,7 +551,7 @@ namespace Veldrid.Utilities
 #if DEBUG
             foreach (OctreeNode<T> child in _children)
             {
-                Debug.Assert(child.Bounds.Contains(ref item.Bounds) != ContainmentType.Contains);
+                Debug.Assert(child.Bounds.Contains(item.Bounds) != ContainmentType.Contains);
             }
 #endif
 
@@ -562,7 +562,7 @@ namespace Veldrid.Utilities
         }
 
         // Splits the node into 8 children
-        private OctreeNode<T>? SplitChildren(ref BoundingBox itemBounds, OctreeNode<T>? existingChild)
+        private OctreeNode<T>? SplitChildren(BoundingBox itemBounds, OctreeNode<T>? existingChild)
         {
             Debug.Assert(_children.Length == 0, "Children must be empty before SplitChildren is called.");
 
@@ -595,7 +595,7 @@ namespace Veldrid.Utilities
                             newChild = _nodeCache.GetNode(ref childBounds);
                         }
 
-                        if (childBounds.Contains(ref itemBounds) == ContainmentType.Contains)
+                        if (childBounds.Contains(itemBounds) == ContainmentType.Contains)
                         {
                             Debug.Assert(childBigEnough == null);
                             childBigEnough = newChild;
@@ -639,7 +639,7 @@ namespace Veldrid.Utilities
             {
                 for (int c = 0; c < _children.Length; c++)
                 {
-                    Debug.Assert(_children[c].Bounds.Contains(ref _items[i].Bounds) != ContainmentType.Contains);
+                    Debug.Assert(_children[c].Bounds.Contains(_items[i].Bounds) != ContainmentType.Contains);
                 }
             }
 #endif
@@ -682,7 +682,7 @@ namespace Veldrid.Utilities
 
             BoundingBox newRootBounds = new(newCenter - oldRootHalfExtents * 2f, newCenter + oldRootHalfExtents * 2f);
             OctreeNode<T> newRoot = _nodeCache.GetNode(ref newRootBounds);
-            OctreeNode<T>? fittingNode = newRoot.SplitChildren(ref octreeItem.Bounds, oldRoot);
+            OctreeNode<T>? fittingNode = newRoot.SplitChildren(octreeItem.Bounds, oldRoot);
             if (fittingNode != null)
             {
                 bool succeeded = fittingNode.CoreAddItem(octreeItem);

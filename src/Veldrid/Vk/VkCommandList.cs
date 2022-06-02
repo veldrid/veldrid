@@ -1420,6 +1420,11 @@ namespace Veldrid.Vulkan
 
                 Debug.Assert(_submittedStagingInfos.Count == 0);
 
+                if (_currentStagingInfo != null)
+                {
+                    RecycleStagingInfo(_currentStagingInfo);
+                }
+
                 foreach (VkBuffer buffer in _availableStagingBuffers)
                 {
                     buffer.Dispose();

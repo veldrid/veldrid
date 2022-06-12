@@ -48,8 +48,8 @@ namespace Veldrid.Vulkan
         private readonly List<VkCommandBuffer> _submittedCommandBuffers = new();
 
         private StagingResourceInfo _currentStagingInfo = null!;
-        private readonly ConcurrentDictionary<VkCommandBuffer, StagingResourceInfo> _submittedStagingInfos = new();
-        private readonly ConcurrentStack<StagingResourceInfo> _availableStagingInfos = new();
+        private readonly Dictionary<VkCommandBuffer, StagingResourceInfo> _submittedStagingInfos = new();
+        private readonly ConcurrentQueue<StagingResourceInfo> _availableStagingInfos = new();
         private readonly List<VkBuffer> _availableStagingBuffers = new();
 
         public VkCommandPool CommandPool => _pool;
@@ -109,13 +109,12 @@ namespace Veldrid.Vulkan
 
             VkCommandBuffer cb = _cb;
 
-            if (!_submittedStagingInfos.TryAdd(cb, _currentStagingInfo))
-            {
-                throw new InvalidOperationException();
-            }
-
             lock (_commandBufferListLock)
             {
+                if (!_submittedStagingInfos.TryAdd(cb, _currentStagingInfo))
+                {
+                    throw new InvalidOperationException();
+                }
                 _submittedCommandBuffers.Add(cb);
             }
 
@@ -139,10 +138,11 @@ namespace Veldrid.Vulkan
                         i -= 1;
                     }
                 }
-            }
 
-            if (_submittedStagingInfos.TryRemove(completedCB, out StagingResourceInfo? info))
-            {
+                if (!_submittedStagingInfos.Remove(completedCB, out StagingResourceInfo? info))
+                {
+                    throw new InvalidOperationException();
+                }
                 RecycleStagingInfo(info);
             }
 
@@ -1454,7 +1454,7 @@ namespace Veldrid.Vulkan
 
         private StagingResourceInfo GetStagingResourceInfo()
         {
-            if (!_availableStagingInfos.TryPop(out StagingResourceInfo? ret))
+            if (!_availableStagingInfos.TryDequeue(out StagingResourceInfo? ret))
             {
                 ret = new StagingResourceInfo();
             }
@@ -1478,7 +1478,7 @@ namespace Veldrid.Vulkan
 
             info.Clear();
 
-            _availableStagingInfos.Push(info);
+            _availableStagingInfos.Enqueue(info);
         }
     }
 }

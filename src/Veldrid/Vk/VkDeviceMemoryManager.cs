@@ -537,7 +537,7 @@ namespace Veldrid.Vulkan
         }
     }
 
-    [DebuggerDisplay("[Mem:{DeviceMemory.Handle}] Off:{Offset}, Size:{Size} End:{Offset+Size}")]
+    [DebuggerDisplay($"{{{nameof(GetDebuggerDisplay)}(),nq}}")]
     internal unsafe struct VkMemoryBlock : IEquatable<VkMemoryBlock>
     {
         private readonly uint MemoryType;
@@ -576,6 +576,11 @@ namespace Veldrid.Vulkan
             return DeviceMemory.Equals(other.DeviceMemory)
                 && Offset.Equals(other.Offset)
                 && Size.Equals(other.Size);
+        }
+
+        private string GetDebuggerDisplay()
+        {
+            return $"[Mem:{DeviceMemory.Value:x}] Off:{Offset}, Size:{Size}, End:{Offset+Size}";
         }
     }
 }

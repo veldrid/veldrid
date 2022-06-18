@@ -1,3 +1,5 @@
+using System;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace Veldrid.MetalBindings
@@ -8,13 +10,7 @@ namespace Veldrid.MetalBindings
 
         public static unsafe string GetUtf8String(byte* stringStart)
         {
-            int characters = 0;
-            while (stringStart[characters] != 0)
-            {
-                characters++;
-            }
-
-            return UTF8.GetString(stringStart, characters);
+            return Marshal.PtrToStringUTF8((IntPtr)stringStart) ?? "";
         }
 
         public static T AllocInit<T>(string typeName) where T : struct

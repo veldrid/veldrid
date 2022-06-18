@@ -158,6 +158,16 @@ namespace Veldrid.Sdl2
         public static int SDL_GetDisplayBounds(int displayIndex, Rectangle* rect) => s_sdl_getDisplayBounds(displayIndex, rect);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate int SDL_GetDisplayDPI_t(int displayIndex, float* ddpi, float* hdpi, float* vdpi);
+        private static SDL_GetDisplayDPI_t s_sdl_getDisplayDPI = LoadFunction<SDL_GetDisplayDPI_t>("SDL_GetDisplayDPI");
+        public static int SDL_GetDisplayDPI(int displayIndex, float* ddpi, float* hdpi, float* vdpi) => s_sdl_getDisplayDPI(displayIndex, ddpi, hdpi, vdpi);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate int SDL_GL_GetDrawableSize_t(SDL_Window window, int* w, int* h);
+        private static SDL_GL_GetDrawableSize_t s_sdl_gl_getDrawableSize = LoadFunction<SDL_GL_GetDrawableSize_t>("SDL_GL_GetDrawableSize");
+        public static int SDL_GL_GetDrawableSize(SDL_Window window, int* w, int* h) => s_sdl_gl_getDrawableSize(window, w, h);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate int SDL_GetWindowDisplayIndex_t(SDL_Window window);
         private static SDL_GetWindowDisplayIndex_t s_sdl_getWindowDisplayIndex = LoadFunction<SDL_GetWindowDisplayIndex_t>("SDL_GetWindowDisplayIndex");
         public static int SDL_GetWindowDisplayIndex(SDL_Window window) => s_sdl_getWindowDisplayIndex(window);
@@ -181,7 +191,6 @@ namespace Veldrid.Sdl2
         private delegate bool SDL_SetHint_t(string name, string value);
         private static SDL_SetHint_t s_sdl_setHint = LoadFunction<SDL_SetHint_t>("SDL_SetHint");
         public static bool SDL_SetHint(string name, string value) => s_sdl_setHint(name, value);
-
     }
 
     [Flags]

@@ -1099,7 +1099,7 @@ namespace Veldrid.MTL
             }
         }
 
-        private protected override void PushDebugGroupCore(string name)
+        private protected override void PushDebugGroupCore(ReadOnlySpan<char> name)
         {
             NSString nsName = NSString.New(name);
             if (!_bce.IsNull)
@@ -1134,7 +1134,7 @@ namespace Veldrid.MTL
             }
         }
 
-        private protected override void InsertDebugMarkerCore(string name)
+        private protected override void InsertDebugMarkerCore(ReadOnlySpan<char> name)
         {
             NSString nsName = NSString.New(name);
             if (!_bce.IsNull)

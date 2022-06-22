@@ -717,7 +717,7 @@ namespace Veldrid.Vulkan
             _currentStagingInfo.AddResource(vkPipeline.RefCount);
         }
 
-        private void ClearSets(Span<BoundResourceSetInfo> boundSets)
+        private static void ClearSets(Span<BoundResourceSetInfo> boundSets)
         {
             foreach (ref BoundResourceSetInfo boundSetInfo in boundSets)
             {
@@ -1350,7 +1350,7 @@ namespace Veldrid.Vulkan
         }
 
         [SkipLocalsInit]
-        private protected override void PushDebugGroupCore(string name)
+        private protected override void PushDebugGroupCore(ReadOnlySpan<char> name)
         {
             Span<byte> byteBuffer = stackalloc byte[1024];
 
@@ -1384,7 +1384,7 @@ namespace Veldrid.Vulkan
         }
 
         [SkipLocalsInit]
-        private protected override void InsertDebugMarkerCore(string name)
+        private protected override void InsertDebugMarkerCore(ReadOnlySpan<char> name)
         {
             Span<byte> byteBuffer = stackalloc byte[1024];
 

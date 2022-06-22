@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Text;
 
 namespace Veldrid
 {
@@ -29,6 +30,7 @@ namespace Veldrid
         private protected Framebuffer? _framebuffer;
         private protected Pipeline? _graphicsPipeline;
         private protected Pipeline? _computePipeline;
+        private StringBuilder? _debugStringBuilder;
 
 #if VALIDATE_USAGE
         private DeviceBuffer? _indexBuffer;
@@ -44,6 +46,11 @@ namespace Veldrid
             _features = features;
             _uniformBufferAlignment = uniformAlignment;
             _structuredBufferAlignment = structuredAlignment;
+        }
+
+        internal StringBuilder GetDebugStringBuilder()
+        {
+            return (_debugStringBuilder ??= new StringBuilder()).Clear();
         }
 
         internal void ClearCachedState()
@@ -494,13 +501,13 @@ namespace Veldrid
         public abstract void SetScissorRect(uint index, uint x, uint y, uint width, uint height);
 
         /// <summary>
-        /// Draws primitives from the currently-bound state in this CommandList. An index Buffer is not used.
+        /// Draws primitives from the currently-bound state in this <see cref="CommandList"/>. An index Buffer is not used.
         /// </summary>
         /// <param name="vertexCount">The number of vertices.</param>
         public void Draw(uint vertexCount) => Draw(vertexCount, 1, 0, 0);
 
         /// <summary>
-        /// Draws primitives from the currently-bound state in this CommandList. An index Buffer is not used.
+        /// Draws primitives from the currently-bound state in this <see cref="CommandList"/>. An index Buffer is not used.
         /// </summary>
         /// <param name="vertexCount">The number of vertices.</param>
         /// <param name="instanceCount">The number of instances.</param>
@@ -1110,24 +1117,70 @@ namespace Veldrid
 
         private protected abstract void GenerateMipmapsCore(Texture texture);
 
-        /// <summary>
-        /// Pushes a debug group at the current position in the <see cref="CommandList"/>. This allows subsequent commands to be
-        /// categorized and filtered when viewed in external debugging tools. This method can be called multiple times in order
-        /// to create nested debug groupings. Each call to <see cref="PushDebugGroup"/> must be followed by a matching call to
+        /// <inheritdoc cref="PushDebugGroupCore"/>
+        /// <remarks>
+        /// Each call to <see cref="PushDebugGroup(string)"/> must be followed by a matching call to
         /// <see cref="PopDebugGroup"/>.
-        /// </summary>
-        /// <param name="name">The name of the group. This is an opaque identifier used for display by graphics debuggers.</param>
+        /// </remarks>
         public void PushDebugGroup(string name)
         {
             PushDebugGroupCore(name);
         }
 
-        private protected abstract void PushDebugGroupCore(string name);
+        /// <inheritdoc cref="PushDebugGroupCore"/>
+        /// <remarks>
+        /// Each call to <see cref="PushDebugGroup(ReadOnlySpan{char})"/> must be followed by a matching call to
+        /// <see cref="PopDebugGroup"/>.
+        /// </remarks>
+        public void PushDebugGroup(ReadOnlySpan<char> name)
+        {
+            PushDebugGroupCore(name);
+        }
+
+        /// <inheritdoc cref="PushDebugGroupCore"/>
+        /// <remarks>
+        /// Each call to <see cref="PushDebugGroup(ref DebugMarkerInterpolatedStringHandler)"/> must be followed by a matching call to
+        /// <see cref="PopDebugGroup"/>.
+        /// </remarks>
+        public void PushDebugGroup([InterpolatedStringHandlerArgument("")] ref DebugMarkerInterpolatedStringHandler name)
+        {
+            if (name.HasValue)
+            {
+                PushDebugGroupCore(name.GetSpan());
+            }
+        }
+
+        /// <inheritdoc cref="PushDebugGroupCore"/>
+        /// <remarks>
+        /// Each call to <see cref="PushDebugGroup(IFormatProvider?, ref DebugMarkerInterpolatedStringHandler)"/> must be followed by a matching call to
+        /// <see cref="PopDebugGroup"/>.
+        /// </remarks>
+        public void PushDebugGroup(IFormatProvider? provider, [InterpolatedStringHandlerArgument("", "provider")] ref DebugMarkerInterpolatedStringHandler name)
+        {
+            if (name.HasValue)
+            {
+                PushDebugGroupCore(name.GetSpan());
+            }
+        }
 
         /// <summary>
-        /// Pops the current debug group. This method must only be called after <see cref="PushDebugGroup(string)"/> has been
-        /// called on this instance.
+        /// Pushes a debug group at the current position in the <see cref="CommandList"/>. This allows subsequent commands to be
+        /// categorized and filtered when viewed in external debugging tools. This method can be called multiple times in order
+        /// to create nested debug groupings. 
         /// </summary>
+        /// <param name="name">The name of the group. This is an opaque identifier used for display by graphics debuggers.</param>
+        private protected abstract void PushDebugGroupCore(ReadOnlySpan<char> name);
+
+        /// <summary>
+        /// Pops the current debug group.
+        /// </summary>
+        /// <remarks>
+        /// This method must only be called after either
+        /// <see cref="PushDebugGroup(string)"/>,
+        /// <see cref="PushDebugGroup(ReadOnlySpan{char})"/>, or
+        /// <see cref="PushDebugGroup(ref DebugMarkerInterpolatedStringHandler)"/>
+        /// has been called on this instance.
+        /// </remarks>
         public void PopDebugGroup()
         {
             PopDebugGroupCore();
@@ -1135,17 +1188,43 @@ namespace Veldrid
 
         private protected abstract void PopDebugGroupCore();
 
-        /// <summary>
-        /// Inserts a debug marker into the CommandList at the current position. This is used by graphics debuggers to identify
-        /// points of interest in a command stream.
-        /// </summary>
-        /// <param name="name">The name of the marker. This is an opaque identifier used for display by graphics debuggers.</param>
+        /// <inheritdoc cref="InsertDebugMarkerCore"/>
         public void InsertDebugMarker(string name)
         {
             InsertDebugMarkerCore(name);
         }
 
-        private protected abstract void InsertDebugMarkerCore(string name);
+        /// <inheritdoc cref="InsertDebugMarkerCore"/>
+        public void InsertDebugMarker(ReadOnlySpan<char> name)
+        {
+            InsertDebugMarkerCore(name);
+        }
+
+        /// <inheritdoc cref="InsertDebugMarkerCore"/>
+        public void InsertDebugMarker([InterpolatedStringHandlerArgument("")] ref DebugMarkerInterpolatedStringHandler name)
+        {
+            if (name.HasValue)
+            {
+                InsertDebugMarkerCore(name.GetSpan());
+            }
+        }
+
+        /// <inheritdoc cref="InsertDebugMarkerCore"/>
+        /// <param name="provider">An object that supplies culture-specific formatting information.</param>
+        public void InsertDebugMarker(IFormatProvider? provider, [InterpolatedStringHandlerArgument("", "provider")] ref DebugMarkerInterpolatedStringHandler name)
+        {
+            if (name.HasValue)
+            {
+                InsertDebugMarkerCore(name.GetSpan());
+            }
+        }
+
+        /// <summary>
+        /// Inserts a debug marker into the <see cref="CommandList"/> at the current position. This is used by graphics debuggers to identify
+        /// points of interest in a command stream.
+        /// </summary>
+        /// <param name="name">The name of the marker. This is an opaque identifier used for display by graphics debuggers.</param>
+        private protected abstract void InsertDebugMarkerCore(ReadOnlySpan<char> name);
 
         /// <inheritdoc/>
         public abstract string? Name { get; set; }
@@ -1191,6 +1270,143 @@ namespace Veldrid
             if (!_graphicsPipeline.GraphicsOutputDescription.Equals(_framebuffer.OutputDescription))
             {
                 throw new VeldridException($"The {nameof(OutputDescription)} of the current graphics {nameof(Pipeline)} is not compatible with the current {nameof(Framebuffer)}.");
+            }
+        }
+
+        /// <summary>
+        /// Provides a handler used by the language compiler to
+        /// conditionally build interpolated strings for debug markers when they are supported.
+        /// </summary>
+        [InterpolatedStringHandler]
+        public unsafe ref struct DebugMarkerInterpolatedStringHandler
+        {
+            private StringBuilder.AppendInterpolatedStringHandler _innerHandler;
+
+            private StringBuilder _builder;
+
+            /// <summary>
+            /// Whether this handler can currently build a string.
+            /// </summary>
+            public bool HasValue => _builder != null;
+
+#pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
+            // CS1573 is bugged because of inheritdoc
+
+            /// <inheritdoc cref="StringBuilder.AppendInterpolatedStringHandler(int, int, StringBuilder, IFormatProvider)"/>
+            /// <param name="commandList">The command list used for the building the debug marker string.</param>
+            /// <param name="shouldAppend">Whether the interpolated string handler should build a string.</param>
+            public DebugMarkerInterpolatedStringHandler(
+                int literalLength,
+                int formattedCount,
+                CommandList commandList,
+                IFormatProvider? provider,
+                out bool shouldAppend)
+            {
+                if (commandList._features.CommandListDebugMarkers)
+                {
+                    _builder = commandList.GetDebugStringBuilder();
+                    _innerHandler = new StringBuilder.AppendInterpolatedStringHandler(literalLength, formattedCount, _builder, provider);
+                    shouldAppend = true;
+                }
+                else
+                {
+                    _builder = null!;
+                    _innerHandler = default;
+                    shouldAppend = false;
+                }
+            }
+
+            /// <inheritdoc cref="DebugMarkerInterpolatedStringHandler(int, int, CommandList, IFormatProvider, out bool)"/>
+            public DebugMarkerInterpolatedStringHandler(
+                int literalLength,
+                int formattedCount,
+                CommandList commandList,
+                out bool shouldAppend)
+                : this(literalLength, formattedCount, commandList, null, out shouldAppend)
+            {
+            }
+#pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
+
+            /// <summary>
+            /// Gets a span of the resulting built string.
+            /// </summary>
+            /// <remarks>
+            /// The span lifetime is only valid for the lifetime of the handler.
+            /// </remarks>
+            /// <returns>The span of the resulting string.</returns>
+            public ReadOnlySpan<char> GetSpan()
+            {
+                StringBuilder.ChunkEnumerator chunks = _builder.GetChunks();
+                if (chunks.MoveNext())
+                {
+                    ReadOnlyMemory<char> first = chunks.Current;
+                    if (chunks.MoveNext())
+                    {
+                        return _builder.ToString();
+                    }
+                    return first.Span;
+                }
+                return ReadOnlySpan<char>.Empty;
+            }
+
+            /// <inheritdoc cref="StringBuilder.AppendInterpolatedStringHandler.AppendLiteral(string)"/>
+            public void AppendLiteral(string value)
+            {
+                _innerHandler.AppendLiteral(value);
+            }
+
+            /// <inheritdoc cref="StringBuilder.AppendInterpolatedStringHandler.AppendFormatted{T}(T)"/>
+            public void AppendFormatted<T>(T value)
+            {
+                _innerHandler.AppendFormatted(value);
+            }
+
+            /// <inheritdoc cref="StringBuilder.AppendInterpolatedStringHandler.AppendFormatted{T}(T, string?)"/>
+            public void AppendFormatted<T>(T value, string? format)
+            {
+                _innerHandler.AppendFormatted(value, format);
+            }
+
+            /// <inheritdoc cref="StringBuilder.AppendInterpolatedStringHandler.AppendFormatted{T}(T, int)"/>
+            public void AppendFormatted<T>(T value, int alignment)
+            {
+                _innerHandler.AppendFormatted(value, alignment);
+            }
+
+            /// <inheritdoc cref="StringBuilder.AppendInterpolatedStringHandler.AppendFormatted{T}(T, int, string?)"/>
+            public void AppendFormatted<T>(T value, int alignment, string? format)
+            {
+                _innerHandler.AppendFormatted(value, alignment, format);
+            }
+
+            /// <inheritdoc cref="StringBuilder.AppendInterpolatedStringHandler.AppendFormatted(ReadOnlySpan{char})"/>
+            public void AppendFormatted(ReadOnlySpan<char> value)
+            {
+                _innerHandler.AppendFormatted(value);
+            }
+
+            /// <inheritdoc cref="StringBuilder.AppendInterpolatedStringHandler.AppendFormatted(ReadOnlySpan{char}, int, string?)"/>
+            public void AppendFormatted(ReadOnlySpan<char> value, int alignment = 0, string? format = null)
+            {
+                _innerHandler.AppendFormatted(value, alignment, format);
+            }
+
+            /// <inheritdoc cref="StringBuilder.AppendInterpolatedStringHandler.AppendFormatted(string?)"/>
+            public void AppendFormatted(string? value)
+            {
+                _innerHandler.AppendFormatted(value);
+            }
+
+            /// <inheritdoc cref="StringBuilder.AppendInterpolatedStringHandler.AppendFormatted(string?, int, string?)"/>
+            public void AppendFormatted(string? value, int alignment = 0, string? format = null)
+            {
+                _innerHandler.AppendFormatted(value, alignment, format);
+            }
+
+            /// <inheritdoc cref="StringBuilder.AppendInterpolatedStringHandler.AppendFormatted(object?, int, string?)"/>
+            public void AppendFormatted(object? value, int alignment = 0, string? format = null)
+            {
+                _innerHandler.AppendFormatted(value, alignment, format);
             }
         }
     }

@@ -1334,9 +1334,9 @@ namespace Veldrid.D3D11
             _submittedStagingBuffers.Clear();
         }
 
-        private protected override void PushDebugGroupCore(string name)
+        private protected override void PushDebugGroupCore(ReadOnlySpan<char> name)
         {
-            _uda?.BeginEvent(name);
+            _uda?.BeginEvent(name.ToString());
         }
 
         private protected override void PopDebugGroupCore()
@@ -1344,9 +1344,9 @@ namespace Veldrid.D3D11
             _uda?.EndEvent();
         }
 
-        private protected override void InsertDebugMarkerCore(string name)
+        private protected override void InsertDebugMarkerCore(ReadOnlySpan<char> name)
         {
-            _uda?.SetMarker(name);
+            _uda?.SetMarker(name.ToString());
         }
 
         public override void Dispose()

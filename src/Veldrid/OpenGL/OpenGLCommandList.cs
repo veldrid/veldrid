@@ -221,9 +221,9 @@ namespace Veldrid.OpenGL
             }
         }
 
-        private protected override void PushDebugGroupCore(string name)
+        private protected override void PushDebugGroupCore(ReadOnlySpan<char> name)
         {
-            _currentCommands.PushDebugGroup(name);
+            _currentCommands.PushDebugGroup(name.ToString());
         }
 
         private protected override void PopDebugGroupCore()
@@ -231,9 +231,9 @@ namespace Veldrid.OpenGL
             _currentCommands.PopDebugGroup();
         }
 
-        private protected override void InsertDebugMarkerCore(string name)
+        private protected override void InsertDebugMarkerCore(ReadOnlySpan<char> name)
         {
-            _currentCommands.InsertDebugMarker(name);
+            _currentCommands.InsertDebugMarker(name.ToString());
         }
 
         public override void Dispose()

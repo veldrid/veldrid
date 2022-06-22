@@ -11,9 +11,15 @@ namespace Veldrid.MetalBindings
 
         public static implicit operator IntPtr(NSString nss) => nss.NativePtr;
 
-        public static NSString New(string s)
+        public static NSString New(ReadOnlySpan<char> s)
         {
             NSString nss = s_class.Alloc<NSString>();
+
+            // initWithCharacters crashes if the pointer is null.
+            if (s.IsEmpty)
+            {
+                s = string.Empty;
+            }
 
             fixed (char* utf16Ptr = s)
             {

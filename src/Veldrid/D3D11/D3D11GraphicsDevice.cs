@@ -421,11 +421,7 @@ namespace Veldrid.D3D11
         private protected unsafe override void UpdateBufferCore(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
         {
             D3D11Buffer d3dBuffer = Util.AssertSubtype<DeviceBuffer, D3D11Buffer>(buffer);
-            if (sizeInBytes == 0)
-            {
-                return;
-            }
-
+            
             BufferUsage usage = buffer.Usage;
             bool isDynamic = (usage & BufferUsage.DynamicReadWrite) == 0;
             bool isStaging = (usage & BufferUsage.StagingReadWrite) == 0;

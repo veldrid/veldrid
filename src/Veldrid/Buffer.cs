@@ -32,6 +32,7 @@ namespace Veldrid
         /// </summary>
         public abstract void Dispose();
 
+        /// <inheritdoc/>
         public uint GetSizeInBytes(uint subresource)
         {
             if (subresource != 0)
@@ -39,6 +40,19 @@ namespace Veldrid
                 return 0;
             }
             return SizeInBytes;
+        }
+
+        /// <summary>
+        /// Returns a string that represents the current <see cref="DeviceBuffer"/>.
+        /// </summary>
+        public override string ToString()
+        {
+            string? name = Name;
+            if (string.IsNullOrEmpty(name))
+            {
+                name = $"{base.ToString()}<{Usage.ToDisplayString()}>";
+            }
+            return $"[{name}: {SizeInBytes}B]";
         }
     }
 }

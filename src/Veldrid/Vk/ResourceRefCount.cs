@@ -1,7 +1,9 @@
+using System.Diagnostics;
 using System.Threading;
 
 namespace Veldrid.Vulkan
 {
+    [DebuggerDisplay($"ResourceRefCount ({{{nameof(_target)},nq}})")]
     internal class ResourceRefCount
     {
         private readonly IResourceRefCountTarget _target;

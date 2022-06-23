@@ -173,7 +173,7 @@ namespace Veldrid.D3D11
             _boundUAVs.Clear();
         }
 
-        private void ClearSets(Span<BoundResourceSetInfo> boundSets)
+        private static void ClearSets(Span<BoundResourceSetInfo> boundSets)
         {
             foreach (ref BoundResourceSetInfo boundSetInfo in boundSets)
             {
@@ -424,7 +424,7 @@ namespace Veldrid.D3D11
             }
         }
 
-        private D3D11BufferRange GetBufferRange(BindableResource resource, uint additionalOffset)
+        private static D3D11BufferRange GetBufferRange(BindableResource resource, uint additionalOffset)
         {
             if (resource is D3D11Buffer d3d11Buff)
             {
@@ -615,9 +615,23 @@ namespace Veldrid.D3D11
 
         private void PreDrawCommand()
         {
-            FlushViewports();
-            FlushScissorRects();
-            FlushVertexBindings();
+            if (_viewportsChanged)
+            {
+                _viewportsChanged = false;
+                FlushViewports();
+            }
+
+            if (_scissorRectsChanged)
+            {
+                _scissorRectsChanged = false;
+                FlushScissorRects();
+            }
+
+            if (_vertexBindingsChanged)
+            {
+                _vertexBindingsChanged = false;
+                FlushVertexBindings();
+            }
 
             int graphicsResourceCount = _graphicsPipeline!.ResourceLayouts.Length;
             Span<bool> invalidatedSets = _invalidatedGraphicsResourceSets.AsSpan(0, graphicsResourceCount);
@@ -675,39 +689,26 @@ namespace Veldrid.D3D11
 
         private void FlushViewports()
         {
-            if (_viewportsChanged)
-            {
-                _viewportsChanged = false;
-                _context.RSSetViewports(_viewports);
-            }
+            _context.RSSetViewports(_viewports);
         }
 
         private void FlushScissorRects()
         {
-            if (_scissorRectsChanged)
+            if (_scissors.Length > 0)
             {
-                _scissorRectsChanged = false;
-                if (_scissors.Length > 0)
-                {
-                    // Because this array is resized using Util.EnsureMinimumArraySize, this might set more scissor rectangles
-                    // than are actually needed, but this is okay -- extras are essentially ignored and should be harmless.
-                    _context.RSSetScissorRects(_scissors);
-                }
+                // Because this array is resized using Util.EnsureMinimumArraySize, this might set more scissor rectangles
+                // than are actually needed, but this is okay -- extras are essentially ignored and should be harmless.
+                _context.RSSetScissorRects(_scissors);
             }
         }
 
         private unsafe void FlushVertexBindings()
         {
-            if (_vertexBindingsChanged)
-            {
-                _context.IASetVertexBuffers(
-                    0, (int)_numVertexBindings,
-                    _vertexBindings,
-                    _vertexStrides,
-                    _vertexOffsets);
-
-                _vertexBindingsChanged = false;
-            }
+            _context.IASetVertexBuffers(
+                0, (int)_numVertexBindings,
+                _vertexBindings,
+                _vertexStrides,
+                _vertexOffsets);
         }
 
         public override void SetScissorRect(uint index, uint x, uint y, uint width, uint height)

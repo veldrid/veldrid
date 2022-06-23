@@ -22,6 +22,7 @@ namespace Veldrid.Vulkan
 
         public uint ResourceSetCount { get; }
         public int DynamicOffsetsCount { get; }
+        public uint VertexLayoutCount { get; }
         public bool ScissorTestEnabled { get; }
 
         public override bool IsComputePipeline { get; }
@@ -402,6 +403,7 @@ namespace Veldrid.Vulkan
             {
                 DynamicOffsetsCount += layout.DynamicBufferCount;
             }
+            VertexLayoutCount = (uint)inputDescriptions.Length;
         }
 
         public VkPipeline(VkGraphicsDevice gd, in ComputePipelineDescription description)

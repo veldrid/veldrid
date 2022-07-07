@@ -114,7 +114,9 @@ namespace Veldrid
             byte[] vertexShaderBytes = LoadEmbeddedShaderCode(gd.ResourceFactory, "imgui-vertex", ShaderStages.Vertex, _colorSpaceHandling);
             byte[] fragmentShaderBytes = LoadEmbeddedShaderCode(gd.ResourceFactory, "imgui-frag", ShaderStages.Fragment, _colorSpaceHandling);
             _vertexShader = factory.CreateShader(new ShaderDescription(ShaderStages.Vertex, vertexShaderBytes, _gd.BackendType == GraphicsBackend.Vulkan ? "main" : "VS"));
+            _vertexShader.Name = "ImGui.NET Vertex Shader";
             _fragmentShader = factory.CreateShader(new ShaderDescription(ShaderStages.Fragment, fragmentShaderBytes, _gd.BackendType == GraphicsBackend.Vulkan ? "main" : "FS"));
+            _fragmentShader.Name = "ImGui.NET Fragment Shader";
 
             VertexLayoutDescription[] vertexLayouts = new VertexLayoutDescription[]
             {
@@ -127,8 +129,10 @@ namespace Veldrid
             _layout = factory.CreateResourceLayout(new ResourceLayoutDescription(
                 new ResourceLayoutElementDescription("ProjectionMatrixBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex),
                 new ResourceLayoutElementDescription("MainSampler", ResourceKind.Sampler, ShaderStages.Fragment)));
+            _layout.Name = "ImGui.NET Resource Layout";
             _textureLayout = factory.CreateResourceLayout(new ResourceLayoutDescription(
                 new ResourceLayoutElementDescription("MainTexture", ResourceKind.TextureReadOnly, ShaderStages.Fragment)));
+            _textureLayout.Name = "ImGui.NET Texture Layout";
 
             GraphicsPipelineDescription pd = new GraphicsPipelineDescription(
                 BlendStateDescription.SingleAlphaBlend,
@@ -147,10 +151,12 @@ namespace Veldrid
                 outputDescription,
                 ResourceBindingModel.Default);
             _pipeline = factory.CreateGraphicsPipeline(ref pd);
+            _pipeline.Name = "ImGui.NET Pipeline";
 
             _mainResourceSet = factory.CreateResourceSet(new ResourceSetDescription(_layout,
                 _projMatrixBuffer,
                 gd.PointSampler));
+            _mainResourceSet.Name = "ImGui.NET Main Resource Set";
 
             RecreateFontDeviceTexture(gd);
         }
@@ -164,6 +170,7 @@ namespace Veldrid
             if (!_setsByView.TryGetValue(textureView, out ResourceSetInfo rsi))
             {
                 ResourceSet resourceSet = factory.CreateResourceSet(new ResourceSetDescription(_textureLayout, textureView));
+                resourceSet.Name = $"ImGui.NET {textureView.Name} Resource Set";
                 rsi = new ResourceSetInfo(GetNextImGuiBindingID(), resourceSet);
 
                 _setsByView.Add(textureView, rsi);
@@ -200,6 +207,7 @@ namespace Veldrid
             if (!_autoViewsByTexture.TryGetValue(texture, out TextureView textureView))
             {
                 textureView = factory.CreateTextureView(texture);
+                textureView.Name = $"ImGui.NET {texture.Name} View";
                 _autoViewsByTexture.Add(texture, textureView);
                 _ownedResources.Add(textureView);
             }
@@ -345,6 +353,7 @@ namespace Veldrid
 
             _fontTextureResourceSet?.Dispose();
             _fontTextureResourceSet = gd.ResourceFactory.CreateResourceSet(new ResourceSetDescription(_textureLayout, _fontTexture));
+            _fontTextureResourceSet.Name = "ImGui.NET Font Texture Resource Set";
 
             io.Fonts.ClearTexData();
         }
@@ -619,6 +628,7 @@ namespace Veldrid
             {
                 _vertexBuffer.Dispose();
                 _vertexBuffer = gd.ResourceFactory.CreateBuffer(new BufferDescription((uint)(totalVBSize * 1.5f), BufferUsage.VertexBuffer | BufferUsage.Dynamic));
+                _vertexBuffer.Name = $"ImGui.NET Vertex Buffer";
             }
 
             uint totalIBSize = (uint)(draw_data.TotalIdxCount * sizeof(ushort));
@@ -626,6 +636,7 @@ namespace Veldrid
             {
                 _indexBuffer.Dispose();
                 _indexBuffer = gd.ResourceFactory.CreateBuffer(new BufferDescription((uint)(totalIBSize * 1.5f), BufferUsage.IndexBuffer | BufferUsage.Dynamic));
+                _indexBuffer.Name = $"ImGui.NET Index Buffer";
             }
 
             for (int i = 0; i < draw_data.CmdListsCount; i++)

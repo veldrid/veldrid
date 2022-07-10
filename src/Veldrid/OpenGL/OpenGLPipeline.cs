@@ -138,7 +138,9 @@ namespace Veldrid.OpenGL
                 {
                     int location = GetAttribLocation(layoutDesc.Elements[i].Name);
                     if (location == -1)
+                    {
                         throw new VeldridException("There was no attribute variable with the name " + layoutDesc.Elements[i].Name);
+                    }
 
                     slot += 1;
                 }
@@ -298,7 +300,9 @@ namespace Veldrid.OpenGL
                     glGetActiveUniformBlockName(_program, uniformBufferIndex, bufferNameByteCount, &actualLength, bufferNamePtr);
 
                     if (glGetError() != 0)
+                    {
                         break;
+                    }
 
                     string name = Encoding.UTF8.GetString(bufferNamePtr, (int)actualLength);
                     names.Add(name);
@@ -326,8 +330,10 @@ namespace Veldrid.OpenGL
             CheckLastError();
 
 #if DEBUG && GL_VALIDATE_SHADER_RESOURCE_NAMES
-            if(location == -1)
+            if (location == -1)
+            {
                 ReportInvalidUniformName(resourceName);
+            }
 #endif
             return location;
         }
@@ -348,7 +354,9 @@ namespace Veldrid.OpenGL
             CheckLastError();
 #if DEBUG && GL_VALIDATE_SHADER_RESOURCE_NAMES
             if (binding == GL_INVALID_INDEX)
+            {
                 ReportInvalidResourceName(resourceName, resourceType);
+            }
 #endif
             return binding;
         }
@@ -370,7 +378,9 @@ namespace Veldrid.OpenGL
                     &actualLength, &size, &type, resourceNamePtr);
 
                 if (glGetError() != 0)
+                {
                     break;
+                }
 
                 string name = Encoding.UTF8.GetString(resourceNamePtr, (int)actualLength);
                 names.Add(name);
@@ -382,6 +392,12 @@ namespace Veldrid.OpenGL
 
         void ReportInvalidResourceName(string resourceName, ProgramInterface resourceType)
         {
+            // glGetProgramInterfaceiv and glGetProgramResourceName are only available in 4.3+
+            if (_gd.ApiVersion.Major < 4 || (_gd.ApiVersion.Major == 4 && _gd.ApiVersion.Minor < 3))
+            {
+                return;
+            }
+
             int maxLength = 0;
             int resourceCount = 0;
             glGetProgramInterfaceiv(_program, resourceType, ProgramInterfaceParameterName.MaxNameLength, &maxLength);
@@ -395,7 +411,9 @@ namespace Veldrid.OpenGL
                 glGetProgramResourceName(_program, resourceType, resourceIndex, (uint)maxLength, &actualLength, resourceNamePtr);
 
                 if (glGetError() != 0)
+                {
                     break;
+                }
 
                 string name = Encoding.UTF8.GetString(resourceNamePtr, (int)actualLength);
                 names.Add(name);

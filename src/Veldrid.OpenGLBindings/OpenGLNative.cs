@@ -936,9 +936,6 @@ namespace Veldrid.OpenGLBinding
         public static uint glGetProgramResourceName(uint program, ProgramInterface programInterface, uint index, uint bufSize, uint* length, byte* name)
             => p_glGetProgramResourceName(program, programInterface, index, bufSize, length, name);
 
-        // LoadFunction("glGetProgramInterface", out p_glGetProgramInterface);
-        // LoadFunction("glGetProgramResourceName", out p_glGetProgramResourceName);
-
         [UnmanagedFunctionPointer(CallConv)]
         private delegate void glShaderStorageBlockBinding_t(uint program, uint storageBlockIndex, uint storageBlockBinding);
         private static glShaderStorageBlockBinding_t p_glShaderStorageBlockBinding;

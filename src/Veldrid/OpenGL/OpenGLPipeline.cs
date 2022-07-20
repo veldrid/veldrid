@@ -141,6 +141,10 @@ namespace Veldrid.OpenGL
 
             glLinkProgram(_program);
             CheckLastError();
+            if (_gd.DebugGL)
+            {
+                OpenGLUtil.ValidateProgram(_program);
+            }
 
 #if DEBUG && GL_VALIDATE_VERTEX_INPUT_ELEMENTS
             slot = 0;
@@ -179,6 +183,10 @@ namespace Veldrid.OpenGL
                 CheckLastError();
                 string log = Encoding.UTF8.GetString(infoLog, (int)bytesWritten);
                 throw new VeldridException($"Error linking GL program: {log}");
+            }
+            if (_gd.DebugGL)
+            {
+                OpenGLUtil.ValidateProgram(_program);
             }
 
             ProcessResourceSetLayouts(ResourceLayouts);

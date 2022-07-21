@@ -12,13 +12,13 @@
   <PropertyGroup>
     <VeldridSpirvVersion>1.0.14</VeldridSpirvVersion>
     <NativeLibraryLoaderVersion>1.0.12</NativeLibraryLoaderVersion>
-    <VorticeWindowsVersion>2.1.0</VorticeWindowsVersion>
+    <VorticeWindowsVersion>2.1.25-beta</VorticeWindowsVersion>
   </PropertyGroup>
 
   <PropertyGroup>
     <PackageLicenseUrl>https://raw.githubusercontent.com/mellinoe/veldrid/master/LICENSE</PackageLicenseUrl>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-    <Copyright>Copyright 2020 (c) Eric Mellino. All rights reserved.</Copyright>
+    <Copyright>Copyright 2020-2022 (c) Eric Mellino. All rights reserved.</Copyright>
     <Authors>Eric Mellino</Authors>
     <RepositoryUrl>https://github.com/mellinoe/veldrid</RepositoryUrl>
   </PropertyGroup>

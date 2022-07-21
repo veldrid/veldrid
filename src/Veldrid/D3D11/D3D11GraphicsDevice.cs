@@ -364,6 +364,7 @@ namespace Veldrid.D3D11
                                 (int)arrayLayer,
                                 D3D11Formats.VdToD3D11MapMode(false, mode),
                                 Vortice.Direct3D11.MapFlags.None,
+                                out _,
                                 out int mipSize);
 
                             info.MappedResource = new MappedResource(

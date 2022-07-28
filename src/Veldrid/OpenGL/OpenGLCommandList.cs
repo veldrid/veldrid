@@ -157,12 +157,10 @@ namespace Veldrid.OpenGL
 
         protected override void CopyBufferCore(
             DeviceBuffer source,
-            uint sourceOffset,
             DeviceBuffer destination,
-            uint destinationOffset,
-            uint sizeInBytes)
+            ReadOnlySpan<BufferCopyCommand> commands)
         {
-            _currentCommands.CopyBuffer(source, sourceOffset, destination, destinationOffset, sizeInBytes);
+            _currentCommands.CopyBuffer(source, destination, commands);
         }
 
         protected override void CopyTextureCore(

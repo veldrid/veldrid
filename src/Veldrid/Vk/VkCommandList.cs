@@ -716,11 +716,11 @@ namespace Veldrid.Vulkan
                 if (differentBuffer)
                 {
                     _currentStagingInfo.AddResource(vkBuffer.RefCount);
+                    _vertexBindings[index] = vkBuffer.DeviceBuffer;
                 }
 
-                _vertexBindings[index] = vkBuffer.DeviceBuffer;
                 _vertexOffsets[index] = offset;
-                _numVertexBindings = Math.Max((index + 1), _numVertexBindings);
+                _numVertexBindings = Math.Max(index + 1, _numVertexBindings);
             }
         }
 
@@ -845,10 +845,8 @@ namespace Veldrid.Vulkan
 
         protected override void CopyBufferCore(
             DeviceBuffer source,
-            uint sourceOffset,
             DeviceBuffer destination,
-            uint destinationOffset,
-            uint sizeInBytes)
+            ReadOnlySpan<BufferCopyCommand> commands)
         {
             EnsureNoRenderPass();
 
@@ -857,14 +855,10 @@ namespace Veldrid.Vulkan
             VkBuffer dstVkBuffer = Util.AssertSubtype<DeviceBuffer, VkBuffer>(destination);
             _currentStagingInfo.AddResource(dstVkBuffer.RefCount);
 
-            VkBufferCopy region = new()
+            fixed (BufferCopyCommand* commandPtr = commands)
             {
-                srcOffset = sourceOffset,
-                dstOffset = destinationOffset,
-                size = sizeInBytes
-            };
-
-            vkCmdCopyBuffer(_cb, srcVkBuffer.DeviceBuffer, dstVkBuffer.DeviceBuffer, 1, &region);
+                vkCmdCopyBuffer(_cb, srcVkBuffer.DeviceBuffer, dstVkBuffer.DeviceBuffer, (uint)commands.Length, (VkBufferCopy*)commandPtr);
+            }
 
             VkMemoryBarrier barrier = new()
             {

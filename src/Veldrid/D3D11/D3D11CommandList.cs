@@ -384,24 +384,24 @@ namespace Veldrid.D3D11
                 switch (rbi.Kind)
                 {
                     case ResourceKind.UniformBuffer:
-                    {
-                        D3D11BufferRange range = GetBufferRange(resource, bufferOffset);
-                        BindUniformBuffer(range, cbBase + rbi.Slot, rbi.Stages);
-                        break;
-                    }
+                        {
+                            D3D11BufferRange range = GetBufferRange(resource, bufferOffset);
+                            BindUniformBuffer(range, cbBase + rbi.Slot, rbi.Stages);
+                            break;
+                        }
                     case ResourceKind.StructuredBufferReadOnly:
-                    {
-                        D3D11BufferRange range = GetBufferRange(resource, bufferOffset);
-                        BindStorageBufferView(range, textureBase + rbi.Slot, rbi.Stages);
-                        break;
-                    }
+                        {
+                            D3D11BufferRange range = GetBufferRange(resource, bufferOffset);
+                            BindStorageBufferView(range, textureBase + rbi.Slot, rbi.Stages);
+                            break;
+                        }
                     case ResourceKind.StructuredBufferReadWrite:
-                    {
-                        D3D11BufferRange range = GetBufferRange(resource, bufferOffset);
-                        ID3D11UnorderedAccessView uav = range.Buffer.GetUnorderedAccessView(range.Offset, range.Size);
-                        BindUnorderedAccessView(null, range.Buffer, uav, uaBase + rbi.Slot, rbi.Stages, slot);
-                        break;
-                    }
+                        {
+                            D3D11BufferRange range = GetBufferRange(resource, bufferOffset);
+                            ID3D11UnorderedAccessView uav = range.Buffer.GetUnorderedAccessView(range.Offset, range.Size);
+                            BindUnorderedAccessView(null, range.Buffer, uav, uaBase + rbi.Slot, rbi.Stages, slot);
+                            break;
+                        }
                     case ResourceKind.TextureReadOnly:
                         TextureView texView = Util.GetTextureView(_gd, resource);
                         D3D11TextureView d3d11TexView = Util.AssertSubtype<TextureView, D3D11TextureView>(texView);
@@ -1147,7 +1147,7 @@ namespace Veldrid.D3D11
         private protected unsafe override void UpdateBufferCore(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
         {
             D3D11Buffer d3dBuffer = Util.AssertSubtype<DeviceBuffer, D3D11Buffer>(buffer);
-            
+
             BufferUsage usage = buffer.Usage;
             bool isDynamic = (usage & BufferUsage.DynamicReadWrite) != 0;
             bool isStaging = (usage & BufferUsage.StagingReadWrite) != 0;
@@ -1235,14 +1235,17 @@ namespace Veldrid.D3D11
             return Util.AssertSubtype<DeviceBuffer, D3D11Buffer>(staging);
         }
 
-        protected override void CopyBufferCore(DeviceBuffer source, uint sourceOffset, DeviceBuffer destination, uint destinationOffset, uint sizeInBytes)
+        protected override void CopyBufferCore(DeviceBuffer source, DeviceBuffer destination, ReadOnlySpan<BufferCopyCommand> commands)
         {
             D3D11Buffer srcD3D11Buffer = Util.AssertSubtype<DeviceBuffer, D3D11Buffer>(source);
             D3D11Buffer dstD3D11Buffer = Util.AssertSubtype<DeviceBuffer, D3D11Buffer>(destination);
 
-            Box region = new((int)sourceOffset, 0, 0, (int)(sourceOffset + sizeInBytes), 1, 1);
+            foreach (ref readonly BufferCopyCommand command in commands)
+            {
+                Box region = new((int)command.ReadOffset, 0, 0, (int)(command.ReadOffset + command.Length), 1, 1);
 
-            _context.CopySubresourceRegion(dstD3D11Buffer.Buffer, 0, (int)destinationOffset, 0, 0, srcD3D11Buffer.Buffer, 0, region);
+                _context.CopySubresourceRegion(dstD3D11Buffer.Buffer, 0, (int)command.WriteOffset, 0, 0, srcD3D11Buffer.Buffer, 0, region);
+            }
         }
 
         protected override void CopyTextureCore(

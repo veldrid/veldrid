@@ -948,30 +948,55 @@ namespace Veldrid
         public void CopyBuffer(
             DeviceBuffer source, uint sourceOffset, DeviceBuffer destination, uint destinationOffset, uint sizeInBytes)
         {
-#if VALIDATE_USAGE
-            if (sourceOffset + sizeInBytes > source.SizeInBytes)
+            ReadOnlySpan<BufferCopyCommand> commands = stackalloc[]
             {
-                throw new VeldridException(
-                    $"The {nameof(source)} ({source}) is not large enough to read the amount of " +
-                    $"data specified ({sizeInBytes}) at the given offset ({sourceOffset}).");
-            }
-            if (destinationOffset + sizeInBytes > destination.SizeInBytes)
-            {
-                throw new VeldridException(
-                    $"The {nameof(destination)} ({destination}) is not large enough to write the amount of " +
-                    $"data specified ({sizeInBytes}) at the given offset ({destination}).");
-            }
-#endif
-            if (sizeInBytes == 0)
+                new BufferCopyCommand(sourceOffset, destinationOffset, sizeInBytes)
+            };
+            CopyBufferCore(source, destination, commands);
+        }
+
+        /// <summary>
+        /// Copies regions from the source <see cref="DeviceBuffer"/> to
+        /// the destination <see cref="DeviceBuffer"/>.
+        /// </summary>
+        /// <param name="source">The source <see cref="DeviceBuffer"/> from which data will be copied.</param>
+        /// <param name="destination">The destination <see cref="DeviceBuffer"/> into which data will be copied.</param>
+        /// <param name="commands">
+        /// The commands that represent copies from <paramref name="source"/> to <paramref name="destination"/>.
+        /// </param>
+        public void CopyBuffer(
+            DeviceBuffer source, DeviceBuffer destination, ReadOnlySpan<BufferCopyCommand> commands)
+        {
+            if (commands.Length == 0)
             {
                 return;
             }
 
-            CopyBufferCore(source, sourceOffset, destination, destinationOffset, sizeInBytes);
+#if VALIDATE_USAGE
+            foreach (ref readonly BufferCopyCommand command in commands)
+            {
+                if (command.ReadOffset + command.Length > source.SizeInBytes)
+                {
+                    throw new VeldridException(
+                        $"The {nameof(source)} ({source}) is not large enough to read the amount of " +
+                        $"data specified ({command.Length}) at the given offset ({command.ReadOffset}).");
+                }
+                if (command.WriteOffset + command.Length > destination.SizeInBytes)
+                {
+                    throw new VeldridException(
+                        $"The {nameof(destination)} ({destination}) is not large enough to write the amount of " +
+                        $"data specified ({command.Length}) at the given offset ({destination}).");
+                }
+
+                // TODO: check if length exceeds maximum backend length
+            }
+#endif
+
+            CopyBufferCore(source, destination, commands);
         }
 
         protected abstract void CopyBufferCore(
-            DeviceBuffer source, uint sourceOffset, DeviceBuffer destination, uint destinationOffset, uint sizeInBytes);
+            DeviceBuffer source, DeviceBuffer destination, ReadOnlySpan<BufferCopyCommand> commands);
 
         /// <summary>
         /// Copies all subresources from one <see cref="Texture"/> to another.

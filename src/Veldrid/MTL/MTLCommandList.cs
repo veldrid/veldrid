@@ -332,14 +332,17 @@ namespace Veldrid.MTL
                 || (sizeInBytes % 4 != 0 && bufferOffsetInBytes != 0 && sizeInBytes != buffer.SizeInBytes);
 
             MTLBuffer dstMTLBuffer = Util.AssertSubtype<DeviceBuffer, MTLBuffer>(buffer);
+
             // TODO: Cache these, and rely on the command buffer's completion callback to add them back to a shared pool.
-            MTLBuffer copySrc = Util.AssertSubtype<DeviceBuffer, MTLBuffer>(
+            using MTLBuffer copySrc = Util.AssertSubtype<DeviceBuffer, MTLBuffer>(
                 _gd.ResourceFactory.CreateBuffer(new BufferDescription(sizeInBytes, BufferUsage.StagingWrite)));
+
             _gd.UpdateBuffer(copySrc, 0, source, sizeInBytes);
 
             if (useComputeCopy)
             {
-                CopyBufferCore(copySrc, 0, buffer, bufferOffsetInBytes, sizeInBytes);
+                BufferCopyCommand command = new(0, bufferOffsetInBytes, sizeInBytes);
+                CopyBufferUnaligned(copySrc, dstMTLBuffer, stackalloc[] { command });
             }
             else
             {
@@ -351,43 +354,62 @@ namespace Veldrid.MTL
                     dstMTLBuffer.DeviceBuffer, (UIntPtr)bufferOffsetInBytes,
                     (UIntPtr)(sizeInBytes + sizeRoundFactor));
             }
-
-            copySrc.Dispose();
         }
 
         protected override void CopyBufferCore(
             DeviceBuffer source,
-            uint sourceOffset,
             DeviceBuffer destination,
-            uint destinationOffset,
-            uint sizeInBytes)
+            ReadOnlySpan<BufferCopyCommand> commands)
         {
             MTLBuffer mtlSrc = Util.AssertSubtype<DeviceBuffer, MTLBuffer>(source);
             MTLBuffer mtlDst = Util.AssertSubtype<DeviceBuffer, MTLBuffer>(destination);
 
-            if (sourceOffset % 4 != 0 || destinationOffset % 4 != 0 || sizeInBytes % 4 != 0)
+            bool useComputeCopy = false;
+
+            foreach (ref readonly BufferCopyCommand command in commands)
             {
-                // Unaligned copy -- use special compute shader.
-                EnsureComputeEncoder();
-                _cce.setComputePipelineState(_gd.GetUnalignedBufferCopyPipeline());
-                _cce.setBuffer(mtlSrc.DeviceBuffer, UIntPtr.Zero, (UIntPtr)0);
-                _cce.setBuffer(mtlDst.DeviceBuffer, UIntPtr.Zero, (UIntPtr)1);
+                if (command.ReadOffset % 4 != 0 || command.WriteOffset % 4 != 0 || command.Length % 4 != 0)
+                {
+                    useComputeCopy = true;
+                    break;
+                }
+            }
 
-                MTLUnalignedBufferCopyInfo copyInfo;
-                copyInfo.SourceOffset = sourceOffset;
-                copyInfo.DestinationOffset = destinationOffset;
-                copyInfo.CopySize = sizeInBytes;
-
-                _cce.setBytes(&copyInfo, (UIntPtr)sizeof(MTLUnalignedBufferCopyInfo), (UIntPtr)2);
-                _cce.dispatchThreadGroups(new MTLSize(1, 1, 1), new MTLSize(1, 1, 1));
+            if (useComputeCopy)
+            {
+                CopyBufferUnaligned(mtlSrc, mtlDst, commands);
             }
             else
             {
                 EnsureBlitEncoder();
-                _bce.copy(
-                    mtlSrc.DeviceBuffer, (UIntPtr)sourceOffset,
-                    mtlDst.DeviceBuffer, (UIntPtr)destinationOffset,
-                    (UIntPtr)sizeInBytes);
+
+                foreach (ref readonly BufferCopyCommand command in commands)
+                {
+                    _bce.copy(
+                        mtlSrc.DeviceBuffer, (UIntPtr)command.ReadOffset,
+                        mtlDst.DeviceBuffer, (UIntPtr)command.WriteOffset,
+                        (UIntPtr)command.Length);
+                }
+            }
+        }
+
+        private void CopyBufferUnaligned(MTLBuffer mtlSrc, MTLBuffer mtlDst, ReadOnlySpan<BufferCopyCommand> commands)
+        {
+            // Unaligned copy -- use special compute shader.
+            EnsureComputeEncoder();
+            _cce.setComputePipelineState(_gd.GetUnalignedBufferCopyPipeline());
+            _cce.setBuffer(mtlSrc.DeviceBuffer, UIntPtr.Zero, (UIntPtr)0);
+            _cce.setBuffer(mtlDst.DeviceBuffer, UIntPtr.Zero, (UIntPtr)1);
+
+            foreach (ref readonly BufferCopyCommand command in commands)
+            {
+                MTLUnalignedBufferCopyInfo copyInfo;
+                copyInfo.SourceOffset = (uint)command.ReadOffset;
+                copyInfo.DestinationOffset = (uint)command.WriteOffset;
+                copyInfo.CopySize = (uint)command.Length;
+
+                _cce.setBytes(&copyInfo, (UIntPtr)sizeof(MTLUnalignedBufferCopyInfo), (UIntPtr)2);
+                _cce.dispatchThreadGroups(new MTLSize(1, 1, 1), new MTLSize(1, 1, 1));
             }
         }
 
@@ -741,11 +763,11 @@ namespace Veldrid.MTL
                 switch (bindingInfo.Kind)
                 {
                     case ResourceKind.UniformBuffer:
-                    {
-                        DeviceBufferRange range = Util.GetBufferRange(resource, bufferOffset);
-                        BindBuffer(range, slot, bindingInfo.Slot, bindingInfo.Stages);
-                        break;
-                    }
+                        {
+                            DeviceBufferRange range = Util.GetBufferRange(resource, bufferOffset);
+                            BindBuffer(range, slot, bindingInfo.Slot, bindingInfo.Stages);
+                            break;
+                        }
                     case ResourceKind.TextureReadOnly:
                         TextureView texView = Util.GetTextureView(_gd, resource);
                         MTLTextureView mtlTexView = Util.AssertSubtype<TextureView, MTLTextureView>(texView);
@@ -761,17 +783,17 @@ namespace Veldrid.MTL
                         BindSampler(mtlSampler, slot, bindingInfo.Slot, bindingInfo.Stages);
                         break;
                     case ResourceKind.StructuredBufferReadOnly:
-                    {
-                        DeviceBufferRange range = Util.GetBufferRange(resource, bufferOffset);
-                        BindBuffer(range, slot, bindingInfo.Slot, bindingInfo.Stages);
-                        break;
-                    }
+                        {
+                            DeviceBufferRange range = Util.GetBufferRange(resource, bufferOffset);
+                            BindBuffer(range, slot, bindingInfo.Slot, bindingInfo.Stages);
+                            break;
+                        }
                     case ResourceKind.StructuredBufferReadWrite:
-                    {
-                        DeviceBufferRange range = Util.GetBufferRange(resource, bufferOffset);
-                        BindBuffer(range, slot, bindingInfo.Slot, bindingInfo.Stages);
-                        break;
-                    }
+                        {
+                            DeviceBufferRange range = Util.GetBufferRange(resource, bufferOffset);
+                            BindBuffer(range, slot, bindingInfo.Slot, bindingInfo.Stages);
+                            break;
+                        }
                     default:
                         throw Illegal.Value<ResourceKind>();
                 }
@@ -799,11 +821,11 @@ namespace Veldrid.MTL
                 switch (bindingInfo.Kind)
                 {
                     case ResourceKind.UniformBuffer:
-                    {
-                        DeviceBufferRange range = Util.GetBufferRange(resource, bufferOffset);
-                        BindBuffer(range, slot, bindingInfo.Slot, bindingInfo.Stages);
-                        break;
-                    }
+                        {
+                            DeviceBufferRange range = Util.GetBufferRange(resource, bufferOffset);
+                            BindBuffer(range, slot, bindingInfo.Slot, bindingInfo.Stages);
+                            break;
+                        }
                     case ResourceKind.TextureReadOnly:
                         TextureView texView = Util.GetTextureView(_gd, resource);
                         MTLTextureView mtlTexView = Util.AssertSubtype<TextureView, MTLTextureView>(texView);
@@ -819,17 +841,17 @@ namespace Veldrid.MTL
                         BindSampler(mtlSampler, slot, bindingInfo.Slot, bindingInfo.Stages);
                         break;
                     case ResourceKind.StructuredBufferReadOnly:
-                    {
-                        DeviceBufferRange range = Util.GetBufferRange(resource, bufferOffset);
-                        BindBuffer(range, slot, bindingInfo.Slot, bindingInfo.Stages);
-                        break;
-                    }
+                        {
+                            DeviceBufferRange range = Util.GetBufferRange(resource, bufferOffset);
+                            BindBuffer(range, slot, bindingInfo.Slot, bindingInfo.Stages);
+                            break;
+                        }
                     case ResourceKind.StructuredBufferReadWrite:
-                    {
-                        DeviceBufferRange range = Util.GetBufferRange(resource, bufferOffset);
-                        BindBuffer(range, slot, bindingInfo.Slot, bindingInfo.Stages);
-                        break;
-                    }
+                        {
+                            DeviceBufferRange range = Util.GetBufferRange(resource, bufferOffset);
+                            BindBuffer(range, slot, bindingInfo.Slot, bindingInfo.Stages);
+                            break;
+                        }
                     default:
                         throw Illegal.Value<ResourceKind>();
                 }

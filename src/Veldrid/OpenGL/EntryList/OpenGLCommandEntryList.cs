@@ -504,15 +504,21 @@ namespace Veldrid.OpenGL.EntryList
             AddEntry(UpdateBufferEntryID, ref entry);
         }
 
-        public void CopyBuffer(DeviceBuffer source, uint sourceOffset, DeviceBuffer destination, uint destinationOffset, uint sizeInBytes)
+        public void CopyBuffer(DeviceBuffer source, DeviceBuffer destination, ReadOnlySpan<BufferCopyCommand> commands)
         {
-            CopyBufferEntry entry = new(
-                Track(source),
-                sourceOffset,
-                Track(destination),
-                destinationOffset,
-                sizeInBytes);
-            AddEntry(CopyBufferEntryID, ref entry);
+            Tracked<DeviceBuffer> trackedSrc = Track(source);
+            Tracked<DeviceBuffer> trackedDst = Track(destination);
+
+            foreach (ref readonly BufferCopyCommand command in commands)
+            {
+                CopyBufferEntry entry = new(
+                    trackedSrc,
+                    (uint)command.ReadOffset,
+                    trackedDst,
+                    (uint)command.WriteOffset,
+                    (uint)command.Length);
+                AddEntry(CopyBufferEntryID, ref entry);
+            }
         }
 
         public void CopyTexture(

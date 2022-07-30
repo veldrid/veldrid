@@ -1255,7 +1255,6 @@ namespace Veldrid.OpenGL
                             OpenGLCommandEntryList? list = Unsafe.As<OpenGLCommandEntryList>(workItem.Object0);
                             OpenGLFence? fence = Unsafe.As<OpenGLFence>(workItem.Object1);
                             Debug.Assert(list != null);
-                            Debug.Assert(fence != null);
 
                             try
                             {

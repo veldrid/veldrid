@@ -484,9 +484,9 @@ namespace Veldrid.OpenGL.EntryList
             AddEntry(SetVertexBufferEntryID, ref entry);
         }
 
-        public void SetViewport(uint index, ref Viewport viewport)
+        public void SetViewport(uint index, in Viewport viewport)
         {
-            SetViewportEntry entry = new(index, ref viewport);
+            SetViewportEntry entry = new(index, viewport);
             AddEntry(SetViewportEntryID, ref entry);
         }
 

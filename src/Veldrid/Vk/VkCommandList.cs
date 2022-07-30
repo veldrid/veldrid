@@ -20,6 +20,11 @@ namespace Veldrid.Vulkan
 
         private bool _commandBufferBegun;
         private bool _commandBufferEnded;
+
+        private uint _viewportCount;
+        private bool _viewportsChanged = false;
+        private VkViewport[] _viewports = Array.Empty<VkViewport>();
+        private bool _scissorRectsChanged = false;
         private VkRect2D[] _scissorRects = Array.Empty<VkRect2D>();
 
         private VkClearValue[] _clearValues = Array.Empty<VkClearValue>();
@@ -321,6 +326,18 @@ namespace Veldrid.Vulkan
 
         private void PreDrawCommand()
         {
+            if (_viewportsChanged)
+            {
+                _viewportsChanged = false;
+                FlushViewports();
+            }
+
+            if (_scissorRectsChanged)
+            {
+                _scissorRectsChanged = false;
+                FlushScissorRects();
+            }
+
             if (_vertexBindingsChanged)
             {
                 _vertexBindingsChanged = false;
@@ -340,7 +357,7 @@ namespace Veldrid.Vulkan
                 _currentGraphicsPipeline.PipelineLayout);
         }
 
-        private unsafe void FlushVertexBindings()
+        private void FlushVertexBindings()
         {
             fixed (VulkanBuffer* vertexBindings = _vertexBindings)
             fixed (ulong* vertexOffsets = _vertexOffsets)
@@ -350,6 +367,34 @@ namespace Veldrid.Vulkan
                     0, _numVertexBindings,
                     vertexBindings,
                     vertexOffsets);
+            }
+        }
+
+        private void FlushViewports()
+        {
+            uint count = _viewportCount;
+            if (count > 1 && !_gd.Features.MultipleViewports)
+            {
+                count = 1;
+            }
+
+            fixed (VkViewport* viewports = _viewports)
+            {
+                vkCmdSetViewport(_cb, 0, count, viewports);
+            }
+        }
+
+        private void FlushScissorRects()
+        {
+            uint count = _viewportCount;
+            if (count > 1 && !_gd.Features.MultipleViewports)
+            {
+                count = 1;
+            }
+
+            fixed (VkRect2D* scissorRects = _scissorRects)
+            {
+                vkCmdSetScissor(_cb, 0, count, scissorRects);
             }
         }
 
@@ -562,7 +607,13 @@ namespace Veldrid.Vulkan
             _currentFramebuffer = vkFB;
             _currentFramebufferEverActive = false;
             _newFramebuffer = true;
-            Util.EnsureArrayMinimumSize(ref _scissorRects, Math.Max(1, (uint)vkFB.ColorTargets.Length));
+
+            _viewportCount = Math.Max(1u, (uint)vkFB.ColorTargets.Length);
+            Util.EnsureArrayMinimumSize(ref _viewports, _viewportCount);
+            Util.ClearArray(_viewports);
+            Util.EnsureArrayMinimumSize(ref _scissorRects, _viewportCount);
+            Util.ClearArray(_scissorRects);
+
             uint clearValueCount = (uint)vkFB.ColorTargets.Length;
             Util.EnsureArrayMinimumSize(ref _clearValues, clearValueCount + 1); // Leave an extra space for the depth value (tracked separately).
             Util.ClearArray(_validColorClearValues);
@@ -793,47 +844,43 @@ namespace Veldrid.Vulkan
 
         public override void SetScissorRect(uint index, uint x, uint y, uint width, uint height)
         {
-            if (index == 0 || _gd.Features.MultipleViewports)
+            VkRect2D scissor = new()
             {
-                VkRect2D scissor = new()
-                {
-                    offset = new VkOffset2D() { x = (int)x, y = (int)y },
-                    extent = new VkExtent2D() { width = width, height = height }
-                };
+                offset = new VkOffset2D() { x = (int)x, y = (int)y },
+                extent = new VkExtent2D() { width = width, height = height }
+            };
 
-                if (_scissorRects[index].offset.x != scissor.offset.x ||
-                    _scissorRects[index].offset.y != scissor.offset.y ||
-                    _scissorRects[index].extent.width != scissor.extent.width ||
-                    _scissorRects[index].extent.height != scissor.extent.height)
-                {
-                    _scissorRects[index] = scissor;
-                    vkCmdSetScissor(_cb, index, 1, &scissor);
-                }
+            VkRect2D[] scissorRects = _scissorRects;
+            if (scissorRects[index].offset.x != scissor.offset.x ||
+                scissorRects[index].offset.y != scissor.offset.y ||
+                scissorRects[index].extent.width != scissor.extent.width ||
+                scissorRects[index].extent.height != scissor.extent.height)
+            {
+                _scissorRectsChanged = true;
+                scissorRects[index] = scissor;
             }
         }
 
-        public override void SetViewport(uint index, ref Viewport viewport)
+        public override void SetViewport(uint index, in Viewport viewport)
         {
-            if (index == 0 || _gd.Features.MultipleViewports)
-            {
-                float vpY = _gd.IsClipSpaceYInverted
-                    ? viewport.Y
-                    : viewport.Height + viewport.Y;
-                float vpHeight = _gd.IsClipSpaceYInverted
-                    ? viewport.Height
-                    : -viewport.Height;
+            bool yInverted = _gd.IsClipSpaceYInverted;
+            float vpY = yInverted
+                ? viewport.Y
+                : viewport.Height + viewport.Y;
+            float vpHeight = yInverted
+                ? viewport.Height
+                : -viewport.Height;
 
-                VkViewport vkViewport = new()
-                {
-                    x = viewport.X,
-                    y = vpY,
-                    width = viewport.Width,
-                    height = vpHeight,
-                    minDepth = viewport.MinDepth,
-                    maxDepth = viewport.MaxDepth
-                };
-                vkCmdSetViewport(_cb, index, 1, &vkViewport);
-            }
+            _viewportsChanged = true;
+            _viewports[index] = new VkViewport()
+            {
+                x = viewport.X,
+                y = vpY,
+                width = viewport.Width,
+                height = vpHeight,
+                minDepth = viewport.MinDepth,
+                maxDepth = viewport.MaxDepth
+            };
         }
 
         private protected override void UpdateBufferCore(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)

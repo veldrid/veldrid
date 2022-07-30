@@ -5,7 +5,7 @@
         public readonly uint Index;
         public Viewport Viewport;
 
-        public SetViewportEntry(uint index, ref Viewport viewport)
+        public SetViewportEntry(uint index, in Viewport viewport)
         {
             Index = index;
             Viewport = viewport;

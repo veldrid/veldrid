@@ -168,7 +168,7 @@ namespace Veldrid
                 throw new VeldridException(
                     $"The {nameof(buffer)} ({buffer}) cannot be bound as an index buffer. " +
                     $"It must have been created with the " +
-                    $"{nameof(BufferUsage)}.{nameof(BufferUsage.IndexBuffer)} flag."); 
+                    $"{nameof(BufferUsage)}.{nameof(BufferUsage.IndexBuffer)} flag.");
             }
             _indexBuffer = buffer;
             _indexFormat = format;
@@ -446,12 +446,13 @@ namespace Veldrid
         /// </summary>
         public void SetFullViewports()
         {
-            SetViewport(0, new Viewport(0, 0, _framebuffer!.Width, _framebuffer.Height, 0, 1));
+            Viewport viewport = new(0, 0, _framebuffer!.Width, _framebuffer.Height, 0, 1);
+            SetViewport(0, viewport);
 
             int length = _framebuffer.ColorTargets.Length;
             for (uint index = 1; index < length; index++)
             {
-                SetViewport(index, new Viewport(0, 0, _framebuffer.Width, _framebuffer.Height, 0, 1));
+                SetViewport(index, viewport);
             }
         }
 
@@ -470,27 +471,21 @@ namespace Veldrid
         /// </summary>
         /// <param name="index">The color target index.</param>
         /// <param name="viewport">The new <see cref="Viewport"/>.</param>
-        public void SetViewport(uint index, Viewport viewport) => SetViewport(index, ref viewport);
-
-        /// <summary>
-        /// Sets the active <see cref="Viewport"/> at the given index.
-        /// The index given must be less than the number of color attachments in the active <see cref="Framebuffer"/>.
-        /// </summary>
-        /// <param name="index">The color target index.</param>
-        /// <param name="viewport">The new <see cref="Viewport"/>.</param>
-        public abstract void SetViewport(uint index, ref Viewport viewport);
+        public abstract void SetViewport(uint index, in Viewport viewport);
 
         /// <summary>
         /// Sets all active scissor rectangles to cover the active <see cref="Framebuffer"/>.
         /// </summary>
         public void SetFullScissorRects()
         {
-            SetScissorRect(0, 0, 0, _framebuffer!.Width, _framebuffer.Height);
+            uint width = _framebuffer!.Width;
+            uint height = _framebuffer.Height;
+            SetScissorRect(0, 0, 0, width, height);
 
             int length = _framebuffer.ColorTargets.Length;
             for (uint index = 1; index < length; index++)
             {
-                SetScissorRect(index, 0, 0, _framebuffer.Width, _framebuffer.Height);
+                SetScissorRect(index, 0, 0, width, height);
             }
         }
 
@@ -1077,7 +1072,7 @@ namespace Veldrid
                     $"must be less than the given textures' mip level count and array layer count.");
             }
 #endif
-            
+
             Util.GetMipDimensions(source, mipLevel, out uint width, out uint height, out uint depth);
             CopyTexture(
                 source, 0, 0, 0, mipLevel, arrayLayer,

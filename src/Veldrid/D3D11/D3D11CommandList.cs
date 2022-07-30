@@ -81,6 +81,7 @@ namespace Veldrid.D3D11
         private readonly List<D3D11Buffer> _availableStagingBuffers = new();
         private readonly List<D3D11Buffer> _submittedStagingBuffers = new();
 
+        private uint _viewportCount;
         private readonly List<D3D11Swapchain> _referencedSwapchains = new();
 
         public D3D11CommandList(D3D11GraphicsDevice gd, in CommandListDescription description)
@@ -689,17 +690,14 @@ namespace Veldrid.D3D11
 
         private void FlushViewports()
         {
-            _context.RSSetViewports(_viewports);
+            _context.RSSetViewports(_viewports.AsSpan(0, (int)_viewportCount));
         }
 
         private void FlushScissorRects()
         {
-            if (_scissors.Length > 0)
-            {
-                // Because this array is resized using Util.EnsureMinimumArraySize, this might set more scissor rectangles
-                // than are actually needed, but this is okay -- extras are essentially ignored and should be harmless.
-                _context.RSSetScissorRects(_scissors);
-            }
+            // Because this array is resized using Util.EnsureMinimumArraySize, this might set more scissor rectangles
+            // than are actually needed, but this is okay -- extras are essentially ignored and should be harmless.
+            _context.RSSetScissorRects(_scissors.AsSpan(0, (int)_viewportCount));
         }
 
         private unsafe void FlushVertexBindings()
@@ -714,14 +712,12 @@ namespace Veldrid.D3D11
         public override void SetScissorRect(uint index, uint x, uint y, uint width, uint height)
         {
             _scissorRectsChanged = true;
-            Util.EnsureArrayMinimumSize(ref _scissors, index + 1);
             _scissors[index] = new RawRect((int)x, (int)y, (int)(x + width), (int)(y + height));
         }
 
-        public override void SetViewport(uint index, ref Viewport viewport)
+        public override void SetViewport(uint index, in Viewport viewport)
         {
             _viewportsChanged = true;
-            Util.EnsureArrayMinimumSize(ref _viewports, index + 1);
             _viewports[index] = viewport;
         }
 
@@ -1132,6 +1128,12 @@ namespace Veldrid.D3D11
             }
 
             _context.OMSetRenderTargets(d3dFB.RenderTargetViews, d3dFB.DepthStencilView);
+
+            _viewportCount = Math.Max(1u, (uint)fb.ColorTargets.Length);
+            Util.EnsureArrayMinimumSize(ref _viewports, _viewportCount);
+            Util.ClearArray(_viewports);
+            Util.EnsureArrayMinimumSize(ref _scissors, _viewportCount);
+            Util.ClearArray(_scissors);
         }
 
         private protected override void ClearColorTargetCore(uint index, RgbaFloat clearColor)

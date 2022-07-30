@@ -26,7 +26,6 @@ namespace Veldrid.OpenGL
         private uint[] _vbOffsets = Array.Empty<uint>();
         private uint[] _vertexAttribDivisors = Array.Empty<uint>();
         private uint _vertexAttributesBound;
-        private readonly Viewport[] _viewports = new Viewport[20];
         private DrawElementsType _drawElementsType;
         private uint _ibOffset;
         private PrimitiveType _primitiveType;
@@ -1103,8 +1102,6 @@ namespace Veldrid.OpenGL
 
         public void SetViewport(uint index, ref Viewport viewport)
         {
-            _viewports[(int)index] = viewport;
-
             if (_backend == GraphicsBackend.OpenGL)
             {
                 float left = viewport.X;

@@ -206,16 +206,6 @@ namespace Veldrid.Vulkan
                         {
                             return true;
                         }
-
-                        // Allocate may have merged free blocks.
-                        if (allocator.IsFullFreeBlock())
-                        {
-                            // The allocator is a free contiguous block so dispose it.
-                            allocator.Dispose();
-
-                            allocators.RemoveAt(i);
-                            i--;
-                        }
                     }
 
                     ChunkAllocator newAllocator = new(_device, _memoryTypeIndex, _persistentMapped);
@@ -235,6 +225,15 @@ namespace Veldrid.Vulkan
                         if (allocator.Memory == block.DeviceMemory)
                         {
                             allocator.Free(block);
+
+                            // Free may have merged free blocks.
+                            if (allocator.IsFullFreeBlock())
+                            {
+                                // The allocator is a free contiguous block so dispose it.
+                                allocator.Dispose();
+
+                                allocators.RemoveAt(i);
+                            }
                             return;
                         }
                     }
@@ -312,85 +311,76 @@ namespace Veldrid.Vulkan
                     return false;
                 }
 
-                checked
+                Span<VkMemoryBlock> freeBlocks = CollectionsMarshal.AsSpan(_freeBlocks);
+
+                ulong alignedBlockSize = 0;
+                uint alignedOffsetRemainder = 0;
+
+                int i = 0;
+                int selectedIndex = -1;
+                for (; i < freeBlocks.Length; i++)
                 {
-                    bool hasMergedBlocks = false;
-                    do
+                    ref VkMemoryBlock block = ref freeBlocks[i];
+                    alignedBlockSize = block.Size;
+                    alignedOffsetRemainder = block.Offset % alignment;
+                    if (alignedOffsetRemainder != 0)
                     {
-                        Span<VkMemoryBlock> freeBlocks = CollectionsMarshal.AsSpan(_freeBlocks);
-
-                        ulong alignedBlockSize = 0;
-                        uint alignedOffsetRemainder = 0;
-
-                        int i = 0;
-                        int selectedIndex = -1;
-                        for (; i < freeBlocks.Length; i++)
+                        ulong alignmentCorrection = alignment - alignedOffsetRemainder;
+                        if (alignedBlockSize <= alignmentCorrection)
                         {
-                            ref VkMemoryBlock block = ref freeBlocks[i];
-                            alignedBlockSize = block.Size;
-                            alignedOffsetRemainder = block.Offset % alignment;
-                            if (alignedOffsetRemainder != 0)
-                            {
-                                ulong alignmentCorrection = alignment - alignedOffsetRemainder;
-                                if (alignedBlockSize <= alignmentCorrection)
-                                {
-                                    continue;
-                                }
-                                alignedBlockSize -= alignmentCorrection;
-                            }
-
-                            if (alignedBlockSize >= size) // Valid match -- split it and return.
-                            {
-                                selectedIndex = i;
-                                break;
-                            }
+                            continue;
                         }
+                        alignedBlockSize -= alignmentCorrection;
+                    }
 
-                        if (selectedIndex != -1)
-                        {
-                            VkMemoryBlock block = freeBlocks[selectedIndex];
-                            block.Size = alignedBlockSize;
-                            if (alignedOffsetRemainder != 0)
-                            {
-                                block.Offset += alignment - alignedOffsetRemainder;
-                            }
+                    if (alignedBlockSize >= size) // Valid match -- split it and return.
+                    {
+                        selectedIndex = i;
+                        break;
+                    }
+                }
 
-                            if (alignedBlockSize != size)
-                            {
-                                VkMemoryBlock splitBlock = new(
-                                    block.DeviceMemory,
-                                    block.Offset + size,
-                                    block.Size - size,
-                                    _memoryTypeIndex,
-                                    block.BaseMappedPointer,
-                                    false);
+                if (selectedIndex != -1)
+                {
+                    VkMemoryBlock block = freeBlocks[selectedIndex];
+                    block.Size = alignedBlockSize;
+                    if (alignedOffsetRemainder != 0)
+                    {
+                        block.Offset += alignment - alignedOffsetRemainder;
+                    }
 
-                                freeBlocks[selectedIndex] = splitBlock;
-                                block.Size = size;
-                            }
-                            else
-                            {
-                                _freeBlocks.RemoveAt(i);
-                            }
+                    if (alignedBlockSize != size)
+                    {
+                        VkMemoryBlock splitBlock = new(
+                            block.DeviceMemory,
+                            block.Offset + size,
+                            block.Size - size,
+                            _memoryTypeIndex,
+                            block.BaseMappedPointer,
+                            false);
+
+                        freeBlocks[selectedIndex] = splitBlock;
+                        block.Size = size;
+                    }
+                    else
+                    {
+                        _freeBlocks.RemoveAt(i);
+                    }
 
 #if DEBUG
-                            CheckAllocatedBlock(block);
+                    CheckAllocatedBlock(block);
 #endif
-                            resultBlock = block;
-                            return true;
-                        }
-
-                        if (hasMergedBlocks)
-                        {
-                            break;
-                        }
-                        hasMergedBlocks = MergeContiguousBlocks();
-                    }
-                    while (hasMergedBlocks);
-
-                    resultBlock = default;
-                    return false;
+                    resultBlock = block;
+                    return true;
                 }
+
+#if DEBUG
+                bool hasMergedBlocks = MergeContiguousBlocks();
+                Debug.Assert(!hasMergedBlocks);
+#endif
+
+                resultBlock = default;
+                return false;
             }
 
             private static int FindPrecedingBlockIndex(ReadOnlySpan<VkMemoryBlock> list, ulong targetOffset)
@@ -417,15 +407,47 @@ namespace Veldrid.Vulkan
 
             public void Free(VkMemoryBlock block)
             {
-                // Assume that _freeBlocks is always sorted.
-                int precedingBlock = FindPrecedingBlockIndex(CollectionsMarshal.AsSpan(_freeBlocks), block.Offset);
+                Span<VkMemoryBlock> freeBlocks = CollectionsMarshal.AsSpan(_freeBlocks);
+
+                // freeBlocks should always be sorted by offset.
+                int precedingBlock = FindPrecedingBlockIndex(freeBlocks, block.Offset);
                 if (precedingBlock != -1)
                 {
-                    _freeBlocks.Insert(precedingBlock, block);
+                    if ((uint)precedingBlock < (uint)freeBlocks.Length &&
+                        block.End == freeBlocks[precedingBlock].Offset)
+                    {
+                        freeBlocks[precedingBlock].Size += block.Size;
+                        freeBlocks[precedingBlock].Offset = block.Offset;
+                    }
+                    else
+                    {
+                        _freeBlocks.Insert(precedingBlock, block);
+
+                        // Updating the list invalidates the previous span.
+                        freeBlocks = CollectionsMarshal.AsSpan(_freeBlocks);
+                    }
+
+                    int prevBlock = precedingBlock - 1;
+                    if ((uint)precedingBlock < (uint)freeBlocks.Length &&
+                        (uint)prevBlock < (uint)freeBlocks.Length &&
+                        freeBlocks[prevBlock].End == freeBlocks[precedingBlock].Offset)
+                    {
+                        freeBlocks[prevBlock].Size += freeBlocks[precedingBlock].Size;
+                        _freeBlocks.RemoveAt(precedingBlock);
+                    }
                 }
                 else
                 {
-                    _freeBlocks.Add(block);
+                    int lastIndex = freeBlocks.Length - 1;
+                    if ((uint)lastIndex < (uint)freeBlocks.Length &&
+                        freeBlocks[lastIndex].End == block.Offset)
+                    {
+                        freeBlocks[lastIndex].Size += block.Size;
+                    }
+                    else
+                    {
+                        _freeBlocks.Add(block);
+                    }
                 }
 
 #if DEBUG
@@ -433,6 +455,7 @@ namespace Veldrid.Vulkan
 #endif
             }
 
+#if DEBUG
             private bool MergeContiguousBlocks()
             {
                 List<VkMemoryBlock> freeBlocks = _freeBlocks;
@@ -469,7 +492,6 @@ namespace Veldrid.Vulkan
                 return hasMerged;
             }
 
-#if DEBUG
             private HashSet<VkMemoryBlock> _allocatedBlocks = new();
 
             private void CheckAllocatedBlock(VkMemoryBlock block)
@@ -580,7 +602,7 @@ namespace Veldrid.Vulkan
 
         private string GetDebuggerDisplay()
         {
-            return $"[Mem:{DeviceMemory.Value:x}] Off:{Offset}, Size:{Size}, End:{Offset+Size}";
+            return $"[Mem:{DeviceMemory.Value:x}] Off:{Offset}, Size:{Size}, End:{Offset + Size}";
         }
     }
 }

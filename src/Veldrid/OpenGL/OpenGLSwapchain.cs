@@ -2,7 +2,7 @@
 
 namespace Veldrid.OpenGL
 {
-    internal class OpenGLSwapchain : Swapchain
+    internal sealed class OpenGLSwapchain : Swapchain
     {
         private readonly OpenGLGraphicsDevice _gd;
         private readonly OpenGLSwapchainFramebuffer _framebuffer;

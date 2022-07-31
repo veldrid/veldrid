@@ -4,7 +4,7 @@ using Veldrid.MetalBindings;
 
 namespace Veldrid.MTL
 {
-    internal class MTLSwapchain : Swapchain
+    internal sealed class MTLSwapchain : Swapchain
     {
         private readonly MTLSwapchainFramebuffer _framebuffer;
         private CAMetalLayer _metalLayer;

@@ -3,7 +3,7 @@ using Veldrid.MetalBindings;
 
 namespace Veldrid.MTL
 {
-    internal class MTLResourceFactory : ResourceFactory
+    internal sealed class MTLResourceFactory : ResourceFactory
     {
         private readonly MTLGraphicsDevice _gd;
 

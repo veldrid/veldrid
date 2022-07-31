@@ -6,7 +6,7 @@ using System.Diagnostics;
 
 namespace Veldrid.OpenGL
 {
-    internal unsafe class OpenGLBuffer : DeviceBuffer, OpenGLDeferredResource
+    internal sealed unsafe class OpenGLBuffer : DeviceBuffer, OpenGLDeferredResource
     {
         private readonly OpenGLGraphicsDevice _gd;
         private uint _buffer;

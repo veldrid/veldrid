@@ -2,7 +2,7 @@
 
 namespace Veldrid.OpenGL
 {
-    internal class OpenGLResourceFactory : ResourceFactory
+    internal sealed class OpenGLResourceFactory : ResourceFactory
     {
         private readonly OpenGLGraphicsDevice _gd;
         private readonly StagingMemoryPool _pool;

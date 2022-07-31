@@ -1,6 +1,6 @@
 ﻿namespace Veldrid.D3D11
 {
-    internal class D3D11ResourceLayout : ResourceLayout
+    internal sealed class D3D11ResourceLayout : ResourceLayout
     {
         private readonly ResourceBindingInfo[] _bindingInfosByVdIndex;
         private string? _name;

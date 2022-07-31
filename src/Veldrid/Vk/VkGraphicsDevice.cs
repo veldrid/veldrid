@@ -13,7 +13,7 @@ using static Veldrid.Vulkan.VulkanUtil;
 
 namespace Veldrid.Vulkan
 {
-    internal unsafe class VkGraphicsDevice : GraphicsDevice
+    internal sealed unsafe class VkGraphicsDevice : GraphicsDevice
     {
         private static readonly FixedUtf8String s_name = "Veldrid-VkGraphicsDevice";
         private static readonly Lazy<bool> s_isSupported = new(CheckIsSupported, isThreadSafe: true);
@@ -1582,7 +1582,7 @@ namespace Veldrid.Vulkan
             pool.EndAndSubmit(cb);
         }
 
-        private class SharedCommandPool
+        private sealed class SharedCommandPool
         {
             private readonly VkGraphicsDevice _gd;
             private readonly VkCommandPool _pool;

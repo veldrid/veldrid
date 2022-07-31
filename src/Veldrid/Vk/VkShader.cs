@@ -5,7 +5,7 @@ using static Veldrid.Vulkan.VulkanUtil;
 
 namespace Veldrid.Vulkan
 {
-    internal unsafe class VkShader : Shader
+    internal sealed unsafe class VkShader : Shader
     {
         private readonly VkGraphicsDevice _gd;
         private readonly VkShaderModule _shaderModule;

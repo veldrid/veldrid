@@ -3,7 +3,7 @@ using Vortice.Mathematics;
 
 namespace Veldrid.D3D11
 {
-    internal class D3D11Sampler : Sampler
+    internal sealed class D3D11Sampler : Sampler
     {
         private string? _name;
 

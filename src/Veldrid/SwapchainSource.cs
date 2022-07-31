@@ -1,12 +1,11 @@
 ﻿using System;
-using System.Runtime.InteropServices;
 
 namespace Veldrid
 {
     /// <summary>
     /// A platform-specific object representing a renderable surface.
-    /// A SwapchainSource can be created with one of several static factory methods.
-    /// A SwapchainSource is used to describe a Swapchain (see <see cref="SwapchainDescription"/>).
+    /// A <see cref="SwapchainSource"/> can be created with one of several static factory methods.
+    /// A <see cref="SwapchainSource"/> is used to describe a <see cref="Swapchain"/> (see <see cref="SwapchainDescription"/>).
     /// </summary>
     public abstract class SwapchainSource
     {
@@ -89,7 +88,7 @@ namespace Veldrid
             => new NSViewSwapchainSource(nsView);
     }
 
-    internal class Win32SwapchainSource : SwapchainSource
+    internal sealed class Win32SwapchainSource : SwapchainSource
     {
         public IntPtr Hwnd { get; }
         public IntPtr Hinstance { get; }
@@ -101,7 +100,7 @@ namespace Veldrid
         }
     }
 
-    internal class UwpSwapchainSource : SwapchainSource
+    internal sealed class UwpSwapchainSource : SwapchainSource
     {
         public object SwapChainPanelNative { get; }
         public float LogicalDpi { get; }
@@ -113,7 +112,7 @@ namespace Veldrid
         }
     }
 
-    internal class XlibSwapchainSource : SwapchainSource
+    internal sealed class XlibSwapchainSource : SwapchainSource
     {
         public IntPtr Display { get; }
         public IntPtr Window { get; }
@@ -125,7 +124,7 @@ namespace Veldrid
         }
     }
 
-    internal class WaylandSwapchainSource : SwapchainSource
+    internal sealed class WaylandSwapchainSource : SwapchainSource
     {
         public IntPtr Display { get; }
         public IntPtr Surface { get; }
@@ -137,7 +136,7 @@ namespace Veldrid
         }
     }
 
-    internal class NSWindowSwapchainSource : SwapchainSource
+    internal sealed class NSWindowSwapchainSource : SwapchainSource
     {
         public IntPtr NSWindow { get; }
 
@@ -147,7 +146,7 @@ namespace Veldrid
         }
     }
 
-    internal class UIViewSwapchainSource : SwapchainSource
+    internal sealed class UIViewSwapchainSource : SwapchainSource
     {
         public IntPtr UIView { get; }
 
@@ -157,7 +156,7 @@ namespace Veldrid
         }
     }
 
-    internal class AndroidSurfaceSwapchainSource : SwapchainSource
+    internal sealed class AndroidSurfaceSwapchainSource : SwapchainSource
     {
         public IntPtr Surface { get; }
         public IntPtr JniEnv { get; }
@@ -169,7 +168,7 @@ namespace Veldrid
         }
     }
 
-    internal class NSViewSwapchainSource : SwapchainSource
+    internal sealed class NSViewSwapchainSource : SwapchainSource
     {
         public IntPtr NSView { get; }
 

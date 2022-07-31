@@ -5,7 +5,7 @@ using System;
 
 namespace Veldrid.OpenGL
 {
-    internal unsafe class OpenGLFramebuffer : Framebuffer, OpenGLDeferredResource
+    internal sealed unsafe class OpenGLFramebuffer : Framebuffer, OpenGLDeferredResource
     {
         private readonly OpenGLGraphicsDevice _gd;
         private uint _framebuffer;

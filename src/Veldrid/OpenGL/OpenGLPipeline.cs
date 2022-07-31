@@ -10,7 +10,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Veldrid.OpenGL
 {
-    internal unsafe class OpenGLPipeline : Pipeline, OpenGLDeferredResource
+    internal sealed unsafe class OpenGLPipeline : Pipeline, OpenGLDeferredResource
     {
         private const uint GL_INVALID_INDEX = 0xFFFFFFFF;
         private readonly OpenGLGraphicsDevice _gd;
@@ -398,7 +398,7 @@ namespace Veldrid.OpenGL
             ProcessResourceSetLayouts(ResourceLayouts, byteBuffer);
         }
 
-        public bool GetUniformBindingForSlot(uint set, uint slot, [MaybeNullWhen(false)] out OpenGLUniformBinding binding)
+        public bool GetUniformBindingForSlot(uint set, uint slot, out OpenGLUniformBinding binding)
         {
             Debug.Assert(_setInfos != null, "EnsureResourcesCreated must be called before accessing resource set information.");
             SetBindingsInfo setInfo = _setInfos[set];
@@ -419,7 +419,7 @@ namespace Veldrid.OpenGL
             return setInfo.GetSamplerBindingInfo(slot, out binding);
         }
 
-        public bool GetStorageBufferBindingForSlot(uint set, uint slot, [MaybeNullWhen(false)] out OpenGLShaderStorageBinding binding)
+        public bool GetStorageBufferBindingForSlot(uint set, uint slot, out OpenGLShaderStorageBinding binding)
         {
             Debug.Assert(_setInfos != null, "EnsureResourcesCreated must be called before accessing resource set information.");
             SetBindingsInfo setInfo = _setInfos[set];
@@ -480,12 +480,12 @@ namespace Veldrid.OpenGL
             return _samplerBindings.TryGetValue(slot, out binding);
         }
 
-        public bool GetUniformBindingForSlot(uint slot, [MaybeNullWhen(false)] out OpenGLUniformBinding binding)
+        public bool GetUniformBindingForSlot(uint slot, out OpenGLUniformBinding binding)
         {
             return _uniformBindings.TryGetValue(slot, out binding);
         }
 
-        public bool GetStorageBufferBindingForSlot(uint slot, [MaybeNullWhen(false)] out OpenGLShaderStorageBinding binding)
+        public bool GetStorageBufferBindingForSlot(uint slot, out OpenGLShaderStorageBinding binding)
         {
             return _storageBufferBindings.TryGetValue(slot, out binding);
         }
@@ -514,7 +514,7 @@ namespace Veldrid.OpenGL
         public int[] RelativeIndices;
     }
 
-    internal class OpenGLUniformBinding
+    internal readonly struct OpenGLUniformBinding
     {
         public uint Program { get; }
         public uint BlockLocation { get; }
@@ -528,7 +528,7 @@ namespace Veldrid.OpenGL
         }
     }
 
-    internal class OpenGLShaderStorageBinding
+    internal readonly struct OpenGLShaderStorageBinding
     {
         public uint StorageBlockBinding { get; }
 

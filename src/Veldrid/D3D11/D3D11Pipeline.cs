@@ -4,7 +4,7 @@ using System;
 
 namespace Veldrid.D3D11
 {
-    internal class D3D11Pipeline : Pipeline
+    internal sealed class D3D11Pipeline : Pipeline
     {
         private string? _name;
         private bool _disposed;

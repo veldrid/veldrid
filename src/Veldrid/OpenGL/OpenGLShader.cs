@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Veldrid.OpenGL
 {
-    internal unsafe class OpenGLShader : Shader, OpenGLDeferredResource
+    internal sealed unsafe class OpenGLShader : Shader, OpenGLDeferredResource
     {
         private readonly OpenGLGraphicsDevice _gd;
         private readonly ShaderType _shaderType;

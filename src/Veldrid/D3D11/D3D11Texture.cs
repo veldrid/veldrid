@@ -3,7 +3,7 @@ using Vortice.Direct3D11;
 
 namespace Veldrid.D3D11
 {
-    internal class D3D11Texture : Texture
+    internal sealed class D3D11Texture : Texture
     {
         private string? _name;
 

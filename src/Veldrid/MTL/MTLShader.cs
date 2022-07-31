@@ -4,7 +4,7 @@ using Veldrid.MetalBindings;
 
 namespace Veldrid.MTL
 {
-    internal class MTLShader : Shader
+    internal sealed class MTLShader : Shader
     {
         private readonly MTLGraphicsDevice _device;
         private bool _disposed;

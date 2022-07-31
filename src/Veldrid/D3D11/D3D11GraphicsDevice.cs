@@ -14,7 +14,7 @@ using Vortice.DXGI.Debug;
 
 namespace Veldrid.D3D11
 {
-    internal class D3D11GraphicsDevice : GraphicsDevice
+    internal sealed class D3D11GraphicsDevice : GraphicsDevice
     {
         private readonly IDXGIAdapter _dxgiAdapter;
         private readonly ID3D11Device _device;

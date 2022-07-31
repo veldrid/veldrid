@@ -1,6 +1,6 @@
 ﻿namespace Veldrid.D3D11
 {
-    internal class D3D11ResourceSet : ResourceSet
+    internal sealed class D3D11ResourceSet : ResourceSet
     {
         private string? _name;
         private bool _disposed;

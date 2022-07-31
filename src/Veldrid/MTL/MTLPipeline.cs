@@ -5,7 +5,7 @@ using Veldrid.MetalBindings;
 
 namespace Veldrid.MTL
 {
-    internal class MTLPipeline : Pipeline
+    internal sealed class MTLPipeline : Pipeline
     {
         private bool _disposed;
         private List<MTLFunction> _specializedFunctions = new();

@@ -3,7 +3,7 @@ using Vortice.Direct3D11;
 
 namespace Veldrid.D3D11
 {
-    internal class D3D11Framebuffer : Framebuffer
+    internal sealed class D3D11Framebuffer : Framebuffer
     {
         private string? _name;
         private bool _disposed;

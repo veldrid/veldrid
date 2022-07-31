@@ -2,7 +2,7 @@
 
 namespace Veldrid.OpenGL
 {
-    internal class OpenGLSwapchainFramebuffer : Framebuffer
+    internal sealed class OpenGLSwapchainFramebuffer : Framebuffer
     {
         private readonly PixelFormat? _depthFormat;
         private bool _disposed;

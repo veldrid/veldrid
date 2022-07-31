@@ -5,7 +5,7 @@ using Veldrid.MetalBindings;
 
 namespace Veldrid.MTL
 {
-    internal class MTLFeatureSupport : IReadOnlyCollection<MTLFeatureSet>
+    internal sealed class MTLFeatureSupport : IReadOnlyCollection<MTLFeatureSet>
     {
         private readonly HashSet<MTLFeatureSet> _supportedFeatureSets = new();
 

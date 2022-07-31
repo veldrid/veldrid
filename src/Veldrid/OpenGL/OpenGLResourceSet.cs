@@ -1,6 +1,6 @@
 ﻿namespace Veldrid.OpenGL
 {
-    internal class OpenGLResourceSet : ResourceSet
+    internal sealed class OpenGLResourceSet : ResourceSet
     {
         private bool _disposed;
 

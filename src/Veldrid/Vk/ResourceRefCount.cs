@@ -4,7 +4,7 @@ using System.Threading;
 namespace Veldrid.Vulkan
 {
     [DebuggerDisplay($"ResourceRefCount@{{{nameof(_refCount)}}} ({{{nameof(_target)},nq}})")]
-    internal class ResourceRefCount
+    internal sealed class ResourceRefCount
     {
         private readonly IResourceRefCountTarget _target;
         private int _refCount;

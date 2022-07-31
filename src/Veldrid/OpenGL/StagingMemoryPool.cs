@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 
 namespace Veldrid.OpenGL
 {
-    internal unsafe sealed class StagingMemoryPool : IDisposable
+    internal sealed unsafe class StagingMemoryPool : IDisposable
     {
         private const uint MinimumCapacity = 128;
 
@@ -105,7 +105,7 @@ namespace Veldrid.OpenGL
             }
         }
 
-        private class CapacityComparer : IComparer<uint>
+        private sealed class CapacityComparer : IComparer<uint>
         {
             public int Compare(uint x, uint y)
             {

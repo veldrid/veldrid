@@ -3,7 +3,7 @@ using Veldrid.MetalBindings;
 
 namespace Veldrid.MTL
 {
-    internal class MTLTexture : Texture
+    internal sealed class MTLTexture : Texture
     {
         private bool _disposed;
 

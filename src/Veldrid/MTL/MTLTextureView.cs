@@ -2,7 +2,7 @@ using Veldrid.MetalBindings;
 
 namespace Veldrid.MTL
 {
-    internal class MTLTextureView : TextureView
+    internal sealed class MTLTextureView : TextureView
     {
         private readonly bool _hasTextureView;
         private bool _disposed;

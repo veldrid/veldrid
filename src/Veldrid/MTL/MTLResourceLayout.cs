@@ -1,6 +1,6 @@
 namespace Veldrid.MTL
 {
-    internal class MTLResourceLayout : ResourceLayout
+    internal sealed class MTLResourceLayout : ResourceLayout
     {
         private readonly ResourceBindingInfo[] _bindingInfosByVdIndex;
         private bool _disposed;

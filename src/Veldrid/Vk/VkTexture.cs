@@ -6,7 +6,7 @@ using static Veldrid.Vulkan.VulkanUtil;
 
 namespace Veldrid.Vulkan
 {
-    internal unsafe class VkTexture : Texture, IResourceRefCountTarget
+    internal sealed unsafe class VkTexture : Texture, IResourceRefCountTarget
     {
         private readonly VkGraphicsDevice _gd;
         private readonly VkImage _optimalImage;

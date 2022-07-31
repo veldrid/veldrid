@@ -10,7 +10,7 @@ using VulkanBuffer = TerraFX.Interop.Vulkan.VkBuffer;
 
 namespace Veldrid.Vulkan
 {
-    internal unsafe class VkDeviceMemoryManager : IDisposable
+    internal sealed unsafe class VkDeviceMemoryManager : IDisposable
     {
         private readonly VkDevice _device;
         private readonly VkPhysicalDevice _physicalDevice;
@@ -179,7 +179,7 @@ namespace Veldrid.Vulkan
             }
         }
 
-        private class ChunkAllocatorSet : IDisposable
+        private sealed class ChunkAllocatorSet : IDisposable
         {
             private readonly VkDevice _device;
             private readonly uint _memoryTypeIndex;
@@ -253,7 +253,7 @@ namespace Veldrid.Vulkan
             }
         }
 
-        private class ChunkAllocator : IDisposable
+        private sealed class ChunkAllocator : IDisposable
         {
             public const ulong PersistentMappedChunkSize = 1024 * 1024;
             public const ulong UnmappedChunkSize = 1024 * 1024 * 8;

@@ -7,7 +7,7 @@ using VulkanBuffer = TerraFX.Interop.Vulkan.VkBuffer;
 
 namespace Veldrid.Vulkan
 {
-    internal unsafe class VkBuffer : DeviceBuffer, IResourceRefCountTarget
+    internal sealed unsafe class VkBuffer : DeviceBuffer, IResourceRefCountTarget
     {
         private readonly VkGraphicsDevice _gd;
         private readonly VulkanBuffer _deviceBuffer;

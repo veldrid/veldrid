@@ -8,7 +8,7 @@ using Vortice.Mathematics;
 
 namespace Veldrid.D3D11
 {
-    internal class D3D11CommandList : CommandList
+    internal sealed class D3D11CommandList : CommandList
     {
         private readonly D3D11GraphicsDevice _gd;
         private readonly ID3D11DeviceContext _context;

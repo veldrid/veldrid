@@ -3,7 +3,7 @@ using Veldrid.MetalBindings;
 
 namespace Veldrid.MTL
 {
-    internal class MTLSampler : Sampler
+    internal sealed class MTLSampler : Sampler
     {
         private bool _disposed;
 

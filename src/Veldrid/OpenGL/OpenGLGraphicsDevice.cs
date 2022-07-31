@@ -15,7 +15,7 @@ using NativeLibrary = NativeLibraryLoader.NativeLibrary;
 
 namespace Veldrid.OpenGL
 {
-    internal unsafe class OpenGLGraphicsDevice : GraphicsDevice
+    internal sealed unsafe class OpenGLGraphicsDevice : GraphicsDevice
     {
         private ResourceFactory _resourceFactory;
         private string _deviceName;
@@ -1159,7 +1159,7 @@ namespace Veldrid.OpenGL
 
         internal override uint GetStructuredBufferMinOffsetAlignmentCore() => _minSsboOffsetAlignment;
 
-        private class ExecutionThread
+        private sealed class ExecutionThread
         {
             private readonly OpenGLGraphicsDevice _gd;
             private readonly ConcurrentQueue<ExecutionThreadWorkItem> _workItems;

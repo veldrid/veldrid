@@ -3,7 +3,7 @@ using Veldrid.MetalBindings;
 
 namespace Veldrid.MTL
 {
-    internal class MTLBuffer : DeviceBuffer
+    internal sealed class MTLBuffer : DeviceBuffer
     {
         private string? _name;
         private bool _disposed;

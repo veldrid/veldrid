@@ -3,7 +3,7 @@ using System.Threading;
 
 namespace Veldrid.OpenGL
 {
-    internal class OpenGLFence : Fence
+    internal sealed class OpenGLFence : Fence
     {
         private readonly ManualResetEvent _mre;
         private bool _disposed;

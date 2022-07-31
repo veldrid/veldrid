@@ -4,7 +4,7 @@ using Veldrid.MetalBindings;
 
 namespace Veldrid.MTL
 {
-    internal class MTLSwapchainFramebuffer : MTLFramebufferBase
+    internal sealed class MTLSwapchainFramebuffer : MTLFramebufferBase
     {
         private readonly MTLGraphicsDevice _gd;
         private readonly MTLPlaceholderTexture _placeholderTexture;

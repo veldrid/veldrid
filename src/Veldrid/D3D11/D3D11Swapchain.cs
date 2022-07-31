@@ -8,7 +8,7 @@ using SharpGen.Runtime;
 
 namespace Veldrid.D3D11
 {
-    internal class D3D11Swapchain : Swapchain
+    internal sealed class D3D11Swapchain : Swapchain
     {
         private readonly D3D11GraphicsDevice _gd;
         private readonly PixelFormat? _depthFormat;

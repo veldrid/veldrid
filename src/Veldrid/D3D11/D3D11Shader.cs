@@ -5,7 +5,7 @@ using Vortice.Direct3D11;
 
 namespace Veldrid.D3D11
 {
-    internal class D3D11Shader : Shader
+    internal sealed class D3D11Shader : Shader
     {
         private string? _name;
 

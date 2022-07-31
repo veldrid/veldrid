@@ -5,7 +5,7 @@ using static Veldrid.Vulkan.VulkanUtil;
 
 namespace Veldrid.Vulkan
 {
-    internal unsafe class VkSwapchainFramebuffer : VkFramebufferBase
+    internal sealed unsafe class VkSwapchainFramebuffer : VkFramebufferBase
     {
         private readonly VkGraphicsDevice _gd;
         private readonly VkSwapchain _swapchain;

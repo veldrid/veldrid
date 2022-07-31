@@ -10,7 +10,7 @@ using NativeLibrary = NativeLibraryLoader.NativeLibrary;
 
 namespace Veldrid.MTL
 {
-    internal unsafe class MTLGraphicsDevice : GraphicsDevice
+    internal sealed unsafe class MTLGraphicsDevice : GraphicsDevice
     {
         private static readonly Lazy<bool> s_isSupported = new(GetIsSupported);
         private static readonly Dictionary<IntPtr, MTLGraphicsDevice> s_aotRegisteredBlocks

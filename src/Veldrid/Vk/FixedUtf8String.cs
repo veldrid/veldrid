@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 
 namespace Veldrid.Vulkan
 {
-    internal unsafe class FixedUtf8String : IDisposable
+    internal sealed unsafe class FixedUtf8String : IDisposable
     {
         private IntPtr _handle;
         private int _numBytes;
@@ -34,7 +34,7 @@ namespace Veldrid.Vulkan
         public static implicit operator FixedUtf8String(string s) => new(s);
         public static implicit operator string(FixedUtf8String utf8String) => utf8String.ToString();
 
-        protected virtual void Dispose(bool disposing)
+        private void Dispose(bool disposing)
         {
             if (_handle != IntPtr.Zero)
             {

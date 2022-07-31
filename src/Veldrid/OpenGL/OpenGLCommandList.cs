@@ -5,7 +5,7 @@ using Veldrid.OpenGL.EntryList;
 
 namespace Veldrid.OpenGL
 {
-    internal class OpenGLCommandList : CommandList
+    internal sealed class OpenGLCommandList : CommandList
     {
         private readonly OpenGLGraphicsDevice _gd;
         private OpenGLCommandEntryList _currentCommands = null!;

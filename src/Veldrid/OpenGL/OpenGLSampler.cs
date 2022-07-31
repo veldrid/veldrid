@@ -4,12 +4,12 @@ using Veldrid.OpenGLBinding;
 
 namespace Veldrid.OpenGL
 {
-    internal unsafe class OpenGLSampler : Sampler, OpenGLDeferredResource
+    internal sealed unsafe class OpenGLSampler : Sampler, OpenGLDeferredResource
     {
         private readonly OpenGLGraphicsDevice _gd;
         private readonly SamplerDescription _description;
-        private readonly InternalSamplerState _noMipmapState;
-        private readonly InternalSamplerState _mipmapState;
+        private InternalSamplerState _noMipmapState;
+        private InternalSamplerState _mipmapState;
         private bool _disposeRequested;
 
         private string? _name;
@@ -73,7 +73,7 @@ namespace Veldrid.OpenGL
             _noMipmapState.DestroyGLResources();
         }
 
-        private class InternalSamplerState
+        private struct InternalSamplerState
         {
             private uint _sampler;
 

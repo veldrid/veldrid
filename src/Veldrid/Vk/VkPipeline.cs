@@ -7,7 +7,7 @@ using VulkanPipeline = TerraFX.Interop.Vulkan.VkPipeline;
 
 namespace Veldrid.Vulkan
 {
-    internal unsafe class VkPipeline : Pipeline, IResourceRefCountTarget
+    internal sealed unsafe class VkPipeline : Pipeline, IResourceRefCountTarget
     {
         private readonly VkGraphicsDevice _gd;
         private readonly VulkanPipeline _devicePipeline;

@@ -3,7 +3,7 @@ using static TerraFX.Interop.Vulkan.Vulkan;
 
 namespace Veldrid.Vulkan
 {
-    internal unsafe class VkTextureView : TextureView, IResourceRefCountTarget
+    internal sealed unsafe class VkTextureView : TextureView, IResourceRefCountTarget
     {
         private readonly VkGraphicsDevice _gd;
         private readonly VkImageView _imageView;

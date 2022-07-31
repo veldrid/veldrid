@@ -6,7 +6,7 @@ using Vortice.Direct3D11;
 
 namespace Veldrid.D3D11
 {
-    internal class D3D11ResourceCache : IDisposable
+    internal sealed class D3D11ResourceCache : IDisposable
     {
         private readonly ID3D11Device _device;
         private readonly object _lock = new();

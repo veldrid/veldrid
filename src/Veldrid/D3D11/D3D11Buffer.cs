@@ -6,7 +6,7 @@ using Vortice.Direct3D;
 
 namespace Veldrid.D3D11
 {
-    internal class D3D11Buffer : DeviceBuffer
+    internal sealed class D3D11Buffer : DeviceBuffer
     {
         private readonly ID3D11Device _device;
         private readonly ID3D11Buffer _buffer;

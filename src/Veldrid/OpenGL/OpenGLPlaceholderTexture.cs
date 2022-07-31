@@ -1,6 +1,6 @@
 ﻿namespace Veldrid.OpenGL
 {
-    internal class OpenGLPlaceholderTexture : Texture
+    internal sealed class OpenGLPlaceholderTexture : Texture
     {
         private uint _height;
         private uint _width;

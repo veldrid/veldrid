@@ -4,7 +4,7 @@ using VulkanSampler = TerraFX.Interop.Vulkan.VkSampler;
 
 namespace Veldrid.Vulkan
 {
-    internal unsafe class VkSampler : Sampler, IResourceRefCountTarget
+    internal sealed unsafe class VkSampler : Sampler, IResourceRefCountTarget
     {
         private readonly VkGraphicsDevice _gd;
         private readonly VulkanSampler _sampler;

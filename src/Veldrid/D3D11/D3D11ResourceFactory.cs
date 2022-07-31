@@ -3,7 +3,7 @@ using System;
 
 namespace Veldrid.D3D11
 {
-    internal class D3D11ResourceFactory : ResourceFactory, IDisposable
+    internal sealed class D3D11ResourceFactory : ResourceFactory, IDisposable
     {
         private readonly D3D11GraphicsDevice _gd;
         private readonly ID3D11Device _device;

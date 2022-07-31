@@ -3,7 +3,7 @@ using System.Threading;
 
 namespace Veldrid.D3D11
 {
-    internal class D3D11Fence : Fence
+    internal sealed class D3D11Fence : Fence
     {
         private readonly ManualResetEvent _mre;
         private bool _disposed;

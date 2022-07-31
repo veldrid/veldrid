@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 
 namespace Veldrid.Vulkan
@@ -21,7 +22,7 @@ namespace Veldrid.Vulkan
 #if VALIDATE_USAGE
             if (ret == 0)
             {
-                throw new VeldridException("An attempt was made to reference a disposed resource.");
+                ThrowObjectDisposed();
             }
 #endif
             return ret;
@@ -36,6 +37,12 @@ namespace Veldrid.Vulkan
             }
 
             return ret;
+        }
+
+        [DoesNotReturn]
+        private static void ThrowObjectDisposed()
+        {
+            throw new VeldridException("An attempt was made to reference a disposed resource.");
         }
     }
 }

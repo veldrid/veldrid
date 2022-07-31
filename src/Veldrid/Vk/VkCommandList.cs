@@ -57,7 +57,7 @@ namespace Veldrid.Vulkan
         private readonly Stack<VkCommandBuffer> _availableCommandBuffers = new();
         private readonly List<VkCommandBuffer> _submittedCommandBuffers = new();
 
-        private StagingResourceInfo _currentStagingInfo = null!;
+        private StagingResourceInfo _currentStagingInfo;
         private readonly Dictionary<VkCommandBuffer, StagingResourceInfo> _submittedStagingInfos = new();
         private readonly ConcurrentQueue<StagingResourceInfo> _availableStagingInfos = new();
         private readonly List<VkBuffer> _availableStagingBuffers = new();
@@ -128,7 +128,7 @@ namespace Veldrid.Vulkan
                 _submittedCommandBuffers.Add(cb);
             }
 
-            _currentStagingInfo = null!;
+            _currentStagingInfo = default;
             _cb = default;
 
             return cb;
@@ -149,7 +149,7 @@ namespace Veldrid.Vulkan
                     }
                 }
 
-                if (!_submittedStagingInfos.Remove(completedCB, out StagingResourceInfo? info))
+                if (!_submittedStagingInfos.Remove(completedCB, out StagingResourceInfo info))
                 {
                     throw new InvalidOperationException();
                 }
@@ -180,7 +180,7 @@ namespace Veldrid.Vulkan
                     CheckResult(resetResult);
                 }
 
-                if (_currentStagingInfo != null)
+                if (_currentStagingInfo.IsValid)
                 {
                     RecycleStagingInfo(_currentStagingInfo);
                 }
@@ -1502,7 +1502,7 @@ namespace Veldrid.Vulkan
 
                 Debug.Assert(_submittedStagingInfos.Count == 0);
 
-                if (_currentStagingInfo != null)
+                if (_currentStagingInfo.IsValid)
                 {
                     RecycleStagingInfo(_currentStagingInfo);
                 }
@@ -1514,10 +1514,18 @@ namespace Veldrid.Vulkan
             }
         }
 
-        private sealed class StagingResourceInfo
+        private readonly struct StagingResourceInfo
         {
-            public List<VkBuffer> BuffersUsed { get; } = new List<VkBuffer>();
-            public HashSet<ResourceRefCount> Resources { get; } = new HashSet<ResourceRefCount>();
+            public List<VkBuffer> BuffersUsed { get; }
+            public HashSet<ResourceRefCount> Resources { get; }
+
+            public bool IsValid => BuffersUsed != null;
+
+            public StagingResourceInfo()
+            {
+                BuffersUsed = new List<VkBuffer>();
+                Resources = new HashSet<ResourceRefCount>();
+            }
 
             public void AddResource(ResourceRefCount count)
             {
@@ -1536,7 +1544,7 @@ namespace Veldrid.Vulkan
 
         private StagingResourceInfo GetStagingResourceInfo()
         {
-            if (!_availableStagingInfos.TryDequeue(out StagingResourceInfo? ret))
+            if (!_availableStagingInfos.TryDequeue(out StagingResourceInfo ret))
             {
                 ret = new StagingResourceInfo();
             }

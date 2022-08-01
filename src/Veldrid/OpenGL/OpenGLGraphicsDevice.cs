@@ -1069,6 +1069,7 @@ namespace Veldrid.OpenGL
         {
             glEnable(EnableCap.DebugOutput);
             CheckLastError();
+
             // The debug callback delegate must be persisted, otherwise errors will occur
             // when the OpenGL drivers attempt to call it after it has been collected.
             _debugMessageCallback = callback;
@@ -1087,9 +1088,7 @@ namespace Veldrid.OpenGL
         {
             if (!_openglInfo.InvokeDebugProc(source, type, id, severity, length, message, userParam))
             {
-                if (type != DebugType.DebugTypeMarker &&
-                    type != DebugType.DebugTypePushGroup &&
-                    type != DebugType.DebugTypePopGroup)
+                if (severity != DebugSeverity.DebugSeverityNotification)
                 {
                     string messageString = Marshal.PtrToStringAnsi((IntPtr)message, (int)length);
                     Debug.WriteLine($"GL {source}:, {type}, {id}. {severity}: {messageString}");

@@ -6,7 +6,6 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using TerraFX.Interop.Vulkan;
 using VulkanFence = TerraFX.Interop.Vulkan.VkFence;
-using VulkanBuffer = TerraFX.Interop.Vulkan.VkBuffer;
 using static TerraFX.Interop.Vulkan.VkStructureType;
 using static TerraFX.Interop.Vulkan.Vulkan;
 using static Veldrid.Vulkan.VulkanUtil;
@@ -20,11 +19,8 @@ namespace Veldrid.Vulkan
 
         private VkInstance _instance;
         private VkPhysicalDevice _physicalDevice;
-        private string _deviceName;
-        private string _vendorName;
-        private GraphicsApiVersion _apiVersion;
-        private string _driverName;
-        private string _driverInfo;
+        private string? _driverName;
+        private string? _driverInfo;
         private VkDeviceMemoryManager _memoryManager;
         private VkPhysicalDeviceProperties _physicalDeviceProperties;
         private VkPhysicalDeviceFeatures _physicalDeviceFeatures;
@@ -38,11 +34,10 @@ namespace Veldrid.Vulkan
         private readonly object _graphicsQueueLock = new();
         private VkDebugReportCallbackEXT _debugCallbackHandle;
         private bool _debugMarkerEnabled;
-        private bool _driverDebug;
-        private vkDebugMarkerSetObjectNameEXT_t _setObjectNameDelegate;
-        private vkCmdDebugMarkerBeginEXT_t _markerBegin;
-        private vkCmdDebugMarkerEndEXT_t _markerEnd;
-        private vkCmdDebugMarkerInsertEXT_t _markerInsert;
+        private vkDebugMarkerSetObjectNameEXT_t? _setObjectNameDelegate;
+        private vkCmdDebugMarkerBeginEXT_t? _markerBegin;
+        private vkCmdDebugMarkerEndEXT_t? _markerEnd;
+        private vkCmdDebugMarkerInsertEXT_t? _markerInsert;
         private readonly ConcurrentDictionary<VkFormat, VkFilter> _filters = new();
         private readonly BackendInfoVulkan _vulkanInfo;
 
@@ -51,9 +46,8 @@ namespace Veldrid.Vulkan
         private VkDescriptorPoolManager _descriptorPoolManager;
         private bool _standardValidationSupported;
         private bool _khronosValidationSupported;
-        private bool _standardClipYDirection;
-        private vkGetBufferMemoryRequirements2_t _getBufferMemoryRequirements2;
-        private vkGetImageMemoryRequirements2_t _getImageMemoryRequirements2;
+        private vkGetBufferMemoryRequirements2_t? _getBufferMemoryRequirements2;
+        private vkGetImageMemoryRequirements2_t? _getImageMemoryRequirements2;
         private vkGetPhysicalDeviceProperties2_t? _getPhysicalDeviceProperties2;
 
         // Staging Resources
@@ -67,26 +61,6 @@ namespace Veldrid.Vulkan
         private readonly Dictionary<VkCommandBuffer, VkTexture> _submittedStagingTextures = new();
         private readonly Dictionary<VkCommandBuffer, VkBuffer> _submittedStagingBuffers = new();
         private readonly Dictionary<VkCommandBuffer, SharedCommandPool> _submittedSharedCommandPools = new();
-
-        public override string DeviceName => _deviceName;
-
-        public override string VendorName => _vendorName;
-
-        public override GraphicsApiVersion ApiVersion => _apiVersion;
-
-        public override GraphicsBackend BackendType => GraphicsBackend.Vulkan;
-
-        public override bool IsUvOriginTopLeft => true;
-
-        public override bool IsDepthRangeZeroToOne => true;
-
-        public override bool IsClipSpaceYInverted => !_standardClipYDirection;
-
-        public override bool IsDriverDebug => _driverDebug;
-
-        public override Swapchain? MainSwapchain => _mainSwapchain;
-
-        public override GraphicsDeviceFeatures Features { get; }
 
         public override bool GetVulkanInfo(out BackendInfoVulkan info)
         {
@@ -102,20 +76,19 @@ namespace Veldrid.Vulkan
         public uint GraphicsQueueIndex => _graphicsQueueIndex;
         public uint PresentQueueIndex => _presentQueueIndex;
         public bool DebugMarkerEnabled => _debugMarkerEnabled;
-        public string DriverName => _driverName;
-        public string DriverInfo => _driverInfo;
+        public string? DriverName => _driverName;
+        public string? DriverInfo => _driverInfo;
         public VkDeviceMemoryManager MemoryManager => _memoryManager;
         public VkDescriptorPoolManager DescriptorPoolManager => _descriptorPoolManager;
-        public vkCmdDebugMarkerBeginEXT_t MarkerBegin => _markerBegin;
-        public vkCmdDebugMarkerEndEXT_t MarkerEnd => _markerEnd;
-        public vkCmdDebugMarkerInsertEXT_t MarkerInsert => _markerInsert;
-        public vkGetBufferMemoryRequirements2_t GetBufferMemoryRequirements2 => _getBufferMemoryRequirements2;
-        public vkGetImageMemoryRequirements2_t GetImageMemoryRequirements2 => _getImageMemoryRequirements2;
+        public vkCmdDebugMarkerBeginEXT_t? MarkerBegin => _markerBegin;
+        public vkCmdDebugMarkerEndEXT_t? MarkerEnd => _markerEnd;
+        public vkCmdDebugMarkerInsertEXT_t? MarkerInsert => _markerInsert;
+        public vkGetBufferMemoryRequirements2_t? GetBufferMemoryRequirements2 => _getBufferMemoryRequirements2;
+        public vkGetImageMemoryRequirements2_t? GetImageMemoryRequirements2 => _getImageMemoryRequirements2;
 
         private readonly object _submittedFencesLock = new();
         private readonly ConcurrentQueue<VulkanFence> _availableSubmissionFences = new();
         private readonly List<FenceSubmissionInfo> _submittedFences = new();
-        private readonly VkSwapchain? _mainSwapchain;
 
         private readonly List<FixedUtf8String> _surfaceExtensions = new();
 
@@ -126,6 +99,11 @@ namespace Veldrid.Vulkan
 
         public VkGraphicsDevice(GraphicsDeviceOptions options, SwapchainDescription? scDesc, VulkanDeviceOptions vkOptions)
         {
+            BackendType = GraphicsBackend.Vulkan;
+            IsUvOriginTopLeft = true;
+            IsDepthRangeZeroToOne = true;
+            IsClipSpaceYInverted = true;
+            
             CreateInstance(options.Debug, vkOptions);
             IsDebug = options.Debug;
 
@@ -142,9 +120,7 @@ namespace Veldrid.Vulkan
                 _device,
                 _physicalDevice,
                 _physicalDeviceProperties.limits.bufferImageGranularity,
-                1024,
-                _getBufferMemoryRequirements2!,
-                _getImageMemoryRequirements2!);
+                1024);
 
             Features = new GraphicsDeviceFeatures(
                 computeShader: true,
@@ -172,10 +148,11 @@ namespace Veldrid.Vulkan
             if (scDesc != null)
             {
                 SwapchainDescription desc = scDesc.Value;
-                _mainSwapchain = new VkSwapchain(this, desc, surface);
+                MainSwapchain = new VkSwapchain(this, desc, surface);
             }
 
-            CreateDescriptorPool();
+            _descriptorPoolManager = new VkDescriptorPoolManager(this);
+
             CreateGraphicsCommandPool();
             for (int i = 0; i < SharedCommandPoolCount; i++)
             {
@@ -186,8 +163,6 @@ namespace Veldrid.Vulkan
 
             PostDeviceCreated();
         }
-
-        public override ResourceFactory ResourceFactory { get; }
 
         private protected override void SubmitCommandsCore(CommandList cl, Fence? fence)
         {
@@ -534,7 +509,7 @@ namespace Veldrid.Vulkan
                 {
                     if (availableInstanceExtensions.Contains(CommonStrings.VK_EXT_DEBUG_REPORT_EXTENSION_NAME))
                     {
-                        _driverDebug = true;
+                        IsDriverDebug = true;
                         debugReportExtensionAvailable = true;
                         instanceExtensions.Add(CommonStrings.VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
                     }
@@ -724,11 +699,14 @@ namespace Veldrid.Vulkan
             vkGetPhysicalDeviceProperties(_physicalDevice, &physicalDeviceProperties);
             _physicalDeviceProperties = physicalDeviceProperties;
 
-            byte* utf8NamePtr = (byte*)physicalDeviceProperties.deviceName;
-            _deviceName = Util.UTF8.GetString(utf8NamePtr, (int)VK_MAX_PHYSICAL_DEVICE_NAME_SIZE).TrimEnd('\0');
+            UniformBufferMinOffsetAlignment = (uint)_physicalDeviceProperties.limits.minUniformBufferOffsetAlignment;
+            StructuredBufferMinOffsetAlignment = (uint)_physicalDeviceProperties.limits.minStorageBufferOffsetAlignment;
 
-            _vendorName = "id:" + _physicalDeviceProperties.vendorID.ToString("x8");
-            _apiVersion = GraphicsApiVersion.Unknown;
+            byte* utf8NamePtr = (byte*)physicalDeviceProperties.deviceName;
+            DeviceName = Util.UTF8.GetString(utf8NamePtr, (int)VK_MAX_PHYSICAL_DEVICE_NAME_SIZE).TrimEnd('\0');
+
+            VendorName = "id:" + _physicalDeviceProperties.vendorID.ToString("x8");
+            ApiVersion = GraphicsApiVersion.Unknown;
             _driverInfo = "version:" + _physicalDeviceProperties.driverVersion.ToString("x8");
 
             VkPhysicalDeviceFeatures physicalDeviceFeatures;
@@ -811,7 +789,7 @@ namespace Veldrid.Vulkan
                     else if (preferStandardClipY && extensionName == "VK_KHR_maintenance1")
                     {
                         requiredDeviceExtensions.Remove(extensionName);
-                        _standardClipYDirection = true;
+                        IsClipSpaceYInverted = false;
                     }
                     else if (extensionName == "VK_KHR_get_memory_requirements2")
                     {
@@ -916,7 +894,7 @@ namespace Veldrid.Vulkan
                     (byte*)driverProps.driverInfo, (int)VK_MAX_DRIVER_INFO_SIZE).TrimEnd('\0');
 
                 VkConformanceVersion conforming = driverProps.conformanceVersion;
-                _apiVersion = new GraphicsApiVersion(conforming.major, conforming.minor, conforming.subminor, conforming.patch);
+                ApiVersion = new GraphicsApiVersion(conforming.major, conforming.minor, conforming.subminor, conforming.patch);
                 _driverName = driverName;
                 _driverInfo = driverInfo;
             }
@@ -996,11 +974,6 @@ namespace Veldrid.Vulkan
                     return;
                 }
             }
-        }
-
-        private void CreateDescriptorPool()
-        {
-            _descriptorPoolManager = new VkDescriptorPoolManager(this);
         }
 
         private void CreateGraphicsCommandPool()
@@ -1097,7 +1070,8 @@ namespace Veldrid.Vulkan
                 vkDestroyFence(_device, fence, null);
             }
 
-            _mainSwapchain?.Dispose();
+            MainSwapchain?.Dispose();
+
             if (_debugCallbackHandle != VkDebugReportCallbackEXT.NULL)
             {
                 using FixedUtf8String debugExtFnName = "vkDestroyDebugReportCallbackEXT";
@@ -1567,12 +1541,6 @@ namespace Veldrid.Vulkan
             texture.TransitionImageLayout(cb, 0, texture.MipLevels, 0, effectiveLayers, VkImageLayout.VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
             pool.EndAndSubmit(cb);
         }
-
-        internal override uint GetUniformBufferMinOffsetAlignmentCore()
-            => (uint)_physicalDeviceProperties.limits.minUniformBufferOffsetAlignment;
-
-        internal override uint GetStructuredBufferMinOffsetAlignmentCore()
-            => (uint)_physicalDeviceProperties.limits.minStorageBufferOffsetAlignment;
 
         internal void TransitionImageLayout(VkTexture texture, VkImageLayout layout)
         {

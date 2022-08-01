@@ -17,10 +17,7 @@ namespace Veldrid.MTL
             = new();
 
         private readonly MTLDevice _device;
-        private readonly string _deviceName;
-        private readonly GraphicsApiVersion _apiVersion;
         private readonly MTLCommandQueue _commandQueue;
-        private readonly MTLSwapchain? _mainSwapchain;
         private readonly bool[] _supportedSampleCounts;
         private BackendInfoMetal _metalInfo;
 
@@ -52,14 +49,24 @@ namespace Veldrid.MTL
             GraphicsDeviceOptions options,
             SwapchainDescription? swapchainDesc)
         {
+            VendorName = "Apple";
+            BackendType = GraphicsBackend.Metal;
+            IsUvOriginTopLeft = true;
+            IsDepthRangeZeroToOne = true;
+            IsClipSpaceYInverted = false;
+            IsDriverDebug = true;
+
             IsDebug = options.Debug;
             _device = MTLDevice.MTLCreateSystemDefaultDevice();
-            _deviceName = _device.name;
+            DeviceName = _device.name;
             MetalFeatures = new MTLFeatureSupport(_device);
+
+            UniformBufferMinOffsetAlignment = MetalFeatures.IsMacOS ? 16u : 256u;
+            StructuredBufferMinOffsetAlignment = 16u;
 
             int major = (int)MetalFeatures.MaxFeatureSet / 10000;
             int minor = (int)MetalFeatures.MaxFeatureSet % 10000;
-            _apiVersion = new GraphicsApiVersion(major, minor, 0, 0);
+            ApiVersion = new GraphicsApiVersion(major, minor, 0, 0);
 
             Features = new GraphicsDeviceFeatures(
                 computeShader: true,
@@ -132,35 +139,13 @@ namespace Veldrid.MTL
             if (swapchainDesc != null)
             {
                 SwapchainDescription desc = swapchainDesc.Value;
-                _mainSwapchain = new MTLSwapchain(this, desc);
+                MainSwapchain = new MTLSwapchain(this, desc);
             }
 
             _metalInfo = new BackendInfoMetal(this);
 
             PostDeviceCreated();
         }
-
-        public override string DeviceName => _deviceName;
-
-        public override string VendorName => "Apple";
-
-        public override GraphicsApiVersion ApiVersion => _apiVersion;
-
-        public override GraphicsBackend BackendType => GraphicsBackend.Metal;
-
-        public override bool IsUvOriginTopLeft => true;
-
-        public override bool IsDepthRangeZeroToOne => true;
-
-        public override bool IsClipSpaceYInverted => false;
-
-        public override bool IsDriverDebug => true;
-
-        public override ResourceFactory ResourceFactory { get; }
-
-        public override Swapchain? MainSwapchain => _mainSwapchain;
-
-        public override GraphicsDeviceFeatures Features { get; }
 
         private void OnCommandBufferCompleted(IntPtr block, MTLCommandBuffer cb)
         {
@@ -433,7 +418,7 @@ namespace Veldrid.MTL
                 _unalignedBufferCopyShader?.Dispose();
                 ObjectiveCRuntime.release(_unalignedBufferCopyPipeline.NativePtr);
             }
-            _mainSwapchain?.Dispose();
+            MainSwapchain?.Dispose();
             ObjectiveCRuntime.release(_commandQueue.NativePtr);
             ObjectiveCRuntime.release(_device.NativePtr);
 
@@ -598,9 +583,6 @@ namespace Veldrid.MTL
                 return _unalignedBufferCopyPipeline;
             }
         }
-
-        internal override uint GetUniformBufferMinOffsetAlignmentCore() => MetalFeatures.IsMacOS ? 16u : 256u;
-        internal override uint GetStructuredBufferMinOffsetAlignmentCore() => 16u;
     }
 
     [AttributeUsage(AttributeTargets.Method)]

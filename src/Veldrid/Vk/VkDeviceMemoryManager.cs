@@ -20,23 +20,16 @@ namespace Veldrid.Vulkan
         private readonly Dictionary<uint, ChunkAllocatorSet> _allocatorsByMemoryTypeUnmapped = new();
         private readonly Dictionary<uint, ChunkAllocatorSet> _allocatorsByMemoryType = new();
 
-        private readonly vkGetBufferMemoryRequirements2_t _getBufferMemoryRequirements2;
-        private readonly vkGetImageMemoryRequirements2_t _getImageMemoryRequirements2;
-
         public VkDeviceMemoryManager(
             VkDevice device,
             VkPhysicalDevice physicalDevice,
             ulong bufferImageGranularity,
-            ulong chunkGranularity,
-            vkGetBufferMemoryRequirements2_t getBufferMemoryRequirements2,
-            vkGetImageMemoryRequirements2_t getImageMemoryRequirements2)
+            ulong chunkGranularity)
         {
             _device = device;
             _physicalDevice = physicalDevice;
             _bufferImageGranularity = bufferImageGranularity;
             _chunkGranularity = chunkGranularity;
-            _getBufferMemoryRequirements2 = getBufferMemoryRequirements2;
-            _getImageMemoryRequirements2 = getImageMemoryRequirements2;
         }
 
         public VkMemoryBlock Allocate(

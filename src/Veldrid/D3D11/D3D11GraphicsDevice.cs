@@ -1,16 +1,14 @@
-﻿using Vortice;
-using Vortice.Direct3D11;
-using Vortice.DXGI;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using Vortice.Mathematics;
+using Vortice.Direct3D11;
 using Vortice.Direct3D11.Debug;
-using VorticeDXGI = Vortice.DXGI.DXGI;
-using VorticeD3D11 = Vortice.Direct3D11.D3D11;
+using Vortice.DXGI;
 using Vortice.DXGI.Debug;
+using Vortice.Mathematics;
+using VorticeD3D11 = Vortice.Direct3D11.D3D11;
+using VorticeDXGI = Vortice.DXGI.DXGI;
 
 namespace Veldrid.D3D11
 {
@@ -18,16 +16,10 @@ namespace Veldrid.D3D11
     {
         private readonly IDXGIAdapter _dxgiAdapter;
         private readonly ID3D11Device _device;
-        private readonly string _deviceName;
-        private readonly string _vendorName;
-        private readonly GraphicsApiVersion _apiVersion;
         private readonly int _deviceId;
         private readonly ID3D11DeviceContext _immediateContext;
-        private readonly D3D11ResourceFactory _d3d11ResourceFactory;
-        private readonly D3D11Swapchain? _mainSwapchain;
         private readonly bool _supportsConcurrentResources;
         private readonly bool _supportsCommandLists;
-        private readonly bool _driverDebug;
         private readonly object _immediateContextLock = new();
         private readonly BackendInfoD3D11 _d3d11Info;
 
@@ -36,24 +28,6 @@ namespace Veldrid.D3D11
 
         private readonly object _stagingResourcesLock = new();
         private readonly List<D3D11Buffer> _availableStagingBuffers = new();
-
-        public override string DeviceName => _deviceName;
-
-        public override string VendorName => _vendorName;
-
-        public override GraphicsApiVersion ApiVersion => _apiVersion;
-
-        public override GraphicsBackend BackendType => GraphicsBackend.Direct3D11;
-
-        public override bool IsUvOriginTopLeft => true;
-
-        public override bool IsDepthRangeZeroToOne => true;
-
-        public override bool IsClipSpaceYInverted => false;
-
-        public override bool IsDriverDebug => _driverDebug;
-
-        public override ResourceFactory ResourceFactory => _d3d11ResourceFactory;
 
         public ID3D11Device Device => _device;
 
@@ -65,10 +39,6 @@ namespace Veldrid.D3D11
 
         public int DeviceId => _deviceId;
 
-        public override Swapchain? MainSwapchain => _mainSwapchain;
-
-        public override GraphicsDeviceFeatures Features { get; }
-
         public D3D11GraphicsDevice(GraphicsDeviceOptions options, D3D11DeviceOptions d3D11DeviceOptions, SwapchainDescription? swapchainDesc)
             : this(MergeOptions(d3D11DeviceOptions, options), swapchainDesc)
         {
@@ -76,6 +46,13 @@ namespace Veldrid.D3D11
 
         public D3D11GraphicsDevice(D3D11DeviceOptions options, SwapchainDescription? swapchainDesc)
         {
+            BackendType = GraphicsBackend.Direct3D11;
+            IsUvOriginTopLeft = true;
+            IsDepthRangeZeroToOne = true;
+            IsClipSpaceYInverted = false;
+            UniformBufferMinOffsetAlignment = 256u;
+            StructuredBufferMinOffsetAlignment = 16;
+
             DeviceCreationFlags flags = (DeviceCreationFlags)options.DeviceCreationFlags;
             IsDebug = (flags & DeviceCreationFlags.Debug) != 0;
 
@@ -134,51 +111,51 @@ namespace Veldrid.D3D11
                 dxgiDevice.GetAdapter(out _dxgiAdapter).CheckError();
 
                 AdapterDescription desc = _dxgiAdapter.Description;
-                _deviceName = desc.Description;
-                _vendorName = "id:" + ((uint)desc.VendorId).ToString("x8");
+                DeviceName = desc.Description;
+                VendorName = "id:" + ((uint)desc.VendorId).ToString("x8");
                 _deviceId = desc.DeviceId;
             }
 
             switch (_device.FeatureLevel)
             {
                 case Vortice.Direct3D.FeatureLevel.Level_10_0:
-                    _apiVersion = new GraphicsApiVersion(10, 0, 0, 0);
+                    ApiVersion = new GraphicsApiVersion(10, 0, 0, 0);
                     break;
 
                 case Vortice.Direct3D.FeatureLevel.Level_10_1:
-                    _apiVersion = new GraphicsApiVersion(10, 1, 0, 0);
+                    ApiVersion = new GraphicsApiVersion(10, 1, 0, 0);
                     break;
 
                 case Vortice.Direct3D.FeatureLevel.Level_11_0:
-                    _apiVersion = new GraphicsApiVersion(11, 0, 0, 0);
+                    ApiVersion = new GraphicsApiVersion(11, 0, 0, 0);
                     break;
 
                 case Vortice.Direct3D.FeatureLevel.Level_11_1:
-                    _apiVersion = new GraphicsApiVersion(11, 1, 0, 0);
+                    ApiVersion = new GraphicsApiVersion(11, 1, 0, 0);
                     break;
 
                 case Vortice.Direct3D.FeatureLevel.Level_12_0:
-                    _apiVersion = new GraphicsApiVersion(12, 0, 0, 0);
+                    ApiVersion = new GraphicsApiVersion(12, 0, 0, 0);
                     break;
 
                 case Vortice.Direct3D.FeatureLevel.Level_12_1:
-                    _apiVersion = new GraphicsApiVersion(12, 1, 0, 0);
+                    ApiVersion = new GraphicsApiVersion(12, 1, 0, 0);
                     break;
 
                 case Vortice.Direct3D.FeatureLevel.Level_12_2:
-                    _apiVersion = new GraphicsApiVersion(12, 2, 0, 0);
+                    ApiVersion = new GraphicsApiVersion(12, 2, 0, 0);
                     break;
             }
 
             if (swapchainDesc != null)
             {
                 SwapchainDescription desc = swapchainDesc.Value;
-                _mainSwapchain = new D3D11Swapchain(this, desc);
+                MainSwapchain = new D3D11Swapchain(this, desc);
             }
             _immediateContext = _device.ImmediateContext;
             _device.CheckThreadingSupport(out _supportsConcurrentResources, out _supportsCommandLists);
 
-            _driverDebug = (flags & DeviceCreationFlags.Debug) != 0;
+            IsDriverDebug = (flags & DeviceCreationFlags.Debug) != 0;
 
             Features = new GraphicsDeviceFeatures(
                 computeShader: true,
@@ -201,7 +178,7 @@ namespace Veldrid.D3D11
                 bufferRangeBinding: _device.FeatureLevel >= Vortice.Direct3D.FeatureLevel.Level_11_1,
                 shaderFloat64: _device.CheckFeatureSupport<FeatureDataDoubles>(Vortice.Direct3D11.Feature.Doubles).DoublePrecisionFloatShaderOps);
 
-            _d3d11ResourceFactory = new D3D11ResourceFactory(this);
+            ResourceFactory = new D3D11ResourceFactory(this);
             _d3d11Info = new BackendInfoD3D11(this);
 
             PostDeviceCreated();
@@ -421,7 +398,7 @@ namespace Veldrid.D3D11
         private protected unsafe override void UpdateBufferCore(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
         {
             D3D11Buffer d3dBuffer = Util.AssertSubtype<DeviceBuffer, D3D11Buffer>(buffer);
-            
+
             BufferUsage usage = buffer.Usage;
             bool isDynamic = (usage & BufferUsage.DynamicReadWrite) == 0;
             bool isStaging = (usage & BufferUsage.StagingReadWrite) == 0;
@@ -630,10 +607,6 @@ namespace Veldrid.D3D11
             Util.AssertSubtype<Fence, D3D11Fence>(fence).Reset();
         }
 
-        internal override uint GetUniformBufferMinOffsetAlignmentCore() => 256u;
-
-        internal override uint GetStructuredBufferMinOffsetAlignmentCore() => 16;
-
         protected override void Dispose(bool disposing)
         {
             base.Dispose(disposing);
@@ -645,11 +618,11 @@ namespace Veldrid.D3D11
             }
             _availableStagingBuffers.Clear();
 
-            _d3d11ResourceFactory.Dispose();
-            _mainSwapchain?.Dispose();
+            ((D3D11ResourceFactory)ResourceFactory).Dispose();
+            MainSwapchain?.Dispose();
             _immediateContext.Dispose();
 
-            if (_driverDebug)
+            if (IsDriverDebug)
             {
                 uint refCount = _device.Release();
                 if (refCount > 0)

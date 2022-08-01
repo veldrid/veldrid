@@ -25,41 +25,41 @@ namespace Veldrid
         /// <summary>
         /// Gets the name of the device.
         /// </summary>
-        public abstract string DeviceName { get; }
+        public string DeviceName { get; protected set; }
 
         /// <summary>
         /// Gets the name of the device vendor.
         /// </summary>
-        public abstract string VendorName { get; }
+        public string VendorName { get; protected set; }
 
         /// <summary>
         /// Gets the API version of the graphics backend.
         /// </summary>
-        public abstract GraphicsApiVersion ApiVersion { get; }
+        public GraphicsApiVersion ApiVersion { get; protected set; }
 
         /// <summary>
         /// Gets a value identifying the specific graphics API used by this instance.
         /// </summary>
-        public abstract GraphicsBackend BackendType { get; }
+        public GraphicsBackend BackendType { get; protected set; }
 
         /// <summary>
         /// Gets a value identifying whether texture coordinates begin in the top left corner of a Texture.
         /// If true, (0, 0) refers to the top-left texel of a Texture. If false, (0, 0) refers to the bottom-left 
         /// texel of a Texture. This property is useful for determining how the output of a Framebuffer should be sampled.
         /// </summary>
-        public abstract bool IsUvOriginTopLeft { get; }
+        public bool IsUvOriginTopLeft { get; protected set; }
 
         /// <summary>
         /// Gets a value indicating whether this device's depth values range from 0 to 1.
         /// If false, depth values instead range from -1 to 1.
         /// </summary>
-        public abstract bool IsDepthRangeZeroToOne { get; }
+        public bool IsDepthRangeZeroToOne { get; protected set; }
 
         /// <summary>
         /// Gets a value indicating whether this device's clip space Y values increase from top (-1) to bottom (1).
         /// If false, clip space Y values instead increase from bottom (-1) to top (1).
         /// </summary>
-        public abstract bool IsClipSpaceYInverted { get; }
+        public bool IsClipSpaceYInverted { get; protected set; }
 
         /// <summary>
         /// Gets whether debug was enabled when creating the device.
@@ -70,24 +70,24 @@ namespace Veldrid
         /// Gets whether driver-level debug is enabled.
         /// Depends on a combination of graphics API, driver and installed SDKs.
         /// </summary>
-        public abstract bool IsDriverDebug { get; }
+        public bool IsDriverDebug { get; protected set; }
 
         /// <summary>
         /// Gets the <see cref="ResourceFactory"/> controlled by this instance.
         /// </summary>
-        public abstract ResourceFactory ResourceFactory { get; }
+        public ResourceFactory ResourceFactory { get; protected set; }
 
         /// <summary>
         /// Retrieves the main <see cref="Swapchain"/> for this device.
         /// This property is only valid if the device was created with a main
         /// <see cref="Swapchain"/>, and will return null otherwise.
         /// </summary>
-        public abstract Swapchain? MainSwapchain { get; }
+        public Swapchain? MainSwapchain { get; protected set; }
 
         /// <summary>
         /// Gets a <see cref="GraphicsDeviceFeatures"/> which enumerates the optional features supported by this instance.
         /// </summary>
-        public abstract GraphicsDeviceFeatures Features { get; }
+        public GraphicsDeviceFeatures Features { get; protected set; }
 
         /// <summary>
         /// Gets or sets whether the main swapchain's <see cref="SwapBuffers()"/> should be synchronized to the window system's
@@ -116,17 +116,14 @@ namespace Veldrid
         /// multiple of this value. When binding a <see cref="ResourceSet"/> to a <see cref="CommandList"/> with an overload
         /// accepting dynamic offsets, each offset must be a multiple of this value.
         /// </summary>
-        public uint UniformBufferMinOffsetAlignment => GetUniformBufferMinOffsetAlignmentCore();
+        public uint UniformBufferMinOffsetAlignment { get; protected set; }
 
         /// <summary>
         /// The required alignment, in bytes, for structured buffer offsets. <see cref="DeviceBufferRange.Offset"/> must be a
         /// multiple of this value. When binding a <see cref="ResourceSet"/> to a <see cref="CommandList"/> with an overload
         /// accepting dynamic offsets, each offset must be a multiple of this value.
         /// </summary>
-        public uint StructuredBufferMinOffsetAlignment => GetStructuredBufferMinOffsetAlignmentCore();
-
-        internal abstract uint GetUniformBufferMinOffsetAlignmentCore();
-        internal abstract uint GetStructuredBufferMinOffsetAlignmentCore();
+        public uint StructuredBufferMinOffsetAlignment { get; protected set; }
 
         /// <summary>
         /// Submits the given <see cref="CommandList"/> for execution by this device.

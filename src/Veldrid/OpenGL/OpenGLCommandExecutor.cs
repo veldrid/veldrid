@@ -1137,20 +1137,20 @@ namespace Veldrid.OpenGL
                     (IntPtr)bufferOffsetInBytes,
                     sizeInBytes,
                     dataPtr.ToPointer());
-                CheckLastError();
             }
             else
             {
                 BufferTarget bufferTarget = BufferTarget.CopyWriteBuffer;
                 glBindBuffer(bufferTarget, glBuffer.Buffer);
                 CheckLastError();
+
                 glBufferSubData(
                     bufferTarget,
                     (IntPtr)bufferOffsetInBytes,
                     (UIntPtr)sizeInBytes,
                     dataPtr.ToPointer());
-                CheckLastError();
             }
+            CheckLastError();
         }
 
         public void UpdateTexture(

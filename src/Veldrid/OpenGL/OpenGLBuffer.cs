@@ -54,47 +54,56 @@ namespace Veldrid.OpenGL
             }
         }
 
-        public void CreateGLResources(IntPtr initialData)
+        private static BufferStorageMask GetStorageMask(BufferUsage usage)
         {
-            Debug.Assert(!Created);
+            BufferStorageMask storageMask =
+                BufferStorageMask.DynamicStorage |
+                BufferStorageMask.ClientStorage;
 
-            BufferStorageMask storageMask = BufferStorageMask.DynamicStorage;
-
-            if ((Usage & BufferUsage.StagingRead) != 0 ||
-                (Usage & BufferUsage.DynamicRead) != 0)
+            if ((usage & BufferUsage.StagingRead) != 0 ||
+                (usage & BufferUsage.DynamicRead) != 0)
             {
+                storageMask &= ~BufferStorageMask.ClientStorage;
                 storageMask |= BufferStorageMask.MapRead;
-                storageMask |= BufferStorageMask.ClientStorage;
             }
 
-            if ((Usage & BufferUsage.StagingWrite) != 0 ||
-                (Usage & BufferUsage.DynamicWrite) != 0)
+            if ((usage & BufferUsage.StagingWrite) != 0 ||
+                (usage & BufferUsage.DynamicWrite) != 0)
             {
+                storageMask &= ~BufferStorageMask.ClientStorage;
                 storageMask |= BufferStorageMask.MapWrite;
-                storageMask |= BufferStorageMask.ClientStorage;
             }
 
-            BufferUsageHint hint;
-            if ((Usage & BufferUsage.StagingRead) != 0)
+            return storageMask;
+        }
+
+        private static BufferUsageHint GetUsageHint(BufferUsage usage)
+        {
+            if ((usage & BufferUsage.StagingRead) != 0)
             {
-                hint = BufferUsageHint.StreamRead;
+                return BufferUsageHint.StreamRead;
             }
-            else if ((Usage & BufferUsage.StagingWrite) != 0)
+            else if ((usage & BufferUsage.StagingWrite) != 0)
             {
-                hint = BufferUsageHint.StreamCopy;
+                return BufferUsageHint.StreamCopy;
             }
-            else if ((Usage & BufferUsage.DynamicRead) != 0)
+            else if ((usage & BufferUsage.DynamicRead) != 0)
             {
-                hint = BufferUsageHint.DynamicRead;
+                return BufferUsageHint.DynamicRead;
             }
-            else if ((Usage & BufferUsage.DynamicWrite) != 0)
+            else if ((usage & BufferUsage.DynamicWrite) != 0)
             {
-                hint = BufferUsageHint.DynamicDraw;
+                return BufferUsageHint.DynamicDraw;
             }
             else
             {
-                hint = BufferUsageHint.StaticDraw;
+                return BufferUsageHint.StaticDraw;
             }
+        }
+
+        public void CreateGLResources(IntPtr initialData)
+        {
+            Debug.Assert(!Created);
 
             if (_gd.Extensions.ARB_DirectStateAccess)
             {
@@ -105,14 +114,16 @@ namespace Veldrid.OpenGL
 
                 if (_gd.Extensions.ARB_buffer_storage)
                 {
+                    BufferStorageMask mask = GetStorageMask(Usage);
                     glNamedBufferStorage(
                         _buffer,
                         SizeInBytes,
                         (void*)initialData,
-                        storageMask);
+                        mask);
                 }
                 else
                 {
+                    BufferUsageHint hint = GetUsageHint(Usage);
                     glNamedBufferData(
                         _buffer,
                         SizeInBytes,
@@ -128,21 +139,23 @@ namespace Veldrid.OpenGL
                 CheckLastError();
                 _buffer = buffer;
 
-                glBindBuffer(BufferTarget.CopyReadBuffer, _buffer);
+                glBindBuffer(BufferTarget.CopyWriteBuffer, _buffer);
                 CheckLastError();
 
                 if (_gd.Extensions.ARB_buffer_storage)
                 {
+                    BufferStorageMask mask = GetStorageMask(Usage);
                     glBufferStorage(
-                        BufferTarget.CopyReadBuffer,
+                        BufferTarget.CopyWriteBuffer,
                         SizeInBytes,
                         (void*)initialData,
-                        storageMask);
+                        mask);
                 }
                 else
                 {
+                    BufferUsageHint hint = GetUsageHint(Usage);
                     glBufferData(
-                        BufferTarget.CopyReadBuffer,
+                        BufferTarget.CopyWriteBuffer,
                         SizeInBytes,
                         (void*)initialData,
                         hint);

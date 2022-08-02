@@ -1123,27 +1123,66 @@ namespace Veldrid.OpenGL
             OpenGLBuffer glBuffer = Util.AssertSubtype<DeviceBuffer, OpenGLBuffer>(buffer);
             glBuffer.EnsureResourcesCreated();
 
-            if (_extensions.ARB_DirectStateAccess)
+            if (glBuffer.CanBufferSubData)
             {
-                glNamedBufferSubData(
-                    glBuffer.Buffer,
-                    (IntPtr)bufferOffsetInBytes,
-                    sizeInBytes,
-                    dataPtr.ToPointer());
+                if (_extensions.ARB_DirectStateAccess)
+                {
+                    glNamedBufferSubData(
+                        glBuffer.Buffer,
+                        (IntPtr)bufferOffsetInBytes,
+                        sizeInBytes,
+                        dataPtr.ToPointer());
+                }
+                else
+                {
+                    BufferTarget bufferTarget = BufferTarget.CopyWriteBuffer;
+                    glBindBuffer(bufferTarget, glBuffer.Buffer);
+                    CheckLastError();
+
+                    glBufferSubData(
+                        bufferTarget,
+                        (IntPtr)bufferOffsetInBytes,
+                        (UIntPtr)sizeInBytes,
+                        dataPtr.ToPointer());
+                }
+                CheckLastError();
             }
             else
             {
-                BufferTarget bufferTarget = BufferTarget.CopyWriteBuffer;
-                glBindBuffer(bufferTarget, glBuffer.Buffer);
+                uint tmpBuffer = 0;
+                if (_extensions.ARB_DirectStateAccess)
+                {
+                    glCreateBuffers(1, &tmpBuffer);
+                    CheckLastError();
+
+                    glNamedBufferData(
+                        tmpBuffer,
+                        sizeInBytes,
+                        dataPtr.ToPointer(),
+                        BufferUsageHint.StreamCopy);
+                }
+                else
+                {
+                    glGenBuffers(1, &tmpBuffer);
+                    CheckLastError();
+
+                    BufferTarget bufferTarget = BufferTarget.CopyWriteBuffer;
+                    glBindBuffer(bufferTarget, tmpBuffer);
+                    CheckLastError();
+
+                    glBufferData(
+                        bufferTarget,
+                        sizeInBytes,
+                        dataPtr.ToPointer(),
+                        BufferUsageHint.StreamCopy);
+                }
                 CheckLastError();
 
-                glBufferSubData(
-                    bufferTarget,
-                    (IntPtr)bufferOffsetInBytes,
-                    (UIntPtr)sizeInBytes,
-                    dataPtr.ToPointer());
+                CopyBufferCore(tmpBuffer, 0, glBuffer.Buffer, bufferOffsetInBytes, sizeInBytes);
+
+                glDeleteBuffers(1, &tmpBuffer);
+                CheckLastError();
             }
-            CheckLastError();
         }
 
         public void UpdateTexture(
@@ -1450,21 +1489,26 @@ namespace Veldrid.OpenGL
             srcGLBuffer.EnsureResourcesCreated();
             dstGLBuffer.EnsureResourcesCreated();
 
+            CopyBufferCore(srcGLBuffer.Buffer, sourceOffset, dstGLBuffer.Buffer, destinationOffset, sizeInBytes);
+        }
+
+        private void CopyBufferCore(uint srcBuffer, uint sourceOffset, uint dstBuffer, uint destinationOffset, uint sizeInBytes)
+        {
             if (_extensions.ARB_DirectStateAccess)
             {
                 glCopyNamedBufferSubData(
-                    srcGLBuffer.Buffer,
-                    dstGLBuffer.Buffer,
+                    srcBuffer,
+                    dstBuffer,
                     (IntPtr)sourceOffset,
                     (IntPtr)destinationOffset,
                     sizeInBytes);
             }
             else
             {
-                glBindBuffer(BufferTarget.CopyReadBuffer, srcGLBuffer.Buffer);
+                glBindBuffer(BufferTarget.CopyReadBuffer, srcBuffer);
                 CheckLastError();
 
-                glBindBuffer(BufferTarget.CopyWriteBuffer, dstGLBuffer.Buffer);
+                glBindBuffer(BufferTarget.CopyWriteBuffer, dstBuffer);
                 CheckLastError();
 
                 glCopyBufferSubData(

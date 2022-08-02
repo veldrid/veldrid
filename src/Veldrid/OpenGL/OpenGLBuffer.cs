@@ -23,6 +23,7 @@ namespace Veldrid.OpenGL
         public uint Buffer => _buffer;
 
         public bool Created { get; private set; }
+        public bool CanBufferSubData { get; private set; }
 
         public override bool IsDisposed => _disposeRequested;
 
@@ -54,30 +55,30 @@ namespace Veldrid.OpenGL
             }
         }
 
-        private static BufferStorageMask GetStorageMask(BufferUsage usage)
+        public static BufferStorageMask GetStorageMask(BufferUsage usage)
         {
-            BufferStorageMask storageMask =
-                BufferStorageMask.DynamicStorage |
-                BufferStorageMask.ClientStorage;
+            BufferStorageMask storageMask = 0;
 
             if ((usage & BufferUsage.StagingRead) != 0 ||
                 (usage & BufferUsage.DynamicRead) != 0)
             {
-                storageMask &= ~BufferStorageMask.ClientStorage;
                 storageMask |= BufferStorageMask.MapRead;
+                storageMask |= BufferStorageMask.ClientStorage;
+                storageMask |= BufferStorageMask.DynamicStorage;
             }
 
             if ((usage & BufferUsage.StagingWrite) != 0 ||
                 (usage & BufferUsage.DynamicWrite) != 0)
             {
-                storageMask &= ~BufferStorageMask.ClientStorage;
                 storageMask |= BufferStorageMask.MapWrite;
+                storageMask |= BufferStorageMask.ClientStorage;
+                storageMask |= BufferStorageMask.DynamicStorage;
             }
 
             return storageMask;
         }
 
-        private static BufferUsageHint GetUsageHint(BufferUsage usage)
+        public static BufferUsageHint GetUsageHint(BufferUsage usage)
         {
             if ((usage & BufferUsage.StagingRead) != 0)
             {
@@ -105,6 +106,8 @@ namespace Veldrid.OpenGL
         {
             Debug.Assert(!Created);
 
+            BufferStorageMask mask = GetStorageMask(Usage);
+
             if (_gd.Extensions.ARB_DirectStateAccess)
             {
                 uint buffer;
@@ -112,14 +115,14 @@ namespace Veldrid.OpenGL
                 CheckLastError();
                 _buffer = buffer;
 
-                if (_gd.Extensions.ARB_buffer_storage)
+                if (mask != 0 && _gd.Extensions.ARB_buffer_storage)
                 {
-                    BufferStorageMask mask = GetStorageMask(Usage);
                     glNamedBufferStorage(
                         _buffer,
                         SizeInBytes,
                         (void*)initialData,
                         mask);
+                    CanBufferSubData = (mask & BufferStorageMask.DynamicStorage) != 0;
                 }
                 else
                 {
@@ -129,6 +132,7 @@ namespace Veldrid.OpenGL
                         SizeInBytes,
                         (void*)initialData,
                         hint);
+                    CanBufferSubData = true;
                 }
                 CheckLastError();
             }
@@ -142,14 +146,14 @@ namespace Veldrid.OpenGL
                 glBindBuffer(BufferTarget.CopyWriteBuffer, _buffer);
                 CheckLastError();
 
-                if (_gd.Extensions.ARB_buffer_storage)
+                if (mask != 0 && _gd.Extensions.ARB_buffer_storage)
                 {
-                    BufferStorageMask mask = GetStorageMask(Usage);
                     glBufferStorage(
                         BufferTarget.CopyWriteBuffer,
                         SizeInBytes,
                         (void*)initialData,
                         mask);
+                    CanBufferSubData = (mask & BufferStorageMask.DynamicStorage) != 0;
                 }
                 else
                 {
@@ -159,6 +163,7 @@ namespace Veldrid.OpenGL
                         SizeInBytes,
                         (void*)initialData,
                         hint);
+                    CanBufferSubData = true;
                 }
                 CheckLastError();
             }

@@ -1179,6 +1179,21 @@ namespace Veldrid.OpenGL
                         }
                     }
                     while (hasItem);
+
+                    if (_gd.IsDebug)
+                    {
+                        try
+                        {
+                            VerifyLastError();
+                        }
+                        catch (Exception e)
+                        {
+                            lock (_exceptions)
+                            {
+                                _exceptions.Add(e);
+                            }
+                        }
+                    }
                 }
             }
 
@@ -1217,161 +1232,161 @@ namespace Veldrid.OpenGL
                     switch (workItem.Type)
                     {
                         case WorkItemType.ExecuteList:
-                            {
-                                OpenGLCommandEntryList? list = Unsafe.As<OpenGLCommandEntryList>(workItem.Object0);
-                                OpenGLFence? fence = Unsafe.As<OpenGLFence>(workItem.Object1);
-                                Debug.Assert(list != null);
+                        {
+                            OpenGLCommandEntryList? list = Unsafe.As<OpenGLCommandEntryList>(workItem.Object0);
+                            OpenGLFence? fence = Unsafe.As<OpenGLFence>(workItem.Object1);
+                            Debug.Assert(list != null);
 
-                                try
+                            try
+                            {
+                                list.ExecuteAll(_gd._commandExecutor, fence);
+                            }
+                            finally
+                            {
+                                if (!_gd.CheckCommandListDisposal(list.Parent))
                                 {
-                                    list.ExecuteAll(_gd._commandExecutor, fence);
-                                }
-                                finally
-                                {
-                                    if (!_gd.CheckCommandListDisposal(list.Parent))
-                                    {
-                                        list.Parent.OnCompleted(list);
-                                    }
+                                    list.Parent.OnCompleted(list);
                                 }
                             }
-                            break;
+                        }
+                        break;
 
                         case WorkItemType.Map:
-                            {
-                                MappableResource? resourceToMap = Unsafe.As<MappableResource>(workItem.Object0);
-                                eventAfterExecute = Unsafe.As<ManualResetEvent>(workItem.Object1);
-                                Debug.Assert(resourceToMap != null);
-                                Debug.Assert(eventAfterExecute != null);
+                        {
+                            MappableResource? resourceToMap = Unsafe.As<MappableResource>(workItem.Object0);
+                            eventAfterExecute = Unsafe.As<ManualResetEvent>(workItem.Object1);
+                            Debug.Assert(resourceToMap != null);
+                            Debug.Assert(eventAfterExecute != null);
 
-                                MapParams* resultPtr = (MapParams*)Util.UnpackIntPtr(workItem.UInt0, workItem.UInt1);
+                            MapParams* resultPtr = (MapParams*)Util.UnpackIntPtr(workItem.UInt0, workItem.UInt1);
 
-                                ExecuteMapResource(
-                                    resourceToMap,
-                                    resultPtr);
-                            }
-                            break;
+                            ExecuteMapResource(
+                                resourceToMap,
+                                resultPtr);
+                        }
+                        break;
 
                         case WorkItemType.Unmap:
-                            {
-                                MappableResource? resourceToMap = Unsafe.As<MappableResource>(workItem.Object0);
-                                Debug.Assert(resourceToMap != null);
+                        {
+                            MappableResource? resourceToMap = Unsafe.As<MappableResource>(workItem.Object0);
+                            Debug.Assert(resourceToMap != null);
 
-                                uint subresource = workItem.UInt0;
+                            uint subresource = workItem.UInt0;
 
-                                ExecuteUnmapResource(resourceToMap, subresource);
-                            }
-                            break;
+                            ExecuteUnmapResource(resourceToMap, subresource);
+                        }
+                        break;
 
                         case WorkItemType.UpdateBuffer:
-                            {
-                                DeviceBuffer? updateBuffer = Unsafe.As<DeviceBuffer>(workItem.Object0);
-                                eventAfterExecute = Unsafe.As<ManualResetEvent>(workItem.Object1);
-                                Debug.Assert(updateBuffer != null);
-                                Debug.Assert(eventAfterExecute != null);
+                        {
+                            DeviceBuffer? updateBuffer = Unsafe.As<DeviceBuffer>(workItem.Object0);
+                            eventAfterExecute = Unsafe.As<ManualResetEvent>(workItem.Object1);
+                            Debug.Assert(updateBuffer != null);
+                            Debug.Assert(eventAfterExecute != null);
 
-                                UpdateBufferArgs* args = (UpdateBufferArgs*)Util.UnpackIntPtr(workItem.UInt0, workItem.UInt1);
+                            UpdateBufferArgs* args = (UpdateBufferArgs*)Util.UnpackIntPtr(workItem.UInt0, workItem.UInt1);
 
-                                _gd._commandExecutor.UpdateBuffer(
-                                    updateBuffer,
-                                    args->BufferOffsetInBytes,
-                                    args->Data,
-                                    args->SizeInBytes);
-                            }
-                            break;
+                            _gd._commandExecutor.UpdateBuffer(
+                                updateBuffer,
+                                args->BufferOffsetInBytes,
+                                args->Data,
+                                args->SizeInBytes);
+                        }
+                        break;
 
                         case WorkItemType.CreateBuffer:
-                            {
-                                DeviceBuffer? updateBuffer = Unsafe.As<DeviceBuffer>(workItem.Object0);
-                                eventAfterExecute = Unsafe.As<ManualResetEvent>(workItem.Object1);
-                                Debug.Assert(updateBuffer != null);
-                                Debug.Assert(eventAfterExecute != null);
+                        {
+                            DeviceBuffer? updateBuffer = Unsafe.As<DeviceBuffer>(workItem.Object0);
+                            eventAfterExecute = Unsafe.As<ManualResetEvent>(workItem.Object1);
+                            Debug.Assert(updateBuffer != null);
+                            Debug.Assert(eventAfterExecute != null);
 
-                                IntPtr initialData = Util.UnpackIntPtr(workItem.UInt0, workItem.UInt1);
+                            IntPtr initialData = Util.UnpackIntPtr(workItem.UInt0, workItem.UInt1);
 
-                                OpenGLBuffer glBuffer = Util.AssertSubtype<DeviceBuffer, OpenGLBuffer>(updateBuffer);
-                                glBuffer.CreateGLResources(initialData);
-                            }
-                            break;
+                            OpenGLBuffer glBuffer = Util.AssertSubtype<DeviceBuffer, OpenGLBuffer>(updateBuffer);
+                            glBuffer.CreateGLResources(initialData);
+                        }
+                        break;
 
                         case WorkItemType.UpdateTexture:
-                            {
-                                Texture? texture = Unsafe.As<Texture>(workItem.Object0);
-                                eventAfterExecute = Unsafe.As<ManualResetEvent>(workItem.Object1);
-                                Debug.Assert(texture != null);
-                                Debug.Assert(eventAfterExecute != null);
+                        {
+                            Texture? texture = Unsafe.As<Texture>(workItem.Object0);
+                            eventAfterExecute = Unsafe.As<ManualResetEvent>(workItem.Object1);
+                            Debug.Assert(texture != null);
+                            Debug.Assert(eventAfterExecute != null);
 
-                                UpdateTextureArgs* args = (UpdateTextureArgs*)Util.UnpackIntPtr(workItem.UInt0, workItem.UInt1);
+                            UpdateTextureArgs* args = (UpdateTextureArgs*)Util.UnpackIntPtr(workItem.UInt0, workItem.UInt1);
 
-                                _gd._commandExecutor.UpdateTexture(
-                                    texture, args->Data, args->X, args->Y, args->Z,
-                                    args->Width, args->Height, args->Depth, args->MipLevel, args->ArrayLayer);
-                            }
-                            break;
+                            _gd._commandExecutor.UpdateTexture(
+                                texture, args->Data, args->X, args->Y, args->Z,
+                                args->Width, args->Height, args->Depth, args->MipLevel, args->ArrayLayer);
+                        }
+                        break;
 
                         case WorkItemType.GenericAction:
-                            {
-                                Action? action = Unsafe.As<Action>(workItem.Object0);
-                                Debug.Assert(action != null);
+                        {
+                            Action? action = Unsafe.As<Action>(workItem.Object0);
+                            Debug.Assert(action != null);
 
-                                action.Invoke();
-                            }
-                            break;
+                            action.Invoke();
+                        }
+                        break;
 
                         case WorkItemType.TerminateAction:
+                        {
+                            // Check if the OpenGL context has already been destroyed by the OS. If so, just exit out.
+                            uint error = glGetError();
+                            if (error != (uint)ErrorCode.InvalidOperation)
                             {
-                                // Check if the OpenGL context has already been destroyed by the OS. If so, just exit out.
-                                uint error = glGetError();
-                                if (error != (uint)ErrorCode.InvalidOperation)
-                                {
-                                    _makeCurrent(_gd._glContext);
+                                _makeCurrent(_gd._glContext);
 
-                                    _gd.FlushDisposables();
-                                    _gd._deleteContext(_gd._glContext);
-                                }
-                                _gd.StagingMemoryPool.Dispose();
-                                _terminated = true;
+                                _gd.FlushDisposables();
+                                _gd._deleteContext(_gd._glContext);
                             }
-                            break;
+                            _gd.StagingMemoryPool.Dispose();
+                            _terminated = true;
+                        }
+                        break;
 
                         case WorkItemType.SetSyncToVerticalBlank:
-                            {
-                                bool value = workItem.UInt0 == 1;
-                                _gd._setSyncToVBlank(value);
-                            }
-                            break;
+                        {
+                            bool value = workItem.UInt0 == 1;
+                            _gd._setSyncToVBlank(value);
+                        }
+                        break;
 
                         case WorkItemType.SwapBuffers:
-                            {
-                                _gd._swapBuffers();
-                                _gd.FlushDisposables();
-                            }
-                            break;
+                        {
+                            _gd._swapBuffers();
+                            _gd.FlushDisposables();
+                        }
+                        break;
 
                         case WorkItemType.WaitForIdle:
-                            {
-                                eventAfterExecute = Unsafe.As<ManualResetEvent>(workItem.Object0);
-                                Debug.Assert(eventAfterExecute != null);
+                        {
+                            eventAfterExecute = Unsafe.As<ManualResetEvent>(workItem.Object0);
+                            Debug.Assert(eventAfterExecute != null);
 
-                                _gd.FlushDisposables();
-                                bool isFullFlush = workItem.UInt0 != 0;
-                                if (isFullFlush)
-                                {
-                                    glFlush();
-                                    glFinish();
-                                }
+                            _gd.FlushDisposables();
+                            bool isFullFlush = workItem.UInt0 != 0;
+                            if (isFullFlush)
+                            {
+                                glFlush();
+                                glFinish();
                             }
-                            break;
+                        }
+                        break;
 
                         case WorkItemType.InitializeResource:
-                            {
-                                OpenGLDeferredResource? resource = Unsafe.As<OpenGLDeferredResource>(workItem.Object0);
-                                eventAfterExecute = Unsafe.As<ManualResetEvent>(workItem.Object1);
-                                Debug.Assert(resource != null);
-                                Debug.Assert(eventAfterExecute != null);
+                        {
+                            OpenGLDeferredResource? resource = Unsafe.As<OpenGLDeferredResource>(workItem.Object0);
+                            eventAfterExecute = Unsafe.As<ManualResetEvent>(workItem.Object1);
+                            Debug.Assert(resource != null);
+                            Debug.Assert(eventAfterExecute != null);
 
-                                resource.EnsureResourcesCreated();
-                            }
-                            break;
+                            resource.EnsureResourcesCreated();
+                        }
+                        break;
 
                         default:
                             throw new InvalidOperationException("Invalid command type: " + workItem.Type);

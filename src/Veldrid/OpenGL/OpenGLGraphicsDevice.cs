@@ -32,7 +32,6 @@ namespace Veldrid.OpenGL
         private OpenGLCommandExecutor _commandExecutor;
         private DebugProc _debugMessageCallback;
         private OpenGLExtensions _extensions;
-        private bool _isDepthRangeZeroToOne;
         private BackendInfoOpenGL _openglInfo;
 
         private TextureSampleCount _maxColorTextureSamples;
@@ -1091,7 +1090,7 @@ namespace Veldrid.OpenGL
                 if (severity != DebugSeverity.DebugSeverityNotification)
                 {
                     string messageString = Marshal.PtrToStringAnsi((IntPtr)message, (int)length);
-                    Debug.WriteLine($"GL {source}:, {type}, {id}. {severity}: {messageString}");
+                    Debug.WriteLine($"GL {source}, {type}, {severity}, {id}: {messageString}");
                 }
             }
         }

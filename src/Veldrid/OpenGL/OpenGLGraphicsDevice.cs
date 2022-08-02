@@ -231,13 +231,13 @@ namespace Veldrid.OpenGL
             if (BackendType == GraphicsBackend.OpenGL)
             {
                 glGetIntegerv(GetPName.MaxColorTextureSamples, &maxColorTextureSamples);
-                CheckLastError();
             }
             else
             {
                 glGetIntegerv(GetPName.MaxSamples, &maxColorTextureSamples);
-                CheckLastError();
             }
+            CheckLastError();
+
             if (maxColorTextureSamples >= 32)
             {
                 _maxColorTextureSamples = TextureSampleCount.Count32;
@@ -359,18 +359,18 @@ namespace Veldrid.OpenGL
             {
                 glBindFramebuffer(FramebufferTarget.ReadFramebuffer, copySrc);
                 CheckLastError();
+
                 glReadPixels(
                     0, 0, 1, 1,
                     GLPixelFormat.Rgba,
                     GLPixelType.Float,
                     data);
-                CheckLastError();
             }
             else
             {
                 glGetTexImage(TextureTarget.Texture2D, 0, GLPixelFormat.Rgba, GLPixelType.Float, data);
-                CheckLastError();
             }
+            CheckLastError();
 
             glDeleteFramebuffers(1, &copySrcFb);
             glDeleteTextures(1, &copySrc);
@@ -1519,7 +1519,6 @@ namespace Veldrid.OpenGL
                                                 texture.Texture,
                                                 (int)mipLevel,
                                                 (int)curLayer);
-                                            CheckLastError();
                                         }
                                         else if (texture.Type == TextureType.Texture1D)
                                         {
@@ -1529,7 +1528,6 @@ namespace Veldrid.OpenGL
                                                 TextureTarget.Texture1D,
                                                 texture.Texture,
                                                 (int)mipLevel);
-                                            CheckLastError();
                                         }
                                         else
                                         {
@@ -1539,8 +1537,8 @@ namespace Veldrid.OpenGL
                                                 TextureTarget.Texture2D,
                                                 texture.Texture,
                                                 (int)mipLevel);
-                                            CheckLastError();
                                         }
+                                        CheckLastError();
 
                                         glReadPixels(
                                             0, 0,
@@ -1549,6 +1547,7 @@ namespace Veldrid.OpenGL
                                             texture.GLPixelType,
                                             (byte*)block.Data + curOffset);
                                         CheckLastError();
+
                                         glDeleteFramebuffers(1, &readFB);
                                         CheckLastError();
                                     }
@@ -1573,7 +1572,6 @@ namespace Veldrid.OpenGL
                                             (int)mipLevel,
                                             fullBlock.SizeInBytes,
                                             fullBlock.Data);
-                                        CheckLastError();
                                     }
                                     else
                                     {
@@ -1581,8 +1579,9 @@ namespace Veldrid.OpenGL
                                         CheckLastError();
 
                                         glGetCompressedTexImage(texture.TextureTarget, (int)mipLevel, fullBlock.Data);
-                                        CheckLastError();
                                     }
+                                    CheckLastError();
+
                                     byte* sliceStart = (byte*)fullBlock.Data + (arrayLayer * subresourceSize) + result->OffsetInBytes;
                                     Buffer.MemoryCopy(sliceStart, block.Data, subresourceSize, result->SizeInBytes);
                                     _gd._stagingMemoryPool.Free(fullBlock);
@@ -1596,7 +1595,6 @@ namespace Veldrid.OpenGL
                                             (int)mipLevel,
                                             block.SizeInBytes,
                                             block.Data);
-                                        CheckLastError();
                                     }
                                     else
                                     {
@@ -1604,8 +1602,8 @@ namespace Veldrid.OpenGL
                                         CheckLastError();
 
                                         glGetCompressedTexImage(texture.TextureTarget, (int)mipLevel, block.Data);
-                                        CheckLastError();
                                     }
+                                    CheckLastError();
                                 }
                             }
                         }

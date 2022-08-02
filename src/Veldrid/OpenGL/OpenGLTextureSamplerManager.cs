@@ -39,14 +39,14 @@ namespace Veldrid.OpenGL
                 if (_dsaAvailable)
                 {
                     glBindTextureUnit(textureUnit, textureID);
-                    CheckLastError();
                 }
                 else
                 {
                     SetActiveTextureUnit(textureUnit);
+
                     glBindTexture(textureView.TextureTarget, textureID);
-                    CheckLastError();
                 }
+                CheckLastError();
 
                 EnsureSamplerMipmapState(textureUnit, textureView.MipLevels > 1);
                 _textureUnitTextures[textureUnit] = textureView;
@@ -57,6 +57,7 @@ namespace Veldrid.OpenGL
         {
             _textureUnitTextures[_lastTextureUnit] = null;
             SetActiveTextureUnit(_lastTextureUnit);
+
             glBindTexture(target, texture);
             CheckLastError();
         }

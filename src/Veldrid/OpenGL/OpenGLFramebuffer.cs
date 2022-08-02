@@ -78,7 +78,6 @@ namespace Veldrid.OpenGL
                             textureTarget,
                             glTex.Texture,
                             (int)colorAttachment.MipLevel);
-                        CheckLastError();
                     }
                     else
                     {
@@ -88,8 +87,8 @@ namespace Veldrid.OpenGL
                             glTex.Texture,
                             (int)colorAttachment.MipLevel,
                             (int)colorAttachment.ArrayLayer);
-                        CheckLastError();
                     }
+                    CheckLastError();
                 }
 
                 DrawBuffersEnum* bufs = stackalloc DrawBuffersEnum[(int)colorCount];
@@ -130,7 +129,6 @@ namespace Veldrid.OpenGL
                         depthTarget,
                         depthTextureID,
                         (int)DepthTarget.Value.MipLevel);
-                    CheckLastError();
                 }
                 else
                 {
@@ -140,8 +138,8 @@ namespace Veldrid.OpenGL
                         glDepthTex.Texture,
                         (int)DepthTarget.Value.MipLevel,
                         (int)DepthTarget.Value.ArrayLayer);
-                    CheckLastError();
                 }
+                CheckLastError();
 
             }
 

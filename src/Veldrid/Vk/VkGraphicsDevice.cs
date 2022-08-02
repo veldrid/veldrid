@@ -674,7 +674,7 @@ namespace Veldrid.Vulkan
                 throw new VeldridException("A Vulkan validation error was encountered: " + fullMessage);
             }
 
-            Console.WriteLine(fullMessage);
+            Debug.WriteLine(fullMessage);
             return 0;
         }
 

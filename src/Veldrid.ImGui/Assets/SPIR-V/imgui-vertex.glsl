@@ -7,7 +7,7 @@ layout (location = 0) in vec2 vsin_position;
 layout (location = 1) in vec2 vsin_texCoord;
 layout (location = 2) in vec4 vsin_color;
 
-layout (binding = 0) uniform Projection
+layout (binding = 0) uniform ProjectionMatrixBuffer
 {
     mat4 projection;
 };

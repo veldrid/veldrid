@@ -19,11 +19,8 @@ namespace Veldrid.Vulkan
         private VkExtent2D _scExtent;
         private FramebufferAttachment[][] _scColorTextures = Array.Empty<FramebufferAttachment[]>();
 
-        private uint _desiredWidth;
-        private uint _desiredHeight;
         private bool _destroyed;
         private string? _name;
-        private OutputDescription _outputDescription;
 
         public override TerraFX.Interop.Vulkan.VkFramebuffer CurrentFramebuffer => _scFramebuffers[(int)_currentImageIndex]!.CurrentFramebuffer;
 
@@ -31,17 +28,10 @@ namespace Veldrid.Vulkan
         public override VkRenderPass RenderPassNoClear_Load => _scFramebuffers[0]!.RenderPassNoClear_Load;
         public override VkRenderPass RenderPassClear => _scFramebuffers[0]!.RenderPassClear;
 
-        public override ReadOnlySpan<FramebufferAttachment> ColorTargets => _scColorTextures[(int)_currentImageIndex];
-
         public override uint RenderableWidth => _scExtent.width;
         public override uint RenderableHeight => _scExtent.height;
 
-        public override uint Width => _desiredWidth;
-        public override uint Height => _desiredHeight;
-
         public uint ImageIndex => _currentImageIndex;
-
-        public override OutputDescription OutputDescription => _outputDescription;
 
         public override uint AttachmentCount { get; }
 
@@ -69,6 +59,7 @@ namespace Veldrid.Vulkan
         internal void SetImageIndex(uint index)
         {
             _currentImageIndex = index;
+            _colorTargets = _scColorTextures[(int)_currentImageIndex];
         }
 
         internal void SetNewSwapchain(
@@ -78,12 +69,12 @@ namespace Veldrid.Vulkan
             VkSurfaceFormatKHR surfaceFormat,
             VkExtent2D swapchainExtent)
         {
-            _desiredWidth = width;
-            _desiredHeight = height;
+            Width = width;
+            Height = height;
 
             // Get the images
             uint scImageCount = 0;
-           VkResult result = vkGetSwapchainImagesKHR(_gd.Device, deviceSwapchain, &scImageCount, null);
+            VkResult result = vkGetSwapchainImagesKHR(_gd.Device, deviceSwapchain, &scImageCount, null);
             CheckResult(result);
             if (_scImages.Length < scImageCount)
             {
@@ -101,7 +92,7 @@ namespace Veldrid.Vulkan
             CreateDepthTexture();
             CreateFramebuffers();
 
-            _outputDescription = OutputDescription.CreateFromFramebuffer(this);
+            OutputDescription = OutputDescription.CreateFromFramebuffer(this);
         }
 
         private void DestroySwapchainFramebuffers()
@@ -159,6 +150,8 @@ namespace Veldrid.Vulkan
                 _scFramebuffers[i] = fb;
                 _scColorTextures[i] = new FramebufferAttachment[] { new FramebufferAttachment(colorTex, 0) };
             }
+
+            SetImageIndex(0);
         }
 
         public override void TransitionToIntermediateLayout(VkCommandBuffer cb)

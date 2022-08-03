@@ -1,4 +1,3 @@
-using System;
 using System.Diagnostics;
 using Veldrid.MetalBindings;
 
@@ -12,15 +11,7 @@ namespace Veldrid.MTL
         private readonly MTLSwapchain _parentSwapchain;
         private bool _disposed;
 
-        public override uint Width => _placeholderTexture.Width;
-        public override uint Height => _placeholderTexture.Height;
-
-        public override OutputDescription OutputDescription { get; }
-
         private readonly PixelFormat? _depthFormat;
-
-        public override ReadOnlySpan<FramebufferAttachment> ColorTargets => _colorTargets;
-        public override FramebufferAttachment? DepthTarget => _depthTarget;
 
         public override bool IsDisposed => _disposed;
 
@@ -50,6 +41,9 @@ namespace Veldrid.MTL
             _placeholderTexture = new MTLPlaceholderTexture(colorFormat);
             _placeholderTexture.Resize(width, height);
             _colorTargets = new[] { new FramebufferAttachment(_placeholderTexture, 0) };
+
+            Width = width;
+            Height = height;
         }
 
         private void RecreateDepthTexture(uint width, uint height)
@@ -73,6 +67,9 @@ namespace Veldrid.MTL
             {
                 RecreateDepthTexture(width, height);
             }
+
+            Width = width;
+            Height = height;
         }
 
         public override bool IsRenderable => !_parentSwapchain.CurrentDrawable.IsNull;

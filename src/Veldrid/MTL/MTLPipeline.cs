@@ -101,7 +101,7 @@ namespace Veldrid.MTL
             {
                 uint offset = 0;
                 VertexLayoutDescription vdDesc = vdVertexLayouts[i];
-                for (uint j = 0; j < vdDesc.Elements.Length; j++)
+                for (int j = 0; j < vdDesc.Elements.Length; j++)
                 {
                     VertexElementDescription elementDesc = vdDesc.Elements[j];
                     MTLVertexAttributeDescriptor mtlAttribute = vertexDescriptor.attributes[element];
@@ -138,11 +138,13 @@ namespace Veldrid.MTL
                     mtlDesc.stencilAttachmentPixelFormat = mtlDepthFormat;
                 }
             }
-            for (uint i = 0; i < outputs.ColorAttachments.Length; i++)
+
+            ReadOnlySpan<OutputAttachmentDescription> outputColorAttachments = outputs.ColorAttachments;
+            for (int i = 0; i < outputColorAttachments.Length; i++)
             {
                 BlendAttachmentDescription attachmentBlendDesc = blendStateDesc.AttachmentStates[i];
-                MTLRenderPipelineColorAttachmentDescriptor colorDesc = mtlDesc.colorAttachments[i];
-                colorDesc.pixelFormat = MTLFormats.VdToMTLPixelFormat(outputs.ColorAttachments[i].Format, false);
+                MTLRenderPipelineColorAttachmentDescriptor colorDesc = mtlDesc.colorAttachments[(uint)i];
+                colorDesc.pixelFormat = MTLFormats.VdToMTLPixelFormat(outputColorAttachments[i].Format, false);
                 colorDesc.blendingEnabled = attachmentBlendDesc.BlendEnabled;
                 colorDesc.alphaBlendOperation = MTLFormats.VdToMTLBlendOp(attachmentBlendDesc.AlphaFunction);
                 colorDesc.sourceAlphaBlendFactor = MTLFormats.VdToMTLBlendFactor(attachmentBlendDesc.SourceAlphaFactor);

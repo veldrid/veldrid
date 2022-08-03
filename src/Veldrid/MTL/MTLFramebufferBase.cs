@@ -5,6 +5,7 @@ namespace Veldrid.MTL
     internal abstract class MTLFramebufferBase : Framebuffer
     {
         public abstract MTLRenderPassDescriptor CreateRenderPassDescriptor();
+
         public abstract bool IsRenderable { get; }
 
         public override string? Name { get; set; }

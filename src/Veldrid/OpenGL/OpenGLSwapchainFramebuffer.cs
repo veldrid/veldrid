@@ -1,5 +1,4 @@
-﻿using System;
-
+﻿
 namespace Veldrid.OpenGL
 {
     internal sealed class OpenGLSwapchainFramebuffer : Framebuffer
@@ -7,18 +6,12 @@ namespace Veldrid.OpenGL
         private readonly PixelFormat? _depthFormat;
         private bool _disposed;
 
-        public override uint Width => _colorTexture.Width;
-        public override uint Height => _colorTexture.Height;
-
-        public override OutputDescription OutputDescription { get; }
         public override string? Name { get; set; }
+
         public override bool IsDisposed => _disposed;
 
         private readonly OpenGLPlaceholderTexture _colorTexture;
         private readonly OpenGLPlaceholderTexture? _depthTexture;
-
-        public override ReadOnlySpan<FramebufferAttachment> ColorTargets => _colorTargets;
-        public override FramebufferAttachment? DepthTarget => _depthTarget;
 
         public bool DisableSrgbConversion { get; }
 
@@ -58,6 +51,8 @@ namespace Veldrid.OpenGL
             }
 
             OutputDescription = OutputDescription.CreateFromFramebuffer(this);
+            Width = width;
+            Height = height;
 
             DisableSrgbConversion = disableSrgbConversion;
         }
@@ -66,6 +61,8 @@ namespace Veldrid.OpenGL
         {
             _colorTexture.Resize(width, height);
             _depthTexture?.Resize(width, height);
+            Width = width;
+            Height = height;
         }
 
         public override void Dispose()

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using TerraFX.Interop.Vulkan;
 using static TerraFX.Interop.Vulkan.VkAttachmentLoadOp;
@@ -40,11 +41,16 @@ namespace Veldrid.Vulkan
 
             StackList<VkAttachmentDescription> attachments = new();
 
-            uint colorAttachmentCount = (uint)ColorTargets.Length;
+            ReadOnlySpan<FramebufferAttachment> colorTargets = ColorTargets;
+            int colorAttachmentCount = colorTargets.Length;
+
+            ReadOnlySpan<FramebufferAttachmentDescription> colorTargetDescs = description.ColorTargets.AsSpan(0, colorAttachmentCount);
+
             StackList<VkAttachmentReference> colorAttachmentRefs = new();
+
             for (int i = 0; i < colorAttachmentCount; i++)
             {
-                VkTexture vkColorTex = Util.AssertSubtype<Texture, VkTexture>(ColorTargets[i].Target);
+                VkTexture vkColorTex = Util.AssertSubtype<Texture, VkTexture>(colorTargets[i].Target);
                 VkAttachmentDescription colorAttachmentDesc = new()
                 {
                     format = vkColorTex.VkFormat,
@@ -89,14 +95,14 @@ namespace Veldrid.Vulkan
                     : VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
                 depthAttachmentDesc.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
-                depthAttachmentRef.attachment = (uint)description.ColorTargets.Length;
+                depthAttachmentRef.attachment = (uint)colorTargetDescs.Length;
                 depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
             }
 
             VkSubpassDescription subpass = new() { pipelineBindPoint = VkPipelineBindPoint.VK_PIPELINE_BIND_POINT_GRAPHICS };
-            if (ColorTargets.Length > 0)
+            if (colorAttachmentCount > 0)
             {
-                subpass.colorAttachmentCount = colorAttachmentCount;
+                subpass.colorAttachmentCount = (uint)colorAttachmentCount;
                 subpass.pColorAttachments = (VkAttachmentReference*)colorAttachmentRefs.Data;
             }
 
@@ -176,16 +182,16 @@ namespace Veldrid.Vulkan
             CheckResult(creationResult);
             _renderPassClear = renderPassClear;
 
-            uint fbAttachmentsCount = (uint)description.ColorTargets.Length;
+            int fbAttachmentsCount = colorTargetDescs.Length;
             if (description.DepthTarget != null)
             {
                 fbAttachmentsCount += 1;
             }
 
-            VkImageView* fbAttachments = stackalloc VkImageView[(int)fbAttachmentsCount];
+            VkImageView* fbAttachments = stackalloc VkImageView[fbAttachmentsCount];
             for (int i = 0; i < colorAttachmentCount; i++)
             {
-                VkTexture vkColorTarget = Util.AssertSubtype<Texture, VkTexture>(description.ColorTargets[i].Target);
+                VkTexture vkColorTarget = Util.AssertSubtype<Texture, VkTexture>(colorTargetDescs[i].Target);
                 VkImageViewCreateInfo imageViewCI = new()
                 {
                     sType = VkStructureType.VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
@@ -195,9 +201,9 @@ namespace Veldrid.Vulkan
                     subresourceRange = new VkImageSubresourceRange()
                     {
                         aspectMask = VkImageAspectFlags.VK_IMAGE_ASPECT_COLOR_BIT,
-                        baseMipLevel = description.ColorTargets[i].MipLevel,
+                        baseMipLevel = colorTargetDescs[i].MipLevel,
                         levelCount = 1,
-                        baseArrayLayer = description.ColorTargets[i].ArrayLayer,
+                        baseArrayLayer = colorTargetDescs[i].ArrayLayer,
                         layerCount = 1
                     }
                 };
@@ -210,14 +216,16 @@ namespace Veldrid.Vulkan
             // Depth
             if (description.DepthTarget != null)
             {
-                VkTexture vkDepthTarget = Util.AssertSubtype<Texture, VkTexture>(description.DepthTarget.Value.Target);
+                FramebufferAttachmentDescription depthTargetDesc = description.DepthTarget.GetValueOrDefault();
+                VkTexture vkDepthTarget = Util.AssertSubtype<Texture, VkTexture>(depthTargetDesc.Target);
                 bool hasStencil = FormatHelpers.IsStencilFormat(vkDepthTarget.Format);
+
                 VkImageViewCreateInfo depthViewCI = new()
                 {
                     sType = VkStructureType.VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
                     image = vkDepthTarget.OptimalDeviceImage,
                     format = vkDepthTarget.VkFormat,
-                    viewType = description.DepthTarget.Value.Target.ArrayLayers == 1
+                    viewType = depthTargetDesc.Target.ArrayLayers == 1
                         ? VkImageViewType.VK_IMAGE_VIEW_TYPE_2D
                         : VkImageViewType.VK_IMAGE_VIEW_TYPE_2D_ARRAY,
                     subresourceRange = new VkImageSubresourceRange()
@@ -225,9 +233,9 @@ namespace Veldrid.Vulkan
                         aspectMask = hasStencil
                             ? VkImageAspectFlags.VK_IMAGE_ASPECT_DEPTH_BIT | VkImageAspectFlags.VK_IMAGE_ASPECT_STENCIL_BIT
                             : VkImageAspectFlags.VK_IMAGE_ASPECT_DEPTH_BIT,
-                        baseMipLevel = description.DepthTarget.Value.MipLevel,
+                        baseMipLevel = depthTargetDesc.MipLevel,
                         levelCount = 1,
-                        baseArrayLayer = description.DepthTarget.Value.ArrayLayer,
+                        baseArrayLayer = depthTargetDesc.ArrayLayer,
                         layerCount = 1
                     }
                 };
@@ -240,10 +248,10 @@ namespace Veldrid.Vulkan
 
             Texture dimTex;
             uint mipLevel;
-            if (ColorTargets.Length > 0)
+            if (colorTargets.Length > 0)
             {
-                dimTex = ColorTargets[0].Target;
-                mipLevel = ColorTargets[0].MipLevel;
+                dimTex = colorTargets[0].Target;
+                mipLevel = colorTargets[0].MipLevel;
             }
             else
             {
@@ -263,7 +271,7 @@ namespace Veldrid.Vulkan
                 sType = VkStructureType.VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
                 width = mipWidth,
                 height = mipHeight,
-                attachmentCount = fbAttachmentsCount,
+                attachmentCount = (uint)fbAttachmentsCount,
                 pAttachments = fbAttachments,
                 layers = 1,
                 renderPass = _renderPassNoClear
@@ -278,7 +286,7 @@ namespace Veldrid.Vulkan
             {
                 AttachmentCount += 1;
             }
-            AttachmentCount += (uint)ColorTargets.Length;
+            AttachmentCount += (uint)colorTargets.Length;
         }
 
         public override void TransitionToIntermediateLayout(VkCommandBuffer cb)

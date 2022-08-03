@@ -311,19 +311,22 @@ namespace Veldrid.Vulkan
 
             StackList<VkAttachmentDescription> colorAttachmentDescs = new();
             StackList<VkAttachmentReference> colorAttachmentRefs = new();
-            for (uint i = 0; i < outputDesc.ColorAttachments.Length; i++)
-            {
-                colorAttachmentDescs[i].format = VkFormats.VdToVkPixelFormat(outputDesc.ColorAttachments[i].Format);
-                colorAttachmentDescs[i].samples = vkSampleCount;
-                colorAttachmentDescs[i].loadOp = VkAttachmentLoadOp.VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-                colorAttachmentDescs[i].storeOp = VkAttachmentStoreOp.VK_ATTACHMENT_STORE_OP_STORE;
-                colorAttachmentDescs[i].stencilLoadOp = VkAttachmentLoadOp.VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-                colorAttachmentDescs[i].stencilStoreOp = VkAttachmentStoreOp.VK_ATTACHMENT_STORE_OP_DONT_CARE;
-                colorAttachmentDescs[i].initialLayout = VkImageLayout.VK_IMAGE_LAYOUT_UNDEFINED;
-                colorAttachmentDescs[i].finalLayout = VkImageLayout.VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                attachments.Add(colorAttachmentDescs[i]);
 
-                colorAttachmentRefs[i].attachment = i;
+            ReadOnlySpan<OutputAttachmentDescription> outputColorAttachmentDescs = outputDesc.ColorAttachments;
+            for (int i = 0; i < outputColorAttachmentDescs.Length; i++)
+            {
+                ref VkAttachmentDescription desc = ref colorAttachmentDescs[i];
+                desc.format = VkFormats.VdToVkPixelFormat(outputColorAttachmentDescs[i].Format);
+                desc.samples = vkSampleCount;
+                desc.loadOp = VkAttachmentLoadOp.VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+                desc.storeOp = VkAttachmentStoreOp.VK_ATTACHMENT_STORE_OP_STORE;
+                desc.stencilLoadOp = VkAttachmentLoadOp.VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+                desc.stencilStoreOp = VkAttachmentStoreOp.VK_ATTACHMENT_STORE_OP_DONT_CARE;
+                desc.initialLayout = VkImageLayout.VK_IMAGE_LAYOUT_UNDEFINED;
+                desc.finalLayout = VkImageLayout.VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                attachments.Add(desc);
+
+                colorAttachmentRefs[i].attachment = (uint)i;
                 colorAttachmentRefs[i].layout = VkImageLayout.VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
             }
 
@@ -331,9 +334,9 @@ namespace Veldrid.Vulkan
             VkAttachmentReference depthAttachmentRef = new();
             if (outputDesc.DepthAttachment != null)
             {
-                PixelFormat depthFormat = outputDesc.DepthAttachment.Value.Format;
+                PixelFormat depthFormat = outputDesc.DepthAttachment.GetValueOrDefault().Format;
                 bool hasStencil = FormatHelpers.IsStencilFormat(depthFormat);
-                depthAttachmentDesc.format = VkFormats.VdToVkPixelFormat(outputDesc.DepthAttachment.Value.Format, toDepthFormat: true);
+                depthAttachmentDesc.format = VkFormats.VdToVkPixelFormat(depthFormat, toDepthFormat: true);
                 depthAttachmentDesc.samples = vkSampleCount;
                 depthAttachmentDesc.loadOp = VkAttachmentLoadOp.VK_ATTACHMENT_LOAD_OP_DONT_CARE;
                 depthAttachmentDesc.storeOp = VkAttachmentStoreOp.VK_ATTACHMENT_STORE_OP_STORE;
@@ -344,14 +347,14 @@ namespace Veldrid.Vulkan
                 depthAttachmentDesc.initialLayout = VkImageLayout.VK_IMAGE_LAYOUT_UNDEFINED;
                 depthAttachmentDesc.finalLayout = VkImageLayout.VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
-                depthAttachmentRef.attachment = (uint)outputDesc.ColorAttachments.Length;
+                depthAttachmentRef.attachment = (uint)outputColorAttachmentDescs.Length;
                 depthAttachmentRef.layout = VkImageLayout.VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
             }
 
             VkSubpassDescription subpass = new()
             {
                 pipelineBindPoint = VkPipelineBindPoint.VK_PIPELINE_BIND_POINT_GRAPHICS,
-                colorAttachmentCount = (uint)outputDesc.ColorAttachments.Length,
+                colorAttachmentCount = (uint)outputColorAttachmentDescs.Length,
                 pColorAttachments = (VkAttachmentReference*)colorAttachmentRefs.Data
             };
 

@@ -10,33 +10,33 @@ namespace Veldrid
     public abstract class Framebuffer : DeviceResource, IDisposable
     {
         protected FramebufferAttachment? _depthTarget;
-        protected FramebufferAttachment[] _colorTargets = null!;
+        protected FramebufferAttachment[] _colorTargets = Array.Empty<FramebufferAttachment>();
 
         /// <summary>
         /// Gets the depth attachment associated with this instance. May be null if no depth texture is used.
         /// </summary>
-        public virtual FramebufferAttachment? DepthTarget => _depthTarget;
+        public FramebufferAttachment? DepthTarget => _depthTarget;
 
         /// <summary>
         /// Gets the collection of color attachments associated with this instance. May be empty.
         /// </summary>
-        public virtual ReadOnlySpan<FramebufferAttachment> ColorTargets => _colorTargets;
+        public ReadOnlySpan<FramebufferAttachment> ColorTargets => _colorTargets;
 
         /// <summary>
         /// Gets an <see cref="Veldrid.OutputDescription"/> which describes the number and formats of the depth and color targets
         /// in this instance.
         /// </summary>
-        public virtual OutputDescription OutputDescription { get; }
+        public OutputDescription OutputDescription { get; protected set; }
 
         /// <summary>
         /// Gets the width of the <see cref="Framebuffer"/>.
         /// </summary>
-        public virtual uint Width { get; }
+        public uint Width { get; protected set; }
 
         /// <summary>
         /// Gets the height of the <see cref="Framebuffer"/>.
         /// </summary>
-        public virtual uint Height { get; }
+        public uint Height { get; protected set; }
 
         internal Framebuffer()
         {
@@ -64,14 +64,12 @@ namespace Veldrid
                     colorTargetDescs[i].MipLevel);
             }
 
-            _colorTargets = colorTargets;
-
             Texture dimTex;
             uint mipLevel;
-            if (_colorTargets.Length > 0)
+            if (colorTargets.Length > 0)
             {
-                dimTex = _colorTargets[0].Target;
-                mipLevel = _colorTargets[0].MipLevel;
+                dimTex = colorTargets[0].Target;
+                mipLevel = colorTargets[0].MipLevel;
             }
             else
             {
@@ -84,9 +82,11 @@ namespace Veldrid
             Width = mipWidth;
             Height = mipHeight;
 
+            _colorTargets = colorTargets;
             OutputDescription = OutputDescription.CreateFromFramebuffer(this);
         }
 
+        /// <inheritdoc/>
         public abstract string? Name { get; set; }
 
         /// <summary>

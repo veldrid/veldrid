@@ -68,7 +68,7 @@ namespace Veldrid.OpenGL
                     _gd.TextureSamplerManager.SetTextureTransient(glTex.TextureTarget, glTex.Texture);
                     CheckLastError();
 
-                    TextureTarget textureTarget = GetTextureTarget (glTex, colorAttachment.ArrayLayer);
+                    TextureTarget textureTarget = GetTextureTarget(glTex, colorAttachment.ArrayLayer);
 
                     if (glTex.ArrayLayers == 1)
                     {
@@ -104,7 +104,9 @@ namespace Veldrid.OpenGL
             TextureTarget depthTarget = TextureTarget.Texture2D;
             if (DepthTarget != null)
             {
-                OpenGLTexture glDepthTex = Util.AssertSubtype<Texture, OpenGLTexture>(DepthTarget.Value.Target);
+                FramebufferAttachment depthTargetValue = DepthTarget.GetValueOrDefault();
+
+                OpenGLTexture glDepthTex = Util.AssertSubtype<Texture, OpenGLTexture>(depthTargetValue.Target);
                 glDepthTex.EnsureResourcesCreated();
                 depthTarget = glDepthTex.TextureTarget;
 
@@ -113,7 +115,7 @@ namespace Veldrid.OpenGL
                 _gd.TextureSamplerManager.SetTextureTransient(depthTarget, glDepthTex.Texture);
                 CheckLastError();
 
-                depthTarget = GetTextureTarget (glDepthTex, DepthTarget.Value.ArrayLayer);
+                depthTarget = GetTextureTarget(glDepthTex, depthTargetValue.ArrayLayer);
 
                 GLFramebufferAttachment framebufferAttachment = GLFramebufferAttachment.DepthAttachment;
                 if (FormatHelpers.IsStencilFormat(glDepthTex.Format))
@@ -128,7 +130,7 @@ namespace Veldrid.OpenGL
                         framebufferAttachment,
                         depthTarget,
                         depthTextureID,
-                        (int)DepthTarget.Value.MipLevel);
+                        (int)depthTargetValue.MipLevel);
                 }
                 else
                 {
@@ -136,8 +138,8 @@ namespace Veldrid.OpenGL
                         FramebufferTarget.Framebuffer,
                         framebufferAttachment,
                         glDepthTex.Texture,
-                        (int)DepthTarget.Value.MipLevel,
-                        (int)DepthTarget.Value.ArrayLayer);
+                        (int)depthTargetValue.MipLevel,
+                        (int)depthTargetValue.ArrayLayer);
                 }
                 CheckLastError();
 

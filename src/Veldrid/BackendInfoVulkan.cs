@@ -54,12 +54,12 @@ namespace Veldrid
         /// <summary>
         /// Gets the driver name of the device. May be null.
         /// </summary>
-        public string DriverName => _gd.DriverName;
+        public string? DriverName => _gd.DriverName;
 
         /// <summary>
         /// Gets the driver information of the device. May be null.
         /// </summary>
-        public string DriverInfo => _gd.DriverInfo;
+        public string? DriverInfo => _gd.DriverInfo;
 
         public ReadOnlyCollection<string> AvailableInstanceLayers => _instanceLayers;
 

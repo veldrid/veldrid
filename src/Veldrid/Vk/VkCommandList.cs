@@ -1436,7 +1436,7 @@ namespace Veldrid.Vulkan
         {
             Span<byte> byteBuffer = stackalloc byte[1024];
 
-            vkCmdDebugMarkerBeginEXT_t func = _gd.MarkerBegin;
+            vkCmdDebugMarkerBeginEXT_t? func = _gd.MarkerBegin;
             if (func == null)
             {
                 return;
@@ -1456,7 +1456,7 @@ namespace Veldrid.Vulkan
 
         private protected override void PopDebugGroupCore()
         {
-            vkCmdDebugMarkerEndEXT_t func = _gd.MarkerEnd;
+            vkCmdDebugMarkerEndEXT_t? func = _gd.MarkerEnd;
             if (func == null)
             {
                 return;
@@ -1470,7 +1470,7 @@ namespace Veldrid.Vulkan
         {
             Span<byte> byteBuffer = stackalloc byte[1024];
 
-            vkCmdDebugMarkerInsertEXT_t func = _gd.MarkerInsert;
+            vkCmdDebugMarkerInsertEXT_t? func = _gd.MarkerInsert;
             if (func == null)
             {
                 return;

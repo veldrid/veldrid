@@ -8,7 +8,7 @@ namespace Veldrid.MTL
     {
         private readonly MTLGraphicsDevice _gd;
         private MTLCommandBuffer _cb;
-        private MTLFramebufferBase _mtlFramebuffer;
+        private MTLFramebufferBase? _mtlFramebuffer;
         private uint _viewportCount;
         private bool _currentFramebufferEverActive;
         private MTLRenderCommandEncoder _rce;
@@ -969,6 +969,7 @@ namespace Veldrid.MTL
 
         private bool BeginCurrentRenderPass()
         {
+            Debug.Assert(_mtlFramebuffer != null);
             if (!_mtlFramebuffer.IsRenderable)
             {
                 return false;
@@ -998,7 +999,7 @@ namespace Veldrid.MTL
                 {
                     MTLRenderPassStencilAttachmentDescriptor stencilAttachment = rpDesc.stencilAttachment;
                     stencilAttachment.loadAction = MTLLoadAction.Clear;
-                    stencilAttachment.clearStencil = _clearDepth.Value.stencil;
+                    stencilAttachment.clearStencil = _clearDepth.GetValueOrDefault().stencil;
                 }
 
                 _clearDepth = null;

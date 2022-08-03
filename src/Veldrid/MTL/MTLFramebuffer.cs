@@ -16,6 +16,7 @@ namespace Veldrid.MTL
         public override MTLRenderPassDescriptor CreateRenderPassDescriptor()
         {
             MTLRenderPassDescriptor ret = MTLRenderPassDescriptor.New();
+
             ReadOnlySpan<FramebufferAttachment> colorTargets = ColorTargets;
             for (int i = 0; i < colorTargets.Length; i++)
             {
@@ -30,13 +31,15 @@ namespace Veldrid.MTL
 
             if (DepthTarget != null)
             {
-                MTLTexture mtlDepthTarget = Util.AssertSubtype<Texture, MTLTexture>(DepthTarget.Value.Target);
+                FramebufferAttachment depthTarget = DepthTarget.GetValueOrDefault();
+
+                MTLTexture mtlDepthTarget = Util.AssertSubtype<Texture, MTLTexture>(depthTarget.Target);
                 MTLRenderPassDepthAttachmentDescriptor depthDescriptor = ret.depthAttachment;
                 depthDescriptor.loadAction = MTLLoadAction.Load;
                 depthDescriptor.storeAction = MTLStoreAction.Store;
                 depthDescriptor.texture = mtlDepthTarget.DeviceTexture;
-                depthDescriptor.slice = (UIntPtr)DepthTarget.Value.ArrayLayer;
-                depthDescriptor.level = (UIntPtr)DepthTarget.Value.MipLevel;
+                depthDescriptor.slice = (UIntPtr)depthTarget.ArrayLayer;
+                depthDescriptor.level = (UIntPtr)depthTarget.MipLevel;
 
                 if (FormatHelpers.IsStencilFormat(mtlDepthTarget.Format))
                 {
@@ -44,7 +47,7 @@ namespace Veldrid.MTL
                     stencilDescriptor.loadAction = MTLLoadAction.Load;
                     stencilDescriptor.storeAction = MTLStoreAction.Store;
                     stencilDescriptor.texture = mtlDepthTarget.DeviceTexture;
-                    stencilDescriptor.slice = (UIntPtr)DepthTarget.Value.ArrayLayer;
+                    stencilDescriptor.slice = (UIntPtr)depthTarget.ArrayLayer;
                 }
             }
 

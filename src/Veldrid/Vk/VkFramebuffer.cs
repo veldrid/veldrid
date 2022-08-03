@@ -296,12 +296,15 @@ namespace Veldrid.Vulkan
                 VkTexture vkTex = Util.AssertSubtype<Texture, VkTexture>(ca.Target);
                 vkTex.SetImageLayout(ca.MipLevel, ca.ArrayLayer, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
             }
+
             if (DepthTarget != null)
             {
-                VkTexture vkTex = Util.AssertSubtype<Texture, VkTexture>(DepthTarget.Value.Target);
+                FramebufferAttachment depthTarget = DepthTarget.GetValueOrDefault();
+
+                VkTexture vkTex = Util.AssertSubtype<Texture, VkTexture>(depthTarget.Target);
                 vkTex.SetImageLayout(
-                    DepthTarget.Value.MipLevel,
-                    DepthTarget.Value.ArrayLayer,
+                    depthTarget.MipLevel,
+                    depthTarget.ArrayLayer,
                     VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
             }
         }
@@ -320,15 +323,18 @@ namespace Veldrid.Vulkan
                         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
                 }
             }
+
             if (DepthTarget != null)
             {
-                VkTexture vkTex = Util.AssertSubtype<Texture, VkTexture>(DepthTarget.Value.Target);
+                FramebufferAttachment depthTarget = DepthTarget.GetValueOrDefault();
+
+                VkTexture vkTex = Util.AssertSubtype<Texture, VkTexture>(depthTarget.Target);
                 if ((vkTex.Usage & TextureUsage.Sampled) != 0)
                 {
                     vkTex.TransitionImageLayout(
                         cb,
-                        DepthTarget.Value.MipLevel, 1,
-                        DepthTarget.Value.ArrayLayer, 1,
+                        depthTarget.MipLevel, 1,
+                        depthTarget.ArrayLayer, 1,
                         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
                 }
             }

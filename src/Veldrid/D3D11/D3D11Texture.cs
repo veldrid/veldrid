@@ -7,15 +7,6 @@ namespace Veldrid.D3D11
     {
         private string? _name;
 
-        public override uint Width { get; }
-        public override uint Height { get; }
-        public override uint Depth { get; }
-        public override uint MipLevels { get; }
-        public override uint ArrayLayers { get; }
-        public override PixelFormat Format { get; }
-        public override TextureUsage Usage { get; }
-        public override TextureType Type { get; }
-        public override TextureSampleCount SampleCount { get; }
         public override bool IsDisposed => DeviceTexture.IsDisposed;
 
         public ID3D11Resource DeviceTexture { get; }

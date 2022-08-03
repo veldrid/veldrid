@@ -3,27 +3,7 @@ namespace Veldrid.MTL
     // A fake Texture object representing swapchain Textures.
     internal sealed class MTLPlaceholderTexture : Texture
     {
-        private uint _width;
-        private uint _height;
         private bool _disposed;
-
-        public override PixelFormat Format { get; }
-
-        public override uint Width => _width;
-
-        public override uint Height => _height;
-
-        public override uint Depth => 1;
-
-        public override uint MipLevels => 1;
-
-        public override uint ArrayLayers => 1;
-
-        public override TextureUsage Usage => TextureUsage.RenderTarget;
-
-        public override TextureType Type => TextureType.Texture2D;
-
-        public override TextureSampleCount SampleCount => TextureSampleCount.Count1;
 
         public override string? Name { get; set; }
 
@@ -32,12 +12,18 @@ namespace Veldrid.MTL
         public MTLPlaceholderTexture(PixelFormat format)
         {
             Format = format;
+            Depth = 1;
+            MipLevels = 1;
+            ArrayLayers = 1;
+            Usage = TextureUsage.RenderTarget;
+            Type = TextureType.Texture2D;
+            SampleCount = TextureSampleCount.Count1;
         }
 
         public void Resize(uint width, uint height)
         {
-            _width = width;
-            _height = height;
+            Width = width;
+            Height = height;
         }
 
         private protected override void DisposeCore()

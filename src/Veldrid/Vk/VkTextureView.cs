@@ -38,7 +38,7 @@ namespace Veldrid.Vulkan
             {
                 sType = VkStructureType.VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
                 image = tex.OptimalDeviceImage,
-                format = VkFormats.VdToVkPixelFormat(Format, (Target.Usage & TextureUsage.DepthStencil) != 0),
+                format = VkFormats.VdToVkPixelFormat(Format, (tex.Usage & TextureUsage.DepthStencil) != 0),
                 subresourceRange = new VkImageSubresourceRange()
                 {
                     aspectMask = aspectFlags,

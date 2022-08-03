@@ -25,49 +25,49 @@ namespace Veldrid
         /// <summary>
         /// The format of individual texture elements stored in this instance.
         /// </summary>
-        public abstract PixelFormat Format { get; }
+        public PixelFormat Format { get; protected set; }
 
         /// <summary>
         /// The total width of this instance, in texels.
         /// </summary>
-        public abstract uint Width { get; }
+        public uint Width { get; protected set; }
 
         /// <summary>
         /// The total height of this instance, in texels.
         /// </summary>
-        public abstract uint Height { get; }
+        public uint Height { get; protected set; }
 
         /// <summary>
         /// The total depth of this instance, in texels.
         /// </summary>
-        public abstract uint Depth { get; }
+        public uint Depth { get; protected set; }
 
         /// <summary>
         /// The total number of mipmap levels in this instance.
         /// </summary>
-        public abstract uint MipLevels { get; }
+        public uint MipLevels { get; protected set; }
 
         /// <summary>
         /// The total number of array layers in this instance.
         /// </summary>
-        public abstract uint ArrayLayers { get; }
+        public uint ArrayLayers { get; protected set; }
 
         /// <summary>
         /// The usage flags given when this instance was created. This property controls how this instance is permitted to be
         /// used, and it is an error to attempt to use the Texture outside of those contexts.
         /// </summary>
-        public abstract TextureUsage Usage { get; }
+        public TextureUsage Usage { get; protected set; }
 
         /// <summary>
         /// The <see cref="TextureType"/> of this instance.
         /// </summary>
-        public abstract TextureType Type { get; }
+        public TextureType Type { get; protected set; }
 
         /// <summary>
         /// The number of samples in this instance. If this returns any value other than <see cref="TextureSampleCount.Count1"/>,
         /// then this instance is a multipsample texture.
         /// </summary>
-        public abstract TextureSampleCount SampleCount { get; }
+        public TextureSampleCount SampleCount { get; protected set; }
 
         /// <inheritdoc/>
         public abstract string? Name { get; set; }
@@ -87,6 +87,7 @@ namespace Veldrid
             depthPitch = FormatHelpers.GetDepthPitch(rowPitch, storageHeight, Format);
         }
 
+        /// <inheritdoc/>
         public virtual uint GetSizeInBytes(uint subresource)
         {
             Util.GetMipLevelAndArrayLayer(this, subresource, out uint mipLevel, out _);

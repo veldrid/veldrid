@@ -12,32 +12,8 @@ namespace Veldrid.Vulkan
         private readonly VkImage _optimalImage;
         private readonly VkMemoryBlock _memoryBlock;
         private readonly TerraFX.Interop.Vulkan.VkBuffer _stagingBuffer;
-        private PixelFormat _format; // Static for regular images -- may change for shared staging images
         private readonly uint _actualImageArrayLayers;
         private bool _destroyed;
-
-        // Immutable except for shared staging Textures.
-        private uint _width;
-        private uint _height;
-        private uint _depth;
-
-        public override uint Width => _width;
-
-        public override uint Height => _height;
-
-        public override uint Depth => _depth;
-
-        public override PixelFormat Format => _format;
-
-        public override uint MipLevels { get; }
-
-        public override uint ArrayLayers { get; }
-
-        public override TextureUsage Usage { get; }
-
-        public override TextureType Type { get; }
-
-        public override TextureSampleCount SampleCount { get; }
 
         public override bool IsDisposed => _destroyed;
 
@@ -58,16 +34,16 @@ namespace Veldrid.Vulkan
         internal VkTexture(VkGraphicsDevice gd, in TextureDescription description)
         {
             _gd = gd;
-            _width = description.Width;
-            _height = description.Height;
-            _depth = description.Depth;
+            Width = description.Width;
+            Height = description.Height;
+            Depth = description.Depth;
             MipLevels = description.MipLevels;
             ArrayLayers = description.ArrayLayers;
             bool isCubemap = ((description.Usage) & TextureUsage.Cubemap) == TextureUsage.Cubemap;
             _actualImageArrayLayers = isCubemap
                 ? 6 * ArrayLayers
                 : ArrayLayers;
-            _format = description.Format;
+            Format = description.Format;
             Usage = description.Usage;
             Type = description.Type;
             SampleCount = description.SampleCount;
@@ -264,11 +240,11 @@ namespace Veldrid.Vulkan
             Debug.Assert(width > 0 && height > 0);
             _gd = gd;
             MipLevels = mipLevels;
-            _width = width;
-            _height = height;
-            _depth = 1;
+            Width = width;
+            Height = height;
+            Depth = 1;
             VkFormat = vkFormat;
-            _format = VkFormats.VkToVdPixelFormat(VkFormat);
+            Format = VkFormats.VkToVdPixelFormat(VkFormat);
             ArrayLayers = arrayLayers;
             Usage = usage;
             Type = TextureType.Texture2D;
@@ -478,10 +454,10 @@ namespace Veldrid.Vulkan
         {
             Debug.Assert(_stagingBuffer != TerraFX.Interop.Vulkan.VkBuffer.NULL);
             Debug.Assert(Usage == TextureUsage.Staging);
-            _width = width;
-            _height = height;
-            _depth = depth;
-            _format = format;
+            Width = width;
+            Height = height;
+            Depth = depth;
+            Format = format;
         }
 
         private protected override void DisposeCore()

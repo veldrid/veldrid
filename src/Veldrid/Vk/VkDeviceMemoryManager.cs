@@ -369,7 +369,7 @@ namespace Veldrid.Vulkan
 
 #if DEBUG
                 bool hasMergedBlocks = MergeContiguousBlocks();
-                Debug.Assert(!hasMergedBlocks);
+                Debug.Assert(!hasMergedBlocks, "Free method was not effective at merging blocks.");
 #endif
 
                 resultBlock = default;
@@ -402,31 +402,42 @@ namespace Veldrid.Vulkan
             {
                 Span<VkMemoryBlock> freeBlocks = CollectionsMarshal.AsSpan(_freeBlocks);
 
-                // freeBlocks should always be sorted by offset.
+                // freeBlocks should always be sorted by offset
+                // List mutations done by this algorithm must preserve order. 
+
                 int precedingBlock = FindPrecedingBlockIndex(freeBlocks, block.Offset);
                 if (precedingBlock != -1)
                 {
                     if ((uint)precedingBlock < (uint)freeBlocks.Length &&
                         block.End == freeBlocks[precedingBlock].Offset)
                     {
+                        // Free block ends at the beginning of found block; merge with found block.
                         freeBlocks[precedingBlock].Size += block.Size;
                         freeBlocks[precedingBlock].Offset = block.Offset;
+
+                        int prevBlock = precedingBlock - 1;
+                        if ((uint)prevBlock < (uint)freeBlocks.Length &&
+                            freeBlocks[prevBlock].End == freeBlocks[precedingBlock].Offset)
+                        {
+                            // Merged block begins at the end of the previous block; extend the previous block.
+                            freeBlocks[prevBlock].Size += freeBlocks[precedingBlock].Size;
+                            _freeBlocks.RemoveAt(precedingBlock);
+                        }
                     }
                     else
                     {
-                        _freeBlocks.Insert(precedingBlock, block);
-
-                        // Updating the list invalidates the previous span.
-                        freeBlocks = CollectionsMarshal.AsSpan(_freeBlocks);
-                    }
-
-                    int prevBlock = precedingBlock - 1;
-                    if ((uint)precedingBlock < (uint)freeBlocks.Length &&
-                        (uint)prevBlock < (uint)freeBlocks.Length &&
-                        freeBlocks[prevBlock].End == freeBlocks[precedingBlock].Offset)
-                    {
-                        freeBlocks[prevBlock].Size += freeBlocks[precedingBlock].Size;
-                        _freeBlocks.RemoveAt(precedingBlock);
+                        int prevBlock = precedingBlock - 1;
+                        if ((uint)prevBlock < (uint)freeBlocks.Length &&
+                            freeBlocks[prevBlock].End == block.Offset)
+                        {
+                            // Free block begins at the end of found block; extend the previous block.
+                            freeBlocks[prevBlock].Size += block.Size;
+                        }
+                        else
+                        {
+                            // Free block could not be merged with previous or found block.
+                            _freeBlocks.Insert(precedingBlock, block);
+                        }
                     }
                 }
                 else
@@ -435,10 +446,12 @@ namespace Veldrid.Vulkan
                     if ((uint)lastIndex < (uint)freeBlocks.Length &&
                         freeBlocks[lastIndex].End == block.Offset)
                     {
+                        // Free block begins at the end of last block; extend the last block.
                         freeBlocks[lastIndex].Size += block.Size;
                     }
                     else
                     {
+                        // Free block is at the end of the list.
                         _freeBlocks.Add(block);
                     }
                 }
@@ -447,6 +460,7 @@ namespace Veldrid.Vulkan
                 RemoveAllocatedBlock(block);
 #endif
             }
+
 
 #if DEBUG
             private bool MergeContiguousBlocks()

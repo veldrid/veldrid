@@ -402,7 +402,7 @@ namespace Veldrid.Vulkan
             {
                 Span<VkMemoryBlock> freeBlocks = CollectionsMarshal.AsSpan(_freeBlocks);
 
-                // freeBlocks should always be sorted by offset
+                // The free block list should always be sorted by offset.
                 // List mutations done by this algorithm must preserve order. 
 
                 int precedingBlock = FindPrecedingBlockIndex(freeBlocks, block.Offset);

@@ -79,18 +79,13 @@ namespace Veldrid.Utilities
                 while ((lineEnd = text.IndexOf('\n')) != -1)
                 {
                     Span<char> line = text[..lineEnd];
-                    if (line.IsEmpty)
+                    if (line.Length > 0 && line[^1] == '\r')
                     {
-                        lineEnd++;
-                    }
-                    else if (line[^1] == '\r')
-                    {
-                        lineEnd++;
                         line = line[..^1];
                     }
 
                     _pc.Process(line);
-                    text = text[lineEnd..];
+                    text = text[(lineEnd + 1)..];
                 }
 
                 // Shift back remaining data.
@@ -119,8 +114,7 @@ namespace Veldrid.Utilities
                 TryProcessLines();
 
                 // Try to parse the rest that doesn't have a line ending.
-                if (readIndex > 0)
-                    _pc.Process(_readBuffer.AsSpan(0, readIndex));
+                _pc.Process(_readBuffer.AsSpan(0, readIndex));
             }
 
             _pc.EndOfFileReached();

@@ -348,7 +348,7 @@ namespace Veldrid.Utilities
             public void EndOfFileReached()
             {
                 _currentGroupName ??= "GlobalFileGroup";
-                _groups.Add(new ObjFile.MeshGroup(_currentGroupName, _currentMaterial, _currentGroupFaces.ToArray()));
+                FinalizeGroup();
             }
 
             public ObjFile FinalizeFile()

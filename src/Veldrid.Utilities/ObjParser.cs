@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Numerics;
@@ -12,7 +13,7 @@ namespace Veldrid.Utilities
     /// </summary>
     public class ObjParser
     {
-        private const int InitialReadBufferSize = 2048;
+        private const int InitialReadBufferSize = 1024 * 8;
 
         private static readonly char[] _whitespaceChar = new[] { ' ' };
         private static readonly char _slashChar = '/';
@@ -167,7 +168,7 @@ namespace Veldrid.Utilities
                     ReadOnlySpan<char> y = "0";
 
                     if (!splitter.MoveNext())
-                        throw CreateExpectPiecesException("one", pieceName, false);
+                        ThrowExpectPiecesException("one", pieceName, false);
                     x = splitter.Current;
 
                     if (splitter.MoveNext())
@@ -253,8 +254,8 @@ namespace Veldrid.Utilities
             private ObjFile.FaceVertex ParseFaceVertex(ReadOnlySpan<char> faceComponents)
             {
                 if (faceComponents.IsEmpty)
-                    throw CreateExceptionForWrongFaceCount("There must be at least one face component");
-
+                    ThrowExceptionForWrongFaceCount("There must be at least one face component");
+                
                 int firstSlash = faceComponents.IndexOf(_slashChar);
                 ReadOnlySpan<char> firstSlice = firstSlash == -1
                     ? faceComponents
@@ -268,9 +269,9 @@ namespace Veldrid.Utilities
 
                 ReadOnlySpan<char> afterSecondSlash = afterFirstSlash[(secondSlash + 1)..];
                 int thirdSlash = afterSecondSlash.IndexOf(_slashChar);
-                ReadOnlySpan<char> thirdSlice = thirdSlash == -1
-                    ? afterSecondSlash
-                    : throw CreateExceptionForWrongFaceCount("No more than three face components are allowed");
+                if (thirdSlash != -1)
+                    ThrowExceptionForWrongFaceCount("No more than three face components are allowed");
+                ReadOnlySpan<char> thirdSlice = afterSecondSlash;
 
                 int position = ParseInt(firstSlice, "the first face position index");
                 int texCoord = firstSlash == -1 ? -1 : ParseInt(secondSlice, "the first face texture coordinate index");
@@ -279,9 +280,10 @@ namespace Veldrid.Utilities
                 return new ObjFile.FaceVertex(position, normal, texCoord);
             }
 
-            private ObjParseException CreateExceptionForWrongFaceCount(string message)
+            [DoesNotReturn]
+            private void ThrowExceptionForWrongFaceCount(string message)
             {
-                return new ObjParseException($"{message}, on line {_currentLine}.");
+                throw new ObjParseException($"{message}, on line {_currentLine}.");
             }
 
             public void DiscoverPosition(Vector3 position)
@@ -361,26 +363,32 @@ namespace Veldrid.Utilities
                 if (FastParse.TryParseDouble(xStr, out double x) &&
                     FastParse.TryParseDouble(yStr, out double y) &&
                     FastParse.TryParseDouble(zStr, out double z))
+                {
                     return new Vector3((float)x, (float)y, (float)z);
-
-                throw CreateParseException(location, new FormatException());
+                }
+                ThrowParseException(location);
+                return default;
             }
 
             private Vector2 ParseVector2(ReadOnlySpan<char> xStr, ReadOnlySpan<char> yStr, string location)
             {
                 if (FastParse.TryParseDouble(xStr, out double x) &&
                     FastParse.TryParseDouble(yStr, out double y))
+                {
                     return new Vector2((float)x, (float)y);
-
-                throw CreateParseException(location, new FormatException());
+                }
+                ThrowParseException(location);
+                return default;
             }
 
             private int ParseInt(ReadOnlySpan<char> intStr, string location)
             {
                 if (FastParse.TryParseInt(intStr, out int result))
+                {
                     return result;
-
-                throw CreateParseException(location, new FormatException());
+                }
+                ThrowParseException(location);
+                return default;
             }
 
             private void ExpectPieces(
@@ -403,7 +411,10 @@ namespace Veldrid.Utilities
                     return;
 
                 Fail:
-                throw CreateExpectPiecesException("three", name, exact);
+                ThrowExpectPiecesException("three", name, exact);
+                piece0 = default;
+                piece1 = default;
+                piece2 = default;
             }
 
             private void ExpectPieces(
@@ -422,7 +433,9 @@ namespace Veldrid.Utilities
                     return;
 
                 Fail:
-                throw CreateExpectPiecesException("three", name, exact);
+                ThrowExpectPiecesException("three", name, exact);
+                piece0 = default;
+                piece1 = default;
             }
 
             private void ExpectPieces(
@@ -437,10 +450,12 @@ namespace Veldrid.Utilities
                     return;
 
                 Fail:
-                throw CreateExpectPiecesException("one", name, exact);
+                ThrowExpectPiecesException("one", name, exact);
+                piece = default;
             }
 
-            private Exception CreateExpectPiecesException(string amount, string name, bool exact)
+            [DoesNotReturn]
+            private void ThrowExpectPiecesException(string amount, string name, bool exact)
             {
                 string message = string.Format(
                     "Expected {0} {1} components to a line starting with {2}, on line {3}.",
@@ -451,10 +466,11 @@ namespace Veldrid.Utilities
                 throw new ObjParseException(message);
             }
 
-            private ObjParseException CreateParseException(string location, Exception inner)
+            [DoesNotReturn]
+            private void ThrowParseException(string location)
             {
-                string message = string.Format("An error ocurred while parsing {0} on line {1}", location, _currentLine);
-                return new ObjParseException(message, inner);
+                string message = string.Format("An error ocurred while parsing {0} on line {1}.", location, _currentLine);
+                throw new ObjParseException(message, new FormatException());
             }
         }
     }

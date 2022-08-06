@@ -20,7 +20,7 @@ namespace Veldrid.Utilities
         public override IndexFormat IndexFormat => IndexFormat.UInt32;
 
         /// <summary>
-        /// Constructs a new <see cref="ConstructedMesh16"/>.
+        /// Constructs a new <see cref="ConstructedMesh32"/>.
         /// </summary>
         /// <param name="vertices">The vertices.</param>
         /// <param name="indices">The indices.</param>

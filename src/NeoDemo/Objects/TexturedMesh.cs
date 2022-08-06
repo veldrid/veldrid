@@ -328,7 +328,7 @@ namespace Veldrid.NeoDemo.Objects
         private void RenderShadowMap(CommandList cl, SceneContext sc, int shadowMapIndex)
         {
             cl.SetVertexBuffer(0, _vb);
-            cl.SetIndexBuffer(_ib, IndexFormat.UInt16);
+            cl.SetIndexBuffer(_ib, _meshData.IndexFormat);
             cl.SetPipeline(_shadowMapPipeline);
             cl.SetGraphicsResourceSet(0, _shadowMapResourceSets[shadowMapIndex * 2]);
             ReadOnlySpan<uint> offsets = MemoryMarshal.CreateReadOnlySpan(ref _uniformOffset, 1);
@@ -339,7 +339,7 @@ namespace Veldrid.NeoDemo.Objects
         private void RenderStandard(CommandList cl, SceneContext sc, bool reflectionPass)
         {
             cl.SetVertexBuffer(0, _vb);
-            cl.SetIndexBuffer(_ib, IndexFormat.UInt16);
+            cl.SetIndexBuffer(_ib, _meshData.IndexFormat);
             cl.SetPipeline(reflectionPass ? _pipelineFrontCull : _pipeline);
             cl.SetGraphicsResourceSet(0, _mainProjViewRS);
             cl.SetGraphicsResourceSet(1, _mainSharedRS);

@@ -215,9 +215,9 @@ namespace Veldrid.Vulkan
         {
             VkClearValue clearValue = new();
             clearValue.color.float32[0] = clearColor.R;
-            clearValue.color.float32[0] = clearColor.G;
-            clearValue.color.float32[0] = clearColor.B;
-            clearValue.color.float32[0] = clearColor.A;
+            clearValue.color.float32[1] = clearColor.G;
+            clearValue.color.float32[2] = clearColor.B;
+            clearValue.color.float32[3] = clearColor.A;
 
             if (_activeRenderPass != VkRenderPass.NULL)
             {

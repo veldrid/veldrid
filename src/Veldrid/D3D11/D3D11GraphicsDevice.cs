@@ -318,7 +318,7 @@ namespace Veldrid.D3D11
             {
                 if (_mappedResources.ContainsKey(key))
                 {
-                    throw new VeldridException("The given resource is already mapped.");
+                    ThrowMappedException(resource, subresource);
                 }
 
                 // No current mapping exists -- create one.
@@ -377,7 +377,7 @@ namespace Veldrid.D3D11
             {
                 if (!_mappedResources.Remove(key))
                 {
-                    throw new VeldridException($"The given resource ({resource}) is not mapped.");
+                    ThrowNotMappedException(resource, subresource);
                 }
 
                 lock (_immediateContextLock)

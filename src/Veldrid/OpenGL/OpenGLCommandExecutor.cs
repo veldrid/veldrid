@@ -3,6 +3,7 @@ using static Veldrid.OpenGLBinding.OpenGLNative;
 using static Veldrid.OpenGL.OpenGLUtil;
 using Veldrid.OpenGLBinding;
 using System.Runtime.CompilerServices;
+using System.Diagnostics;
 
 namespace Veldrid.OpenGL
 {
@@ -447,6 +448,9 @@ namespace Veldrid.OpenGL
         {
             OpenGLBuffer glIB = Util.AssertSubtype<DeviceBuffer, OpenGLBuffer>(ib);
             glIB.EnsureResourcesCreated();
+
+            if (_gd.IsDebug)
+                _gd.ThrowIfMapped(glIB, 0);
 
             glBindBuffer(BufferTarget.ElementArrayBuffer, glIB.Buffer);
             CheckLastError();
@@ -1084,6 +1088,9 @@ namespace Veldrid.OpenGL
         {
             OpenGLBuffer glVB = Util.AssertSubtype<DeviceBuffer, OpenGLBuffer>(vb);
             glVB.EnsureResourcesCreated();
+
+            if (_gd.IsDebug)
+                _gd.ThrowIfMapped(glVB, 0);
 
             Util.EnsureArrayMinimumSize(ref _vertexBuffers, index + 1);
             Util.EnsureArrayMinimumSize(ref _vbOffsets, index + 1);

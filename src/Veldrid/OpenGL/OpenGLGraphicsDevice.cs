@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -881,15 +882,20 @@ namespace Veldrid.OpenGL
             _executionThread.CreateBuffer(buffer, initialData);
         }
 
-        private protected override void UpdateBufferCore(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
+        internal void ThrowIfMapped(MappableResource resource, uint subresource)
         {
             lock (_mappedResourceLock)
             {
-                if (_mappedResources.ContainsKey(new MappedResourceCacheKey(buffer, 0)))
+                if (_mappedResources.ContainsKey(new MappedResourceCacheKey(resource, subresource)))
                 {
-                    throw new VeldridException("Cannot call UpdateBuffer on a currently-mapped Buffer.");
+                    ThrowMappedException(resource, subresource);
                 }
             }
+        }
+
+        private protected override void UpdateBufferCore(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
+        {
+            ThrowIfMapped(buffer, 0);
 
             UpdateBufferArgs args;
             args.Data = source;
@@ -1417,7 +1423,7 @@ namespace Veldrid.OpenGL
                 {
                     if (_gd._mappedResources.ContainsKey(key))
                     {
-                        throw new VeldridException("The given resource is already mapped.");
+                        ThrowMappedException(resource, subresource);
                     }
 
                     MappedResourceInfo info = new();
@@ -1659,7 +1665,7 @@ namespace Veldrid.OpenGL
                 {
                     if (!_gd._mappedResources.Remove(key, out MappedResourceInfo info))
                     {
-                        throw new VeldridException($"The given resource ({resource}) is not mapped.");
+                        ThrowNotMappedException(resource, subresource);
                     }
 
                     if (resource is OpenGLBuffer buffer)
@@ -1680,7 +1686,7 @@ namespace Veldrid.OpenGL
 
                         if (!success)
                         {
-                            throw new VeldridException("Buffer became corrupted after unmap.");
+                            ThrowCorruptMapException(resource, subresource);
                         }
                     }
                     else

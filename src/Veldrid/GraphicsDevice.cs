@@ -955,6 +955,24 @@ namespace Veldrid
             }
         }
 
+        [DoesNotReturn]
+        protected static void ThrowMappedException(MappableResource resource, uint subresource)
+        {
+            throw new VeldridMappedResourceException($"The resource ({resource}@{subresource}) is mapped.");
+        }
+
+        [DoesNotReturn]
+        protected static void ThrowNotMappedException(MappableResource resource, uint subresource)
+        {
+            throw new VeldridMappedResourceException($"The resource ({resource}@{subresource}) is not mapped.");
+        }
+
+        [DoesNotReturn]
+        protected static void ThrowCorruptMapException(MappableResource resource, uint subresource)
+        {
+            throw new VeldridMappedResourceException($"The mapped resource ({resource}@{subresource}) is corrupted.");
+        }
+
         /// <summary>
         /// Gets a simple point-filtered <see cref="Sampler"/> object owned by this instance.
         /// This object is created with <see cref="SamplerDescription.Point"/>.

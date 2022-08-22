@@ -1491,7 +1491,7 @@ namespace Veldrid.OpenGL
                         uint packAlignment = 4;
                         if (!isCompressed)
                         {
-                            packAlignment = FormatHelpers.GetSizeInBytes(texture.Format);
+                            packAlignment = FormatSizeHelpers.GetSizeInBytes(texture.Format);
                         }
 
                         if (packAlignment < 4)
@@ -1505,7 +1505,7 @@ namespace Veldrid.OpenGL
                             if (!isCompressed)
                             {
                                 // Read data into buffer.
-                                if (_gd.Extensions.ARB_DirectStateAccess)
+                                if (_gd.Extensions.ARB_DirectStateAccess && texture.ArrayLayers == 1)
                                 {
                                     int zoffset = texture.ArrayLayers > 1 ? (int)arrayLayer : 0;
                                     glGetTextureSubImage(

@@ -15,6 +15,7 @@ namespace Veldrid.Vulkan
         private readonly uint _actualImageArrayLayers;
         private bool _destroyed;
 
+        public uint ActualArrayLayers => _actualImageArrayLayers;
         public override bool IsDisposed => _destroyed;
 
         public VkImage OptimalDeviceImage => _optimalImage;

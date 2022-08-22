@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 using Vortice.D3DCompiler;
 using Vortice.Direct3D;
 using Vortice.Direct3D11;
@@ -83,7 +84,7 @@ namespace Veldrid.D3D11
             }
         }
 
-        public override bool IsDisposed => DeviceShader.IsDisposed;
+        public override bool IsDisposed => DeviceShader.NativePointer == IntPtr.Zero;
 
         public override void Dispose()
         {

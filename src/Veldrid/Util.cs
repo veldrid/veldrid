@@ -216,7 +216,7 @@ namespace Veldrid
             PixelFormat format)
         {
             uint blockSize = FormatHelpers.IsCompressedFormat(format) ? 4u : 1u;
-            uint blockSizeInBytes = blockSize > 1 ? FormatHelpers.GetBlockSizeInBytes(format) : FormatHelpers.GetSizeInBytes(format);
+            uint blockSizeInBytes = blockSize > 1 ? FormatHelpers.GetBlockSizeInBytes(format) : FormatSizeHelpers.GetSizeInBytes(format);
             uint compressedSrcX = srcX / blockSize;
             uint compressedSrcY = srcY / blockSize;
             uint compressedDstX = dstX / blockSize;

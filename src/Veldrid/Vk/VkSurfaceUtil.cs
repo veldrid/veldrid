@@ -1,10 +1,9 @@
-﻿using static Veldrid.Vulkan.VulkanUtil;
-using Veldrid.Android;
-using System;
-using Veldrid.MetalBindings;
-using TerraFX.Interop.Vulkan;
-using static TerraFX.Interop.Vulkan.Vulkan;
+﻿using System;
 using System.Collections.Generic;
+using TerraFX.Interop.Vulkan;
+using Veldrid.Android;
+using Veldrid.MetalBindings;
+using static Veldrid.Vulkan.VulkanUtil;
 
 namespace Veldrid.Vulkan
 {
@@ -24,47 +23,32 @@ namespace Veldrid.Vulkan
         {
             HashSet<string> instanceExtensions = new(EnumerateInstanceExtensions());
 
-            // TODO: a null GD is passed from VkSurfaceSource.CreateSurface for compatibility
-            //      when VkSurfaceInfo is removed we do not have to handle gd == null anymore
-
-            static VeldridException CreateException(ReadOnlySpan<byte> name)
+            void ThrowIfMissing(string name)
             {
-                return new VeldridException($"The required instance extension was not available: {Util.UTF8.GetString(name)}");
+                if (!instanceExtensions.Contains(name))
+                {
+                    throw new VeldridException($"The required instance extension was not available: {name}");
+                }
             }
 
-            if (!instanceExtensions.Contains(KHR_SURFACE_EXTENSION_NAME))
-            {
-                throw CreateException(VK_KHR_SURFACE_EXTENSION_NAME);
-            }
+            ThrowIfMissing(KHR_SURFACE_EXTENSION_NAME);
 
             switch (swapchainSource)
             {
                 case XlibSwapchainSource xlibSource:
-                    if (!instanceExtensions.Contains(KHR_XLIB_SURFACE_EXTENSION_NAME))
-                    {
-                        throw CreateException(VK_KHR_XLIB_SURFACE_EXTENSION_NAME);
-                    }
+                    ThrowIfMissing(KHR_XLIB_SURFACE_EXTENSION_NAME);
                     return CreateXlib(GetInstanceProcAddr(instance, "vkCreateXlibSurfaceKHR"), instance, xlibSource);
 
                 case WaylandSwapchainSource waylandSource:
-                    if (!instanceExtensions.Contains(KHR_WAYLAND_SURFACE_EXTENSION_NAME))
-                    {
-                        throw CreateException(VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME);
-                    }
+                    ThrowIfMissing(KHR_WAYLAND_SURFACE_EXTENSION_NAME);
                     return CreateWayland(GetInstanceProcAddr(instance, "vkCreateWaylandSurfaceKHR"), instance, waylandSource);
 
                 case Win32SwapchainSource win32Source:
-                    if (!instanceExtensions.Contains(KHR_WIN32_SURFACE_EXTENSION_NAME))
-                    {
-                        throw CreateException(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
-                    }
+                    ThrowIfMissing(KHR_WIN32_SURFACE_EXTENSION_NAME);
                     return CreateWin32(GetInstanceProcAddr(instance, "vkCreateWin32SurfaceKHR"), instance, win32Source);
 
                 case AndroidSurfaceSwapchainSource androidSource:
-                    if (!instanceExtensions.Contains(KHR_ANDROID_SURFACE_EXTENSION_NAME))
-                    {
-                        throw CreateException(VK_KHR_ANDROID_SURFACE_EXTENSION_NAME);
-                    }
+                    ThrowIfMissing(KHR_ANDROID_SURFACE_EXTENSION_NAME);
                     return CreateAndroidSurface(GetInstanceProcAddr(instance, "vkCreateAndroidSurfaceKHR"), instance, androidSource);
 
                 case NSWindowSwapchainSource nsWindowSource:
@@ -77,9 +61,20 @@ namespace Veldrid.Vulkan
                         return CreateNSWindowSurfaceMvk(GetInstanceProcAddr(instance, "vkCreateMacOSSurfaceMVK"), instance, nsWindowSource);
                     }
                     throw new VeldridException($"Neither macOS surface extension was available: " +
-                        $"{Util.UTF8.GetString(VK_MVK_MACOS_SURFACE_EXTENSION_NAME)}, " +
-                        $"{Util.UTF8.GetString(VK_EXT_METAL_SURFACE_EXTENSION_NAME)}");
-                    
+                        $"{EXT_METAL_SURFACE_EXTENSION_NAME}, {MVK_MACOS_SURFACE_EXTENSION_NAME}");
+
+                case NSViewSwapchainSource nsViewSource:
+                    if (instanceExtensions.Contains(EXT_METAL_SURFACE_EXTENSION_NAME))
+                    {
+                        return CreateNSViewSurfaceExt(GetInstanceProcAddr(instance, "vkCreateMetalSurfaceEXT"), instance, nsViewSource);
+                    }
+                    if (instanceExtensions.Contains(MVK_MACOS_SURFACE_EXTENSION_NAME))
+                    {
+                        return CreateNSViewSurfaceMvk(GetInstanceProcAddr(instance, "vkCreateMacOSSurfaceMVK"), instance, nsViewSource);
+                    }
+                    throw new VeldridException($"Neither macOS surface extension was available: " +
+                        $"{EXT_METAL_SURFACE_EXTENSION_NAME}, {MVK_MACOS_SURFACE_EXTENSION_NAME}");
+
                 case UIViewSwapchainSource uiViewSource:
                     if (instanceExtensions.Contains(EXT_METAL_SURFACE_EXTENSION_NAME))
                     {
@@ -89,9 +84,8 @@ namespace Veldrid.Vulkan
                     {
                         return CreateUIViewSurfaceMvk(GetInstanceProcAddr(instance, "vkCreateIOSSurfaceMVK"), instance, uiViewSource);
                     }
-                    throw new VeldridException($"Neither iOS surface extension was available: " +
-                        $"{Util.UTF8.GetString(VK_MVK_IOS_SURFACE_EXTENSION_NAME)}, " +
-                        $"{Util.UTF8.GetString(VK_EXT_METAL_SURFACE_EXTENSION_NAME)}");
+                    throw new VeldridException($"Neither macOS surface extension was available: " +
+                        $"{EXT_METAL_SURFACE_EXTENSION_NAME}, {MVK_IOS_SURFACE_EXTENSION_NAME}");
 
                 default:
                     throw new VeldridException($"The provided SwapchainSource cannot be used to create a Vulkan surface.");
@@ -162,14 +156,33 @@ namespace Veldrid.Vulkan
             return surface;
         }
 
-        private static unsafe VkSurfaceKHR CreateNSWindowSurfaceExt(
-            IntPtr ext, VkInstance instance, NSWindowSwapchainSource nsWindowSource)
+        private static unsafe VkSurfaceKHR CreateNSWindowSurfaceExt(IntPtr ext, VkInstance instance, NSWindowSwapchainSource nsWindowSource)
         {
-            CAMetalLayer metalLayer = CAMetalLayer.New();
             NSWindow nswindow = new(nsWindowSource.NSWindow);
-            NSView contentView = nswindow.contentView;
-            contentView.wantsLayer = true;
-            contentView.layer = metalLayer.NativePtr;
+            return CreateNSViewSurfaceExt(ext, instance, new NSViewSwapchainSource(nswindow.contentView.NativePtr));
+        }
+
+        private static unsafe VkSurfaceKHR CreateNSWindowSurfaceMvk(IntPtr mvk, VkInstance instance, NSWindowSwapchainSource nsWindowSource)
+        {
+            NSWindow nswindow = new (nsWindowSource.NSWindow);
+            return CreateNSViewSurfaceMvk(mvk, instance, new NSViewSwapchainSource(nswindow.contentView.NativePtr));
+        }
+
+        private static void GetMetalLayerFromNSView(NSView contentView, out CAMetalLayer metalLayer)
+        {
+            if (!CAMetalLayer.TryCast(contentView.layer, out metalLayer))
+            {
+                metalLayer = CAMetalLayer.New();
+                contentView.wantsLayer = true;
+                contentView.layer = metalLayer.NativePtr;
+            }
+        }
+
+        private static unsafe VkSurfaceKHR CreateNSViewSurfaceExt(
+            IntPtr ext, VkInstance instance, NSViewSwapchainSource nsViewSource)
+        {
+            NSView contentView = new(nsViewSource.NSView);
+            GetMetalLayerFromNSView(contentView, out CAMetalLayer metalLayer);
 
             VkMetalSurfaceCreateInfoEXT surfaceCI = new()
             {
@@ -183,14 +196,11 @@ namespace Veldrid.Vulkan
             return surface;
         }
 
-        private static unsafe VkSurfaceKHR CreateNSWindowSurfaceMvk(
-            IntPtr mvk, VkInstance instance, NSWindowSwapchainSource nsWindowSource)
+        private static unsafe VkSurfaceKHR CreateNSViewSurfaceMvk(
+            IntPtr mvk, VkInstance instance, NSViewSwapchainSource nsViewSource)
         {
-            CAMetalLayer metalLayer = CAMetalLayer.New();
-            NSWindow nswindow = new(nsWindowSource.NSWindow);
-            NSView contentView = nswindow.contentView;
-            contentView.wantsLayer = true;
-            contentView.layer = metalLayer.NativePtr;
+            NSView contentView = new(nsViewSource.NSView);
+            GetMetalLayerFromNSView(contentView, out _);
 
             VkMacOSSurfaceCreateInfoMVK surfaceCI = new()
             {
@@ -204,14 +214,22 @@ namespace Veldrid.Vulkan
             return surface;
         }
 
+        private static void GetMetalLayerFromUIView(UIView uiView, out CAMetalLayer metalLayer)
+        {
+            if (!CAMetalLayer.TryCast(uiView.layer, out metalLayer))
+            {
+                metalLayer = CAMetalLayer.New();
+                metalLayer.frame = uiView.frame;
+                metalLayer.opaque = true;
+                uiView.layer.addSublayer(metalLayer.NativePtr);
+            }
+        }
+
         private static VkSurfaceKHR CreateUIViewSurfaceExt(
             IntPtr ext, VkInstance instance, UIViewSwapchainSource uiViewSource)
         {
-            CAMetalLayer metalLayer = CAMetalLayer.New();
             UIView uiView = new(uiViewSource.UIView);
-            metalLayer.frame = uiView.frame;
-            metalLayer.opaque = true;
-            uiView.layer.addSublayer(metalLayer.NativePtr);
+            GetMetalLayerFromUIView(uiView, out CAMetalLayer metalLayer);
 
             VkMetalSurfaceCreateInfoEXT surfaceCI = new()
             {
@@ -228,11 +246,8 @@ namespace Veldrid.Vulkan
         private static VkSurfaceKHR CreateUIViewSurfaceMvk(
             IntPtr mvk, VkInstance instance, UIViewSwapchainSource uiViewSource)
         {
-            CAMetalLayer metalLayer = CAMetalLayer.New();
             UIView uiView = new(uiViewSource.UIView);
-            metalLayer.frame = uiView.frame;
-            metalLayer.opaque = true;
-            uiView.layer.addSublayer(metalLayer.NativePtr);
+            GetMetalLayerFromUIView(uiView, out _);
 
             VkIOSSurfaceCreateInfoMVK surfaceCI = new()
             {

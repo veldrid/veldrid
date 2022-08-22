@@ -324,6 +324,22 @@ namespace Veldrid.MTL
             };
         }
 
+        internal static MTLColorWriteMask VdToMTLColorWriteMask(ColorWriteMask vdMask)
+        {
+            MTLColorWriteMask mask = MTLColorWriteMask.None;
+
+            if ((vdMask & ColorWriteMask.Red) == ColorWriteMask.Red)
+                mask |= MTLColorWriteMask.Red;
+            if ((vdMask & ColorWriteMask.Green) == ColorWriteMask.Green)
+                mask |= MTLColorWriteMask.Green;
+            if ((vdMask & ColorWriteMask.Blue) == ColorWriteMask.Blue)
+                mask |= MTLColorWriteMask.Blue;
+            if ((vdMask & ColorWriteMask.Alpha) == ColorWriteMask.Alpha)
+                mask |= MTLColorWriteMask.Alpha;
+
+            return mask;
+        }
+
         [SuppressMessage("Style", "IDE0066:Convert switch statement to expression", Justification = "<Pending>")]
         internal static MTLDataType VdVoMTLShaderConstantType(ShaderConstantType type)
         {

@@ -31,9 +31,6 @@ namespace Veldrid
         private ResourceSet _mainResourceSet;
         private ResourceSet _fontTextureResourceSet;
         private IntPtr _fontAtlasID = (IntPtr)1;
-        private bool _controlDown;
-        private bool _shiftDown;
-        private bool _altDown;
 
         private int _windowWidth;
         private int _windowHeight;
@@ -80,9 +77,9 @@ namespace Veldrid
             ImGui.SetCurrentContext(context);
 
             ImGui.GetIO().Fonts.AddFontDefault();
+            ImGui.GetIO().Fonts.Flags |= ImFontAtlasFlags.NoBakedLines;
 
             CreateDeviceResources(gd, outputDescription);
-            SetOpenTKKeyMappings();
 
             SetPerFrameImGuiData(1f / 60f);
 
@@ -137,7 +134,9 @@ namespace Veldrid
             byte[] vertexShaderBytes = LoadEmbeddedShaderCode(gd.ResourceFactory, "imgui-vertex", ShaderStages.Vertex, _colorSpaceHandling);
             byte[] fragmentShaderBytes = LoadEmbeddedShaderCode(gd.ResourceFactory, "imgui-frag", ShaderStages.Fragment, _colorSpaceHandling);
             _vertexShader = factory.CreateShader(new ShaderDescription(ShaderStages.Vertex, vertexShaderBytes, _gd.BackendType == GraphicsBackend.Vulkan ? "main" : "VS"));
+            _vertexShader.Name = "ImGui.NET Vertex Shader";
             _fragmentShader = factory.CreateShader(new ShaderDescription(ShaderStages.Fragment, fragmentShaderBytes, _gd.BackendType == GraphicsBackend.Vulkan ? "main" : "FS"));
+            _fragmentShader.Name = "ImGui.NET Fragment Shader";
 
             VertexLayoutDescription[] vertexLayouts = new VertexLayoutDescription[]
             {
@@ -150,8 +149,11 @@ namespace Veldrid
             _layout = factory.CreateResourceLayout(new ResourceLayoutDescription(
                 new ResourceLayoutElementDescription("ProjectionMatrixBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex),
                 new ResourceLayoutElementDescription("FontSampler", ResourceKind.Sampler, ShaderStages.Fragment)));
+            _layout.Name = "ImGui.NET Resource Layout";
+
             _textureLayout = factory.CreateResourceLayout(new ResourceLayoutDescription(
                 new ResourceLayoutElementDescription("FontTexture", ResourceKind.TextureReadOnly, ShaderStages.Fragment)));
+            _textureLayout.Name = "ImGui.NET Texture Layout";
 
             GraphicsPipelineDescription pd = new(
                 BlendStateDescription.SingleAlphaBlend,
@@ -170,10 +172,12 @@ namespace Veldrid
                 outputDescription,
                 ResourceBindingModel.Default);
             _pipeline = factory.CreateGraphicsPipeline(pd);
+            _pipeline.Name = "ImGui.NET Pipeline";
 
             _mainResourceSet = factory.CreateResourceSet(new ResourceSetDescription(_layout,
                 _projMatrixBuffer,
                 gd.PointSampler));
+            _mainResourceSet.Name = "ImGui.NET Main Resource Set";
 
             RecreateFontDeviceTexture(gd);
         }
@@ -187,6 +191,7 @@ namespace Veldrid
             if (!_setsByView.TryGetValue(textureView, out ResourceSetInfo rsi))
             {
                 ResourceSet resourceSet = factory.CreateResourceSet(new ResourceSetDescription(_textureLayout, textureView));
+                resourceSet.Name = $"ImGui.NET {textureView.Name} Resource Set";
                 rsi = new ResourceSetInfo(GetNextImGuiBindingID(), resourceSet);
 
                 _setsByView.Add(textureView, rsi);
@@ -222,6 +227,7 @@ namespace Veldrid
             if (!_autoViewsByTexture.TryGetValue(texture, out TextureView textureView))
             {
                 textureView = factory.CreateTextureView(texture);
+                textureView.Name = $"ImGui.NET {texture.Name} View";
                 _autoViewsByTexture.Add(texture, textureView);
                 _ownedResources.Add(textureView);
             }
@@ -372,6 +378,7 @@ namespace Veldrid
 
             _fontTextureResourceSet?.Dispose();
             _fontTextureResourceSet = gd.ResourceFactory.CreateResourceSet(new ResourceSetDescription(_textureLayout, _fontTexture));
+            _fontTextureResourceSet.Name = "ImGui.NET Font Texture Resource Set";
 
             io.Fonts.ClearTexData();
         }
@@ -437,96 +444,203 @@ namespace Veldrid
             io.DeltaTime = deltaSeconds; // DeltaTime is in seconds.
         }
 
-        private unsafe void UpdateImGuiInput(InputSnapshot snapshot)
+        private static bool TryMapKey(Key key, out ImGuiKey result)
         {
-            ImGuiIOPtr io = ImGui.GetIO();
-
-            // Determine if any of the mouse buttons were pressed during this snapshot period, even if they are no longer held.
-            bool leftPressed = false;
-            bool middlePressed = false;
-            bool rightPressed = false;
-            for (int i = 0; i < snapshot.MouseEvents.Length; i++)
+            static ImGuiKey keyToImGuiKeyShortcut(Key keyToConvert, Key startKey1, ImGuiKey startKey2)
             {
-                MouseButtonEvent me = snapshot.MouseEvents[i];
-                if (me.Down)
-                {
-                    switch (me.MouseButton)
-                    {
-                        case MouseButton.Left:
-                            leftPressed = true;
-                            break;
-                        case MouseButton.Middle:
-                            middlePressed = true;
-                            break;
-                        case MouseButton.Right:
-                            rightPressed = true;
-                            break;
-                    }
-                }
+                int changeFromStart1 = (int)keyToConvert - (int)startKey1;
+                return startKey2 + changeFromStart1;
             }
 
-            io.MouseDown[0] = leftPressed || (snapshot.MouseDown & MouseButton.Left) != 0;
-            io.MouseDown[1] = rightPressed || (snapshot.MouseDown & MouseButton.Right) != 0;
-            io.MouseDown[2] = middlePressed || (snapshot.MouseDown & MouseButton.Middle) != 0;
-            io.MousePos = snapshot.MousePosition;
-            io.MouseWheel = snapshot.WheelDelta.Y;
-            io.MouseWheelH = snapshot.WheelDelta.X;
-
-            for (int i = 0; i < snapshot.InputEvents.Length; i++)
+            if (key >= Key.F1 && key <= Key.F12)
             {
-                Rune rune = snapshot.InputEvents[i];
-                ImGui.GetIO().AddInputCharacter((uint)rune.Value);
+                result = keyToImGuiKeyShortcut(key, Key.F1, ImGuiKey.F1);
+                return true;
+            }
+            else if (key >= Key.Keypad0 && key <= Key.Keypad9)
+            {
+                result = keyToImGuiKeyShortcut(key, Key.Keypad0, ImGuiKey.Keypad0);
+                return true;
+            }
+            else if (key >= Key.A && key <= Key.Z)
+            {
+                result = keyToImGuiKeyShortcut(key, Key.A, ImGuiKey.A);
+                return true;
+            }
+            else if (key >= Key.Num0 && key <= Key.Num9)
+            {
+                result = keyToImGuiKeyShortcut(key, Key.Num0, ImGuiKey._0);
+                return true;
             }
 
-            for (int i = 0; i < snapshot.KeyEvents.Length; i++)
+            switch (key)
             {
-                KeyEvent keyEvent = snapshot.KeyEvents[i];
-                io.KeysDown[(int)keyEvent.Physical] = keyEvent.Down;
-                if (keyEvent.Physical == Key.LeftControl ||
-                    keyEvent.Physical == Key.RightControl)
-                {
-                    _controlDown = keyEvent.Down;
-                }
-                if (keyEvent.Physical == Key.LeftShift ||
-                    keyEvent.Physical == Key.RightShift)
-                {
-                    _shiftDown = keyEvent.Down;
-                }
-                if (keyEvent.Physical == Key.LeftAlt ||
-                    keyEvent.Physical == Key.RightAlt)
-                {
-                    _altDown = keyEvent.Down;
-                }
+                case Key.LeftShift:
+                case Key.RightShift:
+                    result = ImGuiKey.ModShift;
+                    return true;
+                case Key.LeftControl:
+                case Key.RightControl:
+                    result = ImGuiKey.ModCtrl;
+                    return true;
+                case Key.LeftAlt:
+                case Key.RightAlt:
+                    result = ImGuiKey.ModAlt;
+                    return true;
+                case Key.LeftGui:
+                case Key.RightGui:
+                    result = ImGuiKey.ModSuper;
+                    return true;
+                case Key.Menu:
+                    result = ImGuiKey.Menu;
+                    return true;
+                case Key.Up:
+                    result = ImGuiKey.UpArrow;
+                    return true;
+                case Key.Down:
+                    result = ImGuiKey.DownArrow;
+                    return true;
+                case Key.Left:
+                    result = ImGuiKey.LeftArrow;
+                    return true;
+                case Key.Right:
+                    result = ImGuiKey.RightArrow;
+                    return true;
+                case Key.Return:
+                    result = ImGuiKey.Enter;
+                    return true;
+                case Key.Escape:
+                    result = ImGuiKey.Escape;
+                    return true;
+                case Key.Space:
+                    result = ImGuiKey.Space;
+                    return true;
+                case Key.Tab:
+                    result = ImGuiKey.Tab;
+                    return true;
+                case Key.Backspace:
+                    result = ImGuiKey.Backspace;
+                    return true;
+                case Key.Insert:
+                    result = ImGuiKey.Insert;
+                    return true;
+                case Key.Delete:
+                    result = ImGuiKey.Delete;
+                    return true;
+                case Key.PageUp:
+                    result = ImGuiKey.PageUp;
+                    return true;
+                case Key.PageDown:
+                    result = ImGuiKey.PageDown;
+                    return true;
+                case Key.Home:
+                    result = ImGuiKey.Home;
+                    return true;
+                case Key.End:
+                    result = ImGuiKey.End;
+                    return true;
+                case Key.CapsLock:
+                    result = ImGuiKey.CapsLock;
+                    return true;
+                case Key.ScrollLock:
+                    result = ImGuiKey.ScrollLock;
+                    return true;
+                case Key.PrintScreen:
+                    result = ImGuiKey.PrintScreen;
+                    return true;
+                case Key.Pause:
+                    result = ImGuiKey.Pause;
+                    return true;
+                case Key.NumLockClear:
+                    result = ImGuiKey.NumLock;
+                    return true;
+                case Key.KeypadDivide:
+                    result = ImGuiKey.KeypadDivide;
+                    return true;
+                case Key.KeypadMultiply:
+                    result = ImGuiKey.KeypadMultiply;
+                    return true;
+                case Key.KeypadMemorySubtract:
+                    result = ImGuiKey.KeypadSubtract;
+                    return true;
+                case Key.KeypadMemoryAdd:
+                    result = ImGuiKey.KeypadAdd;
+                    return true;
+                case Key.KeypadDecimal:
+                    result = ImGuiKey.KeypadDecimal;
+                    return true;
+                case Key.KeypadEnter:
+                    result = ImGuiKey.KeypadEnter;
+                    return true;
+                case Key.Grave:
+                    result = ImGuiKey.GraveAccent;
+                    return true;
+                case Key.Minus:
+                    result = ImGuiKey.Minus;
+                    return true;
+                case Key.KeypadPlus:
+                    result = ImGuiKey.Equal;
+                    return true;
+                case Key.LeftBracket:
+                    result = ImGuiKey.LeftBracket;
+                    return true;
+                case Key.RightBracket:
+                    result = ImGuiKey.RightBracket;
+                    return true;
+                case Key.Semicolon:
+                    result = ImGuiKey.Semicolon;
+                    return true;
+                case Key.Apostrophe:
+                    result = ImGuiKey.Apostrophe;
+                    return true;
+                case Key.Comma:
+                    result = ImGuiKey.Comma;
+                    return true;
+                case Key.Period:
+                    result = ImGuiKey.Period;
+                    return true;
+                case Key.Slash:
+                    result = ImGuiKey.Slash;
+                    return true;
+                case Key.Backslash:
+                case Key.NonUsBackslash:
+                    result = ImGuiKey.Backslash;
+                    return true;
+                default:
+                    result = ImGuiKey.GamepadBack;
+                    return false;
             }
-
-            io.KeyCtrl = _controlDown;
-            io.KeyAlt = _altDown;
-            io.KeyShift = _shiftDown;
         }
 
-        private static unsafe void SetOpenTKKeyMappings()
+        private static void UpdateImGuiInput(InputSnapshot snapshot)
         {
             ImGuiIOPtr io = ImGui.GetIO();
-            io.KeyMap[(int)ImGuiKey.Tab] = (int)Key.Tab;
-            io.KeyMap[(int)ImGuiKey.LeftArrow] = (int)Key.Left;
-            io.KeyMap[(int)ImGuiKey.RightArrow] = (int)Key.Right;
-            io.KeyMap[(int)ImGuiKey.UpArrow] = (int)Key.Up;
-            io.KeyMap[(int)ImGuiKey.DownArrow] = (int)Key.Down;
-            io.KeyMap[(int)ImGuiKey.PageUp] = (int)Key.PageUp;
-            io.KeyMap[(int)ImGuiKey.PageDown] = (int)Key.PageDown;
-            io.KeyMap[(int)ImGuiKey.Home] = (int)Key.Home;
-            io.KeyMap[(int)ImGuiKey.End] = (int)Key.End;
-            io.KeyMap[(int)ImGuiKey.Delete] = (int)Key.Delete;
-            io.KeyMap[(int)ImGuiKey.Backspace] = (int)Key.Backspace;
-            io.KeyMap[(int)ImGuiKey.Enter] = (int)Key.Return;
-            io.KeyMap[(int)ImGuiKey.Escape] = (int)Key.Escape;
-            io.KeyMap[(int)ImGuiKey.Space] = (int)Key.Space;
-            io.KeyMap[(int)ImGuiKey.A] = (int)Key.A;
-            io.KeyMap[(int)ImGuiKey.C] = (int)Key.C;
-            io.KeyMap[(int)ImGuiKey.V] = (int)Key.V;
-            io.KeyMap[(int)ImGuiKey.X] = (int)Key.X;
-            io.KeyMap[(int)ImGuiKey.Y] = (int)Key.Y;
-            io.KeyMap[(int)ImGuiKey.Z] = (int)Key.Z;
+
+            Vector2 mousePos = snapshot.MousePosition;
+            io.AddMousePosEvent(mousePos.X, mousePos.Y);
+
+            MouseButton snapMouseDown = snapshot.MouseDown;
+            io.AddMouseButtonEvent(0, (snapMouseDown & MouseButton.Left) != 0);
+            io.AddMouseButtonEvent(1, (snapMouseDown & MouseButton.Right) != 0);
+            io.AddMouseButtonEvent(2, (snapMouseDown & MouseButton.Middle) != 0);
+            io.AddMouseButtonEvent(3, (snapMouseDown & MouseButton.Button1) != 0);
+            io.AddMouseButtonEvent(4, (snapMouseDown & MouseButton.Button2) != 0);
+
+            Vector2 wheelDelta = snapshot.WheelDelta;
+            io.AddMouseWheelEvent(wheelDelta.X, wheelDelta.Y);
+
+            foreach (Rune rune in snapshot.InputEvents)
+            {
+                io.AddInputCharacter((uint)rune.Value);
+            }
+
+            foreach(KeyEvent keyEvent in snapshot.KeyEvents)
+            {
+                if (TryMapKey(keyEvent.Physical, out ImGuiKey imguikey))
+                {
+                    io.AddKeyEvent(imguikey, keyEvent.Down);
+                }
+            }
         }
 
         private unsafe void RenderImDrawData(ImDrawDataPtr draw_data, GraphicsDevice gd, CommandList cl)
@@ -633,11 +747,11 @@ namespace Veldrid
                             (uint)(pcmd.ClipRect.Z - pcmd.ClipRect.X),
                             (uint)(pcmd.ClipRect.W - pcmd.ClipRect.Y));
 
-                        cl.DrawIndexed(pcmd.ElemCount, 1, (uint)idx_offset, vtx_offset, 0);
+                        cl.DrawIndexed(pcmd.ElemCount, 1, pcmd.IdxOffset + (uint)idx_offset, (int)(pcmd.VtxOffset + vtx_offset), 0);
                     }
-
-                    idx_offset += (int)pcmd.ElemCount;
                 }
+
+                idx_offset += cmd_list.IdxBuffer.Size;
                 vtx_offset += cmd_list.VtxBuffer.Size;
             }
         }

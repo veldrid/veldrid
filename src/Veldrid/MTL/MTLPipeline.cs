@@ -110,7 +110,7 @@ namespace Veldrid.MTL
                         : i);
                     mtlAttribute.format = MTLFormats.VdToMTLVertexFormat(elementDesc.Format);
                     mtlAttribute.offset = elementDesc.Offset != 0 ? (UIntPtr)elementDesc.Offset : (UIntPtr)offset;
-                    offset += FormatHelpers.GetSizeInBytes(elementDesc.Format);
+                    offset += FormatSizeHelpers.GetSizeInBytes(elementDesc.Format);
                     element += 1;
                 }
             }
@@ -146,6 +146,7 @@ namespace Veldrid.MTL
                 MTLRenderPipelineColorAttachmentDescriptor colorDesc = mtlDesc.colorAttachments[(uint)i];
                 colorDesc.pixelFormat = MTLFormats.VdToMTLPixelFormat(outputColorAttachments[i].Format, false);
                 colorDesc.blendingEnabled = attachmentBlendDesc.BlendEnabled;
+                colorDesc.writeMask = MTLFormats.VdToMTLColorWriteMask(attachmentBlendDesc.ColorWriteMask.GetOrDefault());
                 colorDesc.alphaBlendOperation = MTLFormats.VdToMTLBlendOp(attachmentBlendDesc.AlphaFunction);
                 colorDesc.sourceAlphaBlendFactor = MTLFormats.VdToMTLBlendFactor(attachmentBlendDesc.SourceAlphaFactor);
                 colorDesc.destinationAlphaBlendFactor = MTLFormats.VdToMTLBlendFactor(attachmentBlendDesc.DestinationAlphaFactor);

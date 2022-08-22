@@ -470,6 +470,11 @@ namespace Veldrid.Vulkan
             List<IntPtr> instanceExtensions = new();
             List<IntPtr> instanceLayers = new();
 
+            if (availableInstanceExtensions.Contains(CommonStrings.VK_KHR_portability_subset))
+            {
+                _surfaceExtensions.Add(CommonStrings.VK_KHR_portability_subset);
+            }
+
             if (availableInstanceExtensions.Contains(CommonStrings.VK_KHR_SURFACE_EXTENSION_NAME))
             {
                 _surfaceExtensions.Add(CommonStrings.VK_KHR_SURFACE_EXTENSION_NAME);
@@ -805,6 +810,10 @@ namespace Veldrid.Vulkan
                     {
                         requiredDeviceExtensions.Remove(extensionName);
                         hasDriverProperties = true;
+                    }
+                    else if (extensionName == "VK_KHR_portability_subset")
+                    {
+                        requiredDeviceExtensions.Remove(extensionName);
                     }
                     else if (requiredDeviceExtensions.Remove(extensionName))
                     {
@@ -1546,7 +1555,7 @@ namespace Veldrid.Vulkan
         {
             SharedCommandPool pool = GetFreeCommandPool();
             VkCommandBuffer cb = pool.BeginNewCommandBuffer();
-            texture.TransitionImageLayout(cb, 0, texture.MipLevels, 0, texture.ArrayLayers, layout);
+            texture.TransitionImageLayout(cb, 0, texture.MipLevels, 0, texture.ActualArrayLayers, layout);
             pool.EndAndSubmit(cb);
         }
 

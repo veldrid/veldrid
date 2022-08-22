@@ -1,4 +1,5 @@
-﻿using Vortice.Direct3D11;
+﻿using System;
+using Vortice.Direct3D11;
 using Vortice.Mathematics;
 
 namespace Veldrid.D3D11
@@ -53,7 +54,7 @@ namespace Veldrid.D3D11
             }
         }
 
-        public override bool IsDisposed => DeviceSampler.IsDisposed;
+        public override bool IsDisposed => DeviceSampler.NativePointer == IntPtr.Zero;
 
         public override void Dispose()
         {

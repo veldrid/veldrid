@@ -2,9 +2,10 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text;
 using Veldrid.SPIRV;
 using Xunit;
 
@@ -181,14 +182,10 @@ void main()
             private uint _padding2;
         }
 
-
-        [Fact]
+        [SkippableFact]
         public void BasicCompute()
         {
-            if (!GD.Features.ComputeShader)
-            {
-                return;
-            }
+            Skip.IfNot(GD.Features.ComputeShader);
 
             ResourceLayout layout = RF.CreateResourceLayout(new ResourceLayoutDescription(
                 new ResourceLayoutElementDescription("Params", ResourceKind.UniformBuffer, ShaderStages.Compute),
@@ -245,12 +242,167 @@ void main()
             GD.Unmap(destinationReadback);
         }
 
-        [Theory]
+        [SkippableFact]
+        public void ComputeCubemapGeneration()
+        {
+            Skip.IfNot(GD.Features.ComputeShader);
+            Skip.If(GD.GetD3D11Info(out _), "D3D11 doesn't support Storage Cubemaps");
+
+            const int TexSize = 32;
+            const uint MipLevels = 1;
+
+            TextureDescription texDesc = TextureDescription.Texture2D(
+                TexSize, TexSize,
+                MipLevels,
+                1,
+                PixelFormat.R8_G8_B8_A8_UNorm,
+                TextureUsage.Sampled | TextureUsage.Storage | TextureUsage.Cubemap);
+            Texture computeOutput = RF.CreateTexture(texDesc);
+
+            Vector4[] faceColors = new Vector4[] {
+                new Vector4(0 * 42),
+                new Vector4(1 * 42),
+                new Vector4(2 * 42),
+                new Vector4(3 * 42),
+                new Vector4(4 * 42),
+                new Vector4(5 * 42)
+            };
+
+            ResourceLayout computeLayout = RF.CreateResourceLayout(new ResourceLayoutDescription(
+                new ResourceLayoutElementDescription("ComputeOutput", ResourceKind.TextureReadWrite, ShaderStages.Compute)));
+            ResourceSet computeSet = RF.CreateResourceSet(new ResourceSetDescription(computeLayout, computeOutput));
+
+            Pipeline computePipeline = RF.CreateComputePipeline(new ComputePipelineDescription(
+                TestShaders.LoadCompute(RF, "ComputeCubemapGenerator"),
+                computeLayout,
+                32, 32, 1));
+
+            CommandList cl = RF.CreateCommandList();
+            cl.Begin();
+            cl.SetPipeline(computePipeline);
+            cl.SetComputeResourceSet(0, computeSet);
+            cl.Dispatch(TexSize / 32, TexSize / 32, 6);
+            cl.End();
+            GD.SubmitCommands(cl);
+            GD.WaitForIdle();
+
+            using (Texture readback = GetReadback(computeOutput))
+            {
+                for (uint mip = 0; mip < MipLevels; mip++)
+                {
+                    for (uint face = 0; face < 6; face++)
+                    {
+                        uint subresource = readback.CalculateSubresource(mip, face);
+                        int mipSize = (TexSize >> (int)mip);
+                        RgbaByte expectedColor = new((byte)faceColors[face].X, (byte)faceColors[face].Y, (byte)faceColors[face].Z, (byte)faceColors[face].Z);
+                        MappedResourceView<RgbaByte> readView = GD.Map<RgbaByte>(readback, MapMode.Read, subresource);
+                        for (int y = 0; y < mipSize; y++)
+                            for (int x = 0; x < mipSize; x++)
+                            {
+                                Assert.Equal(expectedColor, readView[x, y]);
+                            }
+                        GD.Unmap(readback, subresource);
+                    }
+                }
+            }
+        }
+
+        [SkippableFact]
+        public void ComputeCubemapBindSingleTextureMipLevelOutput()
+        {
+            Skip.IfNot(GD.Features.ComputeShader);
+            Skip.If(GD.GetD3D11Info(out _), "D3D11 doesn't support Storage Cubemaps");
+
+            const int TexSize = 128;
+            const uint MipLevels = 7;
+
+            const uint BoundMipLevel = 2;
+
+            TextureDescription texDesc = TextureDescription.Texture2D(
+                TexSize, TexSize,
+                MipLevels,
+                1,
+                PixelFormat.R8_G8_B8_A8_UNorm,
+                TextureUsage.Sampled | TextureUsage.Storage | TextureUsage.Cubemap);
+            Texture computeOutput = RF.CreateTexture(texDesc);
+
+            TextureView computeOutputMipLevel = RF.CreateTextureView(new TextureViewDescription(computeOutput, BoundMipLevel, 1, 0, 1));
+
+            Vector4[] faceColors = new Vector4[] {
+                new Vector4(0 * 42),
+                new Vector4(1 * 42),
+                new Vector4(2 * 42),
+                new Vector4(3 * 42),
+                new Vector4(4 * 42),
+                new Vector4(5 * 42)
+            };
+
+            ResourceLayout computeLayout = RF.CreateResourceLayout(new ResourceLayoutDescription(
+                new ResourceLayoutElementDescription("ComputeOutput", ResourceKind.TextureReadWrite, ShaderStages.Compute)));
+            ResourceSet computeSet = RF.CreateResourceSet(new ResourceSetDescription(computeLayout, computeOutputMipLevel));
+
+            Pipeline computePipeline = RF.CreateComputePipeline(new ComputePipelineDescription(
+                TestShaders.LoadCompute(RF, "ComputeCubemapGenerator"),
+                computeLayout,
+                32, 32, 1));
+
+            using (Texture readback = GetReadback(computeOutput))
+            {
+                for (uint mip = 0; mip < MipLevels; mip++)
+                {
+                    for (uint face = 0; face < 6; face++)
+                    {
+                        uint subresource = readback.CalculateSubresource(mip, face);
+                        uint mipSize = (uint)(TexSize / (1 << (int)mip));
+                        RgbaByte expectedColor = RgbaByte.Clear;
+                        MappedResourceView<RgbaByte> readView = GD.Map<RgbaByte>(readback, MapMode.Read, subresource);
+                        for (int y = 0; y < mipSize; y++)
+                            for (int x = 0; x < mipSize; x++)
+                            {
+                                Assert.Equal(expectedColor, readView[x, y]);
+                            }
+                        GD.Unmap(readback, subresource);
+                    }
+                }
+            }
+
+            CommandList cl = RF.CreateCommandList();
+            cl.Begin();
+            cl.SetPipeline(computePipeline);
+            cl.SetComputeResourceSet(0, computeSet);
+            cl.Dispatch((TexSize >> (int)BoundMipLevel) / 32, (TexSize >> (int)BoundMipLevel) / 32, 6);
+            cl.End();
+            GD.SubmitCommands(cl);
+            GD.WaitForIdle();
+
+            using (Texture readback = GetReadback(computeOutput))
+            {
+                for (uint mip = 0; mip < MipLevels; mip++)
+                {
+                    for (uint face = 0; face < 6; face++)
+                    {
+                        uint subresource = readback.CalculateSubresource(mip, face);
+                        uint mipSize = (uint)(TexSize / (1 << (int)mip));
+                        RgbaByte expectedColor = mip == BoundMipLevel ? new RgbaByte((byte)faceColors[face].X, (byte)faceColors[face].Y, (byte)faceColors[face].Z, (byte)faceColors[face].Z) : RgbaByte.Clear;
+                        MappedResourceView<RgbaByte> readView = GD.Map<RgbaByte>(readback, MapMode.Read, subresource);
+                        for (int y = 0; y < mipSize; y++)
+                            for (int x = 0; x < mipSize; x++)
+                            {
+                                Assert.Equal(expectedColor, readView[x, y]);
+                            }
+                        GD.Unmap(readback, subresource);
+                    }
+                }
+            }
+        }
+
+        [SkippableTheory]
         [MemberData(nameof(FillBuffer_WithOffsetsData))]
         public void FillBuffer_WithOffsets(uint srcSetMultiple, uint srcBindingMultiple, uint dstSetMultiple, uint dstBindingMultiple, bool combinedLayout)
         {
-            if (!GD.Features.ComputeShader) { return; }
-            if (!GD.Features.BufferRangeBinding && (srcSetMultiple != 0 || srcBindingMultiple != 0 || dstSetMultiple != 0 || dstBindingMultiple != 0)) { return; }
+            Skip.IfNot(GD.Features.ComputeShader);
+            Skip.If(!GD.Features.BufferRangeBinding && (srcSetMultiple != 0 || srcBindingMultiple != 0 || dstSetMultiple != 0 || dstBindingMultiple != 0));
+
             Debug.Assert((GD.StructuredBufferMinOffsetAlignment % sizeof(uint)) == 0);
 
             uint valueCount = 512;

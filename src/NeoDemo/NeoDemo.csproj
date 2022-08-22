@@ -5,6 +5,7 @@
     <TargetFramework>net6.0</TargetFramework>
     <RootNamespace>Veldrid.NeoDemo</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <IsPackable>false</IsPackable>
     <AssetsDir>$(MSBuildThisFileDirectory)Assets</AssetsDir>
   </PropertyGroup>
 

@@ -19,6 +19,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Xunit.SkippableFact" Version="1.4.13" />
     <ProjectReference Include="..\..\modules\veldrid-spirv\src\Veldrid.SPIRV\Veldrid.SPIRV.csproj" />
     <ProjectReference Include="..\Veldrid.RenderDoc\Veldrid.RenderDoc.csproj" />
     <ProjectReference Include="..\Veldrid.SDL2\Veldrid.SDL2.csproj" />
@@ -35,6 +36,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="Shaders\ComputeCubemapGenerator.comp" />
+    <None Remove="Shaders\ComputeImage2DArrayGenerator.comp" />
     <None Remove="Shaders\ComputeTextureGenerator.comp" />
     <None Remove="Shaders\F16VertexAttribs.frag" />
     <None Remove="Shaders\F16VertexAttribs.vert" />

@@ -54,6 +54,7 @@ namespace Veldrid.NeoDemo
         public Camera Camera { get; set; }
         public DirectionalLight DirectionalLight { get; } = new DirectionalLight();
         public TextureSampleCount MainSceneSampleCount { get; internal set; }
+        public ColorWriteMask MainSceneMask { get; internal set; } = ColorWriteMask.All;
         public DeviceBuffer MirrorClipPlaneBuffer { get; private set; }
         public DeviceBuffer NoClipPlaneBuffer { get; private set; }
 

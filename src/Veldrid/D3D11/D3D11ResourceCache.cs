@@ -66,7 +66,7 @@ namespace Veldrid.D3D11
                 BlendAttachmentDescription state = attachmentStates[i];
                 ref RenderTargetBlendDescription renderTarget = ref d3dBlendStateDesc.RenderTarget[i];
                 renderTarget.IsBlendEnabled = state.BlendEnabled;
-                renderTarget.RenderTargetWriteMask = ColorWriteEnable.All;
+                renderTarget.RenderTargetWriteMask = D3D11Formats.VdToD3D11ColorWriteEnable(state.ColorWriteMask.GetOrDefault());
                 renderTarget.SourceBlend = D3D11Formats.VdToD3D11Blend(state.SourceColorFactor);
                 renderTarget.DestinationBlend = D3D11Formats.VdToD3D11Blend(state.DestinationColorFactor);
                 renderTarget.BlendOperation = D3D11Formats.VdToD3D11BlendOperation(state.ColorFunction);
@@ -198,7 +198,7 @@ namespace Veldrid.D3D11
                         stepRate == 0 ? InputClassification.PerVertexData : InputClassification.PerInstanceData,
                         (int)stepRate);
 
-                    currentOffset += (int)FormatHelpers.GetSizeInBytes(desc.Format);
+                    currentOffset += (int)FormatSizeHelpers.GetSizeInBytes(desc.Format);
                     element += 1;
                 }
             }

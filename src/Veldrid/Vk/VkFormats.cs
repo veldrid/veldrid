@@ -214,6 +214,22 @@ namespace Veldrid.Vulkan
             };
         }
 
+        internal static VkColorComponentFlags VdToVkColorWriteMask(ColorWriteMask mask)
+        {
+            VkColorComponentFlags flags = default;
+
+            if ((mask & ColorWriteMask.Red) == ColorWriteMask.Red)
+                flags |= VkColorComponentFlags.VK_COLOR_COMPONENT_R_BIT;
+            if ((mask & ColorWriteMask.Green) == ColorWriteMask.Green)
+                flags |= VkColorComponentFlags.VK_COLOR_COMPONENT_G_BIT;
+            if ((mask & ColorWriteMask.Blue) == ColorWriteMask.Blue)
+                flags |= VkColorComponentFlags.VK_COLOR_COMPONENT_B_BIT;
+            if ((mask & ColorWriteMask.Alpha) == ColorWriteMask.Alpha)
+                flags |= VkColorComponentFlags.VK_COLOR_COMPONENT_A_BIT;
+
+            return flags;
+        }
+
         internal static VkPrimitiveTopology VdToVkPrimitiveTopology(PrimitiveTopology topology)
         {
             return topology switch

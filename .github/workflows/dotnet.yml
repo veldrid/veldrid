@@ -8,7 +8,6 @@ on:
 
 jobs:
   build_windows:
-
     runs-on: windows-latest
 
     steps:
@@ -20,7 +19,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: v6.0.100
+        dotnet-version: 6.0.x
     - name: Restore dependencies
       run: dotnet restore src
     - name: Build

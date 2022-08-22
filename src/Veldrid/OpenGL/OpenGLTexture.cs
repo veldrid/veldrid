@@ -649,7 +649,7 @@ namespace Veldrid.OpenGL
                 glBindBuffer(BufferTarget.CopyWriteBuffer, _pbos[subresource]);
                 CheckLastError();
 
-                uint dataSize = Width * Height * FormatHelpers.GetSizeInBytes(Format);
+                uint dataSize = Width * Height * FormatSizeHelpers.GetSizeInBytes(Format);
                 glBufferData(
                     BufferTarget.CopyWriteBuffer,
                     (UIntPtr)dataSize,

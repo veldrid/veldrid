@@ -83,13 +83,13 @@ namespace Veldrid.D3D11
                 SwapChainDescription dxgiSCDesc = new()
                 {
                     BufferCount = 2,
-                    IsWindowed = true,
+                    Windowed = true,
                     BufferDescription = new ModeDescription(
                         (int)description.Width, (int)description.Height, _colorFormat),
                     OutputWindow = win32Source.Hwnd,
                     SampleDescription = new SampleDescription(1, 0),
                     SwapEffect = SwapEffect.Discard,
-                    Usage = Usage.RenderTargetOutput
+                    BufferUsage = Usage.RenderTargetOutput
                 };
 
                 using IDXGIFactory dxgiFactory = _gd.Adapter.GetParent<IDXGIFactory>()!;
@@ -110,7 +110,7 @@ namespace Veldrid.D3D11
                     Width = (int)(description.Width * _pixelScale),
                     SampleDescription = new SampleDescription(1, 0),
                     SwapEffect = SwapEffect.FlipSequential,
-                    Usage = Usage.RenderTargetOutput,
+                    BufferUsage = Usage.RenderTargetOutput,
                 };
 
                 // Get the Vortice.DXGI factory automatically created when initializing the Direct3D device.

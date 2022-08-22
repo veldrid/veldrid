@@ -31,7 +31,12 @@ namespace Veldrid.NeoDemo
 
         private readonly string[] _msaaOptions = new string[] { "Off", "2x", "4x", "8x", "16x", "32x" };
         private int _msaaOption = 0;
+        private bool _colorRedMask = true;
+        private bool _colorGreenMask = true;
+        private bool _colorBlueMask = true;
+        private bool _colorAlphaMask = true;
         private TextureSampleCount? _newSampleCount;
+        private ColorWriteMask? _newMask;
 
         private readonly Dictionary<string, ImageSharpTexture> _textures = new();
         private Sdl2ControllerTracker _controllerTracker;
@@ -39,6 +44,7 @@ namespace Veldrid.NeoDemo
         private FullScreenQuad _fsq;
         private static RenderDoc _renderDoc;
         private bool _controllerDebugMenu;
+        private bool _showImguiDemo;
 
         public NeoDemo()
         {
@@ -279,15 +285,24 @@ namespace Veldrid.NeoDemo
 
                         ImGui.EndMenu();
                     }
+                    if (ImGui.BeginMenu("Color mask"))
+                    {
+                        if (ImGui.Checkbox("Red", ref _colorRedMask)) UpdateColorMask();
+                        if (ImGui.Checkbox("Green", ref _colorGreenMask)) UpdateColorMask();
+                        if (ImGui.Checkbox("Blue", ref _colorBlueMask)) UpdateColorMask();
+                        if (ImGui.Checkbox("Alpha", ref _colorAlphaMask)) UpdateColorMask();
+
+                        ImGui.EndMenu();
+                    }
                     bool threadedRendering = _scene.ThreadedRendering;
                     if (ImGui.MenuItem("Render with multiple threads", string.Empty, threadedRendering, true))
                     {
                         _scene.ThreadedRendering = !_scene.ThreadedRendering;
                     }
-                    bool tinted = _fsq.UseTintedTexture;
+                    bool tinted = _fsq.UseMultipleRenderTargets;
                     if (ImGui.MenuItem("Tinted output", string.Empty, tinted, true))
                     {
-                        _fsq.UseTintedTexture = !tinted;
+                        _fsq.UseMultipleRenderTargets = !tinted;
                     }
 
                     ImGui.EndMenu();
@@ -379,6 +394,10 @@ namespace Veldrid.NeoDemo
                             Sdl2ControllerTracker.CreateDefault(out _controllerTracker);
                             _scene.Camera.Controller = _controllerTracker;
                         }
+                    }
+                    if (ImGui.MenuItem("Show ImGui Demo", string.Empty, _showImguiDemo, true))
+                    {
+                        _showImguiDemo = !_showImguiDemo;
                     }
 
                     ImGui.EndMenu();
@@ -509,13 +528,30 @@ namespace Veldrid.NeoDemo
                 _window.Y -= 10;
             }
 
-            _window.Title = $"NeoDemo ({_gd.DeviceName}, {_gd.BackendType})";
+            _window.Title = $"NeoDemo ({_gd.DeviceName}, {_gd.BackendType.ToString()})";
+
+            if (_showImguiDemo)
+            {
+                ImGui.ShowDemoWindow(ref _showImguiDemo);
+            }
         }
 
         private void ChangeMsaa(int msaaOption)
         {
             TextureSampleCount sampleCount = (TextureSampleCount)msaaOption;
             _newSampleCount = sampleCount;
+        }
+
+        private void UpdateColorMask()
+        {
+            ColorWriteMask mask = ColorWriteMask.None;
+
+            if (_colorRedMask) mask |= ColorWriteMask.Red;
+            if (_colorGreenMask) mask |= ColorWriteMask.Green;
+            if (_colorBlueMask) mask |= ColorWriteMask.Blue;
+            if (_colorAlphaMask) mask |= ColorWriteMask.Alpha;
+
+            _newMask = mask;
         }
 
         private void RefreshDeviceObjects(int numTimes)
@@ -573,6 +609,14 @@ namespace Veldrid.NeoDemo
             {
                 _sc.MainSceneSampleCount = _newSampleCount.Value;
                 _newSampleCount = null;
+                DestroyAllObjects();
+                CreateAllObjects();
+            }
+
+            if (_newMask != null)
+            {
+                _sc.MainSceneMask = _newMask.Value;
+                _newMask = null;
                 DestroyAllObjects();
                 CreateAllObjects();
             }

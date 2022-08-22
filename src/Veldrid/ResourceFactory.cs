@@ -80,7 +80,7 @@ namespace Veldrid
                             $"Vertex element \"{elementDesc.Name}\" has an explicit offset which overlaps with the previous element.");
                     }
 
-                    minOffset = elementDesc.Offset + FormatHelpers.GetSizeInBytes(elementDesc.Format);
+                    minOffset = elementDesc.Offset + FormatSizeHelpers.GetSizeInBytes(elementDesc.Format);
                     hasExplicitLayout |= elementDesc.Offset != 0;
                 }
 

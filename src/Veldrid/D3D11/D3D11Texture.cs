@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using Vortice.Direct3D11;
 
 namespace Veldrid.D3D11
@@ -7,7 +8,7 @@ namespace Veldrid.D3D11
     {
         private string? _name;
 
-        public override bool IsDisposed => DeviceTexture.IsDisposed;
+        public override bool IsDisposed => DeviceTexture.NativePointer == IntPtr.Zero;
 
         public ID3D11Resource DeviceTexture { get; }
         public Vortice.DXGI.Format DxgiFormat { get; }
@@ -66,7 +67,7 @@ namespace Veldrid.D3D11
             int arraySize = (int)description.ArrayLayers;
             if ((description.Usage & TextureUsage.Cubemap) == TextureUsage.Cubemap)
             {
-                optionFlags = ResourceOptionFlags.TextureCube;
+                optionFlags |= ResourceOptionFlags.TextureCube;
                 arraySize *= 6;
             }
 

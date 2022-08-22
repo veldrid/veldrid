@@ -19,5 +19,6 @@
         public static FixedUtf8String KhronosValidationLayerName { get; } = "VK_LAYER_KHRONOS_validation";
         public static FixedUtf8String main { get; } = "main";
         public static FixedUtf8String VK_KHR_get_physical_device_properties2 { get; } = "VK_KHR_get_physical_device_properties2";
+        public static FixedUtf8String VK_KHR_portability_subset { get; } = "VK_KHR_portability_subset";
     }
 }

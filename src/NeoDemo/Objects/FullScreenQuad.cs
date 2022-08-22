@@ -10,7 +10,8 @@ namespace Veldrid.NeoDemo.Objects
         private Pipeline _pipeline;
         private DeviceBuffer _ib;
         private DeviceBuffer _vb;
-        public bool UseTintedTexture { get; set; }
+
+        public bool UseMultipleRenderTargets { get; set; }
 
         public override void CreateDeviceObjects(GraphicsDevice gd, CommandList cl, SceneContext sc)
         {
@@ -66,7 +67,7 @@ namespace Veldrid.NeoDemo.Objects
         public override void Render(GraphicsDevice gd, CommandList cl, SceneContext sc, RenderPasses renderPass)
         {
             cl.SetPipeline(_pipeline);
-            cl.SetGraphicsResourceSet(0, UseTintedTexture ? sc.DuplicatorTargetSet1 : sc.DuplicatorTargetSet0);
+            cl.SetGraphicsResourceSet(0, UseMultipleRenderTargets ? sc.DuplicatorTargetSet1 : sc.DuplicatorTargetSet0);
             cl.SetVertexBuffer(0, _vb);
             cl.SetIndexBuffer(_ib, IndexFormat.UInt16);
             cl.DrawIndexed(6, 1, 0, 0, 0);

@@ -56,11 +56,7 @@ namespace Veldrid.Vulkan
                     dstAlphaBlendFactor = VkFormats.VdToVkBlendFactor(vdDesc.DestinationAlphaFactor),
                     alphaBlendOp = VkFormats.VdToVkBlendOp(vdDesc.AlphaFunction),
                     blendEnable = vdDesc.BlendEnabled,
-                    colorWriteMask =
-                        VkColorComponentFlags.VK_COLOR_COMPONENT_R_BIT |
-                        VkColorComponentFlags.VK_COLOR_COMPONENT_G_BIT |
-                        VkColorComponentFlags.VK_COLOR_COMPONENT_B_BIT |
-                        VkColorComponentFlags.VK_COLOR_COMPONENT_A_BIT
+                    colorWriteMask = VkFormats.VdToVkColorWriteMask(vdDesc.ColorWriteMask.GetOrDefault()),
                 };
                 attachmentsPtr[i] = attachmentState;
             }
@@ -204,7 +200,7 @@ namespace Veldrid.Vulkan
                     };
 
                     targetIndex += 1;
-                    currentOffset += FormatHelpers.GetSizeInBytes(inputElement.Format);
+                    currentOffset += FormatSizeHelpers.GetSizeInBytes(inputElement.Format);
                 }
 
                 targetLocation += inputDesc.Elements.Length;

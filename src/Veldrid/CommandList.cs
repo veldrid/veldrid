@@ -1000,11 +1000,10 @@ namespace Veldrid
         /// <param name="destination">The destination of Texture data.</param>
         public void CopyTexture(Texture source, Texture destination)
         {
-#if VALIDATE_USAGE
             uint effectiveSrcArrayLayers = (source.Usage & TextureUsage.Cubemap) != 0
                 ? source.ArrayLayers * 6
                 : source.ArrayLayers;
-
+#if VALIDATE_USAGE
             uint effectiveDstArrayLayers = (destination.Usage & TextureUsage.Cubemap) != 0
                 ? destination.ArrayLayers * 6
                 : destination.ArrayLayers;
@@ -1051,12 +1050,9 @@ namespace Veldrid
             uint effectiveDstArrayLayers = (destination.Usage & TextureUsage.Cubemap) != 0
                 ? destination.ArrayLayers * 6
                 : destination.ArrayLayers;
-
-            if (effectiveSrcArrayLayers != effectiveDstArrayLayers
-                || source.MipLevels != destination.MipLevels
-                || source.SampleCount != destination.SampleCount
+            if (source.SampleCount != destination.SampleCount 
                 || source.Width != destination.Width
-                || source.Height != destination.Height
+                || source.Height != destination.Height 
                 || source.Depth != destination.Depth
                 || source.Format != destination.Format)
             {
@@ -1065,7 +1061,10 @@ namespace Veldrid
                     $"textures are not compatible to be copied.");
             }
 
-            if (mipLevel >= source.MipLevels || arrayLayer >= effectiveSrcArrayLayers)
+            if (mipLevel >= source.MipLevels ||
+                mipLevel >= destination.MipLevels ||
+                arrayLayer >= effectiveSrcArrayLayers ||
+                arrayLayer >= effectiveDstArrayLayers)
             {
                 throw new VeldridException(
                     $"The {nameof(mipLevel)} ({mipLevel}) and {nameof(arrayLayer)} ({arrayLayer}) " +

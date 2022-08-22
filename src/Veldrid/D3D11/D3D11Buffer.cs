@@ -21,7 +21,7 @@ namespace Veldrid.D3D11
 
         public override BufferUsage Usage { get; }
 
-        public override bool IsDisposed => _buffer.IsDisposed;
+        public override bool IsDisposed => _buffer.NativePointer == IntPtr.Zero;
 
         public ID3D11Buffer Buffer => _buffer;
 
@@ -152,14 +152,13 @@ namespace Veldrid.D3D11
         {
             if (_rawBuffer)
             {
-                ShaderResourceViewDescription srvDesc = new()
-                {
-                    ViewDimension = ShaderResourceViewDimension.BufferExtended,
-                    Format = Format.R32_Typeless
-                };
-                srvDesc.BufferEx.NumElements = (int)size / 4;
-                srvDesc.BufferEx.Flags = BufferExtendedShaderResourceViewFlags.Raw;
-                srvDesc.BufferEx.FirstElement = (int)offset / 4;
+                ShaderResourceViewDescription srvDesc = new(
+                    _buffer,
+                    Format.R32_Typeless,
+                    (int)offset / 4,
+                    (int)size / 4,
+                    BufferExtendedShaderResourceViewFlags.Raw);
+
                 return _device.CreateShaderResourceView(_buffer, srvDesc);
             }
             else
@@ -178,29 +177,22 @@ namespace Veldrid.D3D11
         {
             if (_rawBuffer)
             {
-                UnorderedAccessViewDescription uavDesc = new()
-                {
-                    ViewDimension = UnorderedAccessViewDimension.Buffer
-                };
-
-                uavDesc.Buffer.NumElements = (int)size / 4;
-                uavDesc.Buffer.Flags = BufferUnorderedAccessViewFlags.Raw;
-                uavDesc.Format = Format.R32_Typeless;
-                uavDesc.Buffer.FirstElement = (int)offset / 4;
+                UnorderedAccessViewDescription uavDesc = new(
+                    _buffer,
+                    Format.R32_Typeless,
+                    (int)offset / 4,
+                    (int)size / 4,
+                    BufferUnorderedAccessViewFlags.Raw);
 
                 return _device.CreateUnorderedAccessView(_buffer, uavDesc);
-
             }
             else
             {
-                UnorderedAccessViewDescription uavDesc = new()
-                {
-                    ViewDimension = UnorderedAccessViewDimension.Buffer
-                };
-
-                uavDesc.Buffer.NumElements = (int)(size / _structureByteStride);
-                uavDesc.Format = Format.Unknown;
-                uavDesc.Buffer.FirstElement = (int)(offset / _structureByteStride);
+                UnorderedAccessViewDescription uavDesc = new(
+                    _buffer,
+                    Format.Unknown,
+                    (int)(offset / _structureByteStride),
+                    (int)(size / _structureByteStride));
 
                 return _device.CreateUnorderedAccessView(_buffer, uavDesc);
             }

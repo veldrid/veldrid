@@ -21,11 +21,14 @@ namespace Veldrid.NeoDemo.Objects
 
             (Shader vs, Shader fs) = StaticResourceCache.GetShaders(gd, gd.ResourceFactory, "ScreenDuplicator");
 
+            BlendAttachmentDescription blend = BlendAttachmentDescription.OverrideBlend;
+            blend.ColorWriteMask = sc.MainSceneMask;
+
             GraphicsPipelineDescription pd = new(
                 new BlendStateDescription(
                     RgbaFloat.Black,
-                    BlendAttachmentDescription.OverrideBlend,
-                    BlendAttachmentDescription.OverrideBlend),
+                    blend, 
+                    blend),
                 gd.IsDepthRangeZeroToOne ? DepthStencilStateDescription.DepthOnlyGreaterEqual : DepthStencilStateDescription.DepthOnlyLessEqual,
                 RasterizerStateDescription.Default,
                 PrimitiveTopology.TriangleList,

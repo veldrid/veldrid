@@ -469,7 +469,7 @@ namespace Veldrid.Tests
                 {
                     new VertexLayoutDescription(
                         new VertexElementDescription("Position", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float2),
-                        new VertexElementDescription("Color_Half", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Half4))
+                        new VertexElementDescription("Color", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Half4))
                 },
                 TestShaders.LoadVertexFragment(RF, "F16VertexAttribs"));
 

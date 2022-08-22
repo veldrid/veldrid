@@ -4,7 +4,7 @@
 struct Veldrid_Tests_Shaders_UIntVertexAttribs_Vertex
 {
     vec2 Position;
-    uvec4 Color_Int;
+    uvec4 Color_UInt;
 };
 
 struct Veldrid_Tests_Shaders_UIntVertexAttribs_FragmentInput
@@ -36,21 +36,21 @@ Veldrid_Tests_Shaders_UIntVertexAttribs_FragmentInput VS( Veldrid_Tests_Shaders_
 {
     Veldrid_Tests_Shaders_UIntVertexAttribs_FragmentInput output_;
     output_.Position = field_Ortho * vec4(input_.Position, 0, 1);
-    output_.Color = vec4(input_.Color_Int.x, input_.Color_Int.y, input_.Color_Int.z, 1) / field_InfoBuffer.ColorNormalizationFactor;
+    output_.Color = vec4(input_.Color_UInt) / field_InfoBuffer.ColorNormalizationFactor;
     output_.Color.w = 1;
     return output_;
 }
 
 
 layout(location = 0) in vec2 Position;
-layout(location = 1) in uvec4 Color_Int;
+layout(location = 1) in uvec4 Color_UInt;
 layout(location = 0) out vec4 fsin_0;
 
 void main()
 {
     Veldrid_Tests_Shaders_UIntVertexAttribs_Vertex input_;
     input_.Position = Position;
-    input_.Color_Int = Color_Int;
+    input_.Color_UInt = Color_UInt;
     Veldrid_Tests_Shaders_UIntVertexAttribs_FragmentInput output_ = VS(input_);
     fsin_0 = output_.Color;
     gl_Position = output_.Position;

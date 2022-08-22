@@ -176,7 +176,7 @@ namespace Veldrid.Tests
             DeviceBuffer buffer = RF.CreateBuffer(new BufferDescription(1024, BufferUsage.StagingReadWrite));
             MappedResourceView<int> view = GD.Map<int>(buffer, MapMode.ReadWrite);
             int[] data = Enumerable.Range(0, 256).Select(i => 2 * i).ToArray();
-            Assert.Throws<VeldridException>(() => GD.UpdateBuffer(buffer, 0, data));
+            Assert.Throws<VeldridMappedResourceException>(() => GD.UpdateBuffer(buffer, 0, data));
         }
 
         [Fact]

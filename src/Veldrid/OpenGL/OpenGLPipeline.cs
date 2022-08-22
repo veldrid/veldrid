@@ -166,7 +166,8 @@ namespace Veldrid.OpenGL
                             if (location == -1)
                             {
                                 throw new VeldridException(
-                                    "There was no attribute variable with the name " + layoutDesc.Elements[i].Name);
+                                    "There was no attribute variable with the name " + layoutDesc.Elements[i].Name + ". " +
+                                    "The compiler may have optimized out unused attribute variables.");
                             }
                         }
                         slot += 1;

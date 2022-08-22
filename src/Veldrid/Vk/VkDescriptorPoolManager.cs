@@ -176,9 +176,11 @@ namespace Veldrid.Vulkan
                 RemainingSets += 1;
 
                 UniformBufferCount += counts.UniformBufferCount;
+                UniformBufferDynamicCount += counts.UniformBufferDynamicCount;
                 SampledImageCount += counts.SampledImageCount;
                 SamplerCount += counts.SamplerCount;
                 StorageBufferCount += counts.StorageBufferCount;
+                StorageBufferDynamicCount += counts.StorageBufferDynamicCount;
                 StorageImageCount += counts.StorageImageCount;
             }
         }

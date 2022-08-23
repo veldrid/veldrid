@@ -1301,7 +1301,7 @@ namespace Veldrid.Tests
                     float yComp = y * readback.Width;
                     float val = (yComp + xComp) / (readback.Width * readback.Height);
 
-                    Assert.Equal(val, readView[x, y], 2);
+                    Assert.Equal(val, readView[x, y], 2f);
                 }
             }
             GD.Unmap(readback);

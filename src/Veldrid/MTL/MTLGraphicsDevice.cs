@@ -124,7 +124,7 @@ namespace Veldrid.MTL
             ResourceFactory = new MTLResourceFactory(this);
             _commandQueue = _device.newCommandQueue();
 
-            TextureSampleCount[] allSampleCounts = (TextureSampleCount[])Enum.GetValues(typeof(TextureSampleCount));
+            TextureSampleCount[] allSampleCounts = Enum.GetValues<TextureSampleCount>();
             _supportedSampleCounts = new bool[allSampleCounts.Length];
             for (int i = 0; i < allSampleCounts.Length; i++)
             {

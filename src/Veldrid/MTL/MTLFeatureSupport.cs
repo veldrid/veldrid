@@ -17,7 +17,7 @@ namespace Veldrid.MTL
 
         public MTLFeatureSupport(MTLDevice device)
         {
-            foreach (MTLFeatureSet set in Enum.GetValues(typeof(MTLFeatureSet)))
+            foreach (MTLFeatureSet set in Enum.GetValues<MTLFeatureSet>())
             {
                 if (device.supportsFeatureSet(set))
                 {

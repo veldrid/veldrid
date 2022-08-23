@@ -28,7 +28,7 @@ namespace Veldrid.Tests
         [Fact]
         public void GetSizeInBytes_DefinedForAllVertexElementFormats()
         {
-            foreach (VertexElementFormat format in System.Enum.GetValues(typeof(VertexElementFormat)))
+            foreach (VertexElementFormat format in Enum.GetValues<VertexElementFormat>())
             {
                 Assert.True(0 < FormatSizeHelpers.GetSizeInBytes(format));
             }
@@ -59,9 +59,11 @@ namespace Veldrid.Tests
             PixelFormat.ETC2_R8_G8_B8_A8_UNorm,
             PixelFormat.ETC2_R8_G8_B8_UNorm,
         };
+
         private static IEnumerable<PixelFormat> UncompressedPixelFormats
-            = System.Enum.GetValues(typeof(PixelFormat)).Cast<PixelFormat>()
-                .Where(format => !CompressedPixelFormats.Contains(format));
+            = Enum.GetValues<PixelFormat>()
+            .Where(format => !CompressedPixelFormats.Contains(format));
+
         public static IEnumerable<object[]> CompressedPixelFormatMemberData => CompressedPixelFormats.Select(format => new object[] { format });
         public static IEnumerable<object[]> UncompressedPixelFormatMemberData => UncompressedPixelFormats.Select(format => new object[] { format });
 

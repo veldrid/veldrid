@@ -369,10 +369,12 @@ namespace Veldrid.Tests
                     byte expectedColor = mip == CopiedMip ? (byte)((face + 1) * 42) : (byte)0;
                     MappedResourceView<byte> map = GD.Map<byte>(dst, MapMode.Read, subresource);
                     for (int y = 0; y < mipSize; y++)
+                    {
                         for (int x = 0; x < mipSize; x++)
                         {
                             Assert.Equal(expectedColor, map[x, y]);
                         }
+                    }
                     GD.Unmap(dst, subresource);
                 }
             }

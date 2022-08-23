@@ -159,11 +159,12 @@ namespace Veldrid.Tests
 
             MappedResourceView<RgbaFloat> readView = GD.Map<RgbaFloat>(staging, MapMode.Read);
 
+            bool flip = !GD.IsUvOriginTopLeft || GD.IsClipSpaceYInverted;
             foreach (UIntVertexAttribsVertex vertex in vertices)
             {
                 uint x = (uint)vertex.Position.X;
                 uint y = (uint)vertex.Position.Y;
-                if (!GD.IsUvOriginTopLeft || GD.IsClipSpaceYInverted)
+                if (flip)
                 {
                     y = framebuffer.Height - y - 1;
                 }
@@ -277,11 +278,12 @@ namespace Veldrid.Tests
 
             MappedResourceView<RgbaFloat> readView = GD.Map<RgbaFloat>(staging, MapMode.Read);
 
+            bool flip = !GD.IsUvOriginTopLeft || GD.IsClipSpaceYInverted;
             foreach (VertexCPU_UShortNorm vertex in vertices)
             {
                 uint x = (uint)vertex.Position.X;
                 uint y = (uint)vertex.Position.Y;
-                if (!GD.IsUvOriginTopLeft || GD.IsClipSpaceYInverted)
+                if (flip)
                 {
                     y = framebuffer.Height - y - 1;
                 }
@@ -314,7 +316,7 @@ namespace Veldrid.Tests
             public ushort A;
         }
 
-        private ushort UShortNorm(float normalizedValue)
+        private static ushort UShortNorm(float normalizedValue)
         {
             Debug.Assert(normalizedValue >= 0 && normalizedValue <= 1);
             return (ushort)(normalizedValue * ushort.MaxValue);
@@ -424,11 +426,12 @@ namespace Veldrid.Tests
 
             MappedResourceView<RgbaFloat> readView = GD.Map<RgbaFloat>(staging, MapMode.Read);
 
+            bool flip = !GD.IsUvOriginTopLeft || GD.IsClipSpaceYInverted;
             foreach (VertexCPU_UShort vertex in vertices)
             {
                 uint x = (uint)vertex.Position.X;
                 uint y = (uint)vertex.Position.Y;
-                if (!GD.IsUvOriginTopLeft || GD.IsClipSpaceYInverted)
+                if (flip)
                 {
                     y = framebuffer.Height - y - 1;
                 }
@@ -578,12 +581,13 @@ namespace Veldrid.Tests
 
             MappedResourceView<RgbaFloat> readView = GD.Map<RgbaFloat>(staging, MapMode.Read);
 
+            bool flip = !GD.IsUvOriginTopLeft || GD.IsClipSpaceYInverted;
             for (int i = 0; i < vertices.Length; i++)
             {
                 VertexCPU_UShort vertex = vertices[i];
                 uint x = (uint)vertex.Position.X;
                 uint y = (uint)vertex.Position.Y;
-                if (!GD.IsUvOriginTopLeft || GD.IsClipSpaceYInverted)
+                if (flip)
                 {
                     y = framebuffer.Height - y - 1;
                 }
@@ -710,11 +714,12 @@ namespace Veldrid.Tests
 
             MappedResourceView<RgbaFloat> readView = GD.Map<RgbaFloat>(staging, MapMode.Read);
 
+            bool flip = !GD.IsUvOriginTopLeft || GD.IsClipSpaceYInverted;
             foreach (Vector2 vertex in vertices)
             {
                 uint x = (uint)vertex.X;
                 uint y = (uint)vertex.Y;
-                if (!GD.IsUvOriginTopLeft || GD.IsClipSpaceYInverted)
+                if (flip)
                 {
                     y = framebuffer.Height - y - 1;
                 }
@@ -786,10 +791,12 @@ namespace Veldrid.Tests
             Texture readback = GetReadback(output);
             MappedResourceView<RgbaFloat> readView = GD.Map<RgbaFloat>(readback, MapMode.Read);
             for (uint y = 0; y < height; y++)
+            {
                 for (uint x = 0; x < width; x++)
                 {
                     Assert.Equal(RgbaFloat.Red, readView[x, y]);
                 }
+            }
             GD.Unmap(readback);
         }
 
@@ -905,17 +912,13 @@ namespace Veldrid.Tests
                     uint mipSize = TexSize >> mip;
                     float expectedColor = (byte)255.0f * ((layer + 1) * sideColorStep);
                     MappedResourceView<byte> map = GD.Map<byte>(readback, MapMode.Read, subresource);
-
-                    Assert.All(
-                        from x in Enumerable.Range(0, (int)mipSize)
-                        from y in Enumerable.Range(0, (int)mipSize)
-                        select (X: x, Y: y),
-                        (xy) =>
+                    for (int y = 0; y < mipSize; y++)
+                    {
+                        for (int x = 0; x < mipSize; x++)
                         {
-                            Assert.Equal(map[xy.X, xy.Y], expectedColor);
+                            Assert.Equal(map[x, y], expectedColor);
                         }
-                    );
-
+                    }
                     GD.Unmap(readback, subresource);
                 }
             }
@@ -945,8 +948,7 @@ namespace Veldrid.Tests
             Texture tex1D = RF.CreateTexture(
                 TextureDescription.Texture1D(128, 1, layers, PixelFormat.R32_G32_B32_A32_Float, TextureUsage.Sampled));
             RgbaFloat[] colors = new RgbaFloat[tex1D.Width];
-            for (int i = 0; i < colors.Length; i++)
-            { colors[i] = RgbaFloat.Pink; }
+            colors.AsSpan().Fill(RgbaFloat.Pink);
             GD.UpdateTexture(tex1D, colors, 0, 0, 0, tex1D.Width, 1, 1, 0, 0);
 
             ResourceLayout layout = RF.CreateResourceLayout(new ResourceLayoutDescription(
@@ -1036,8 +1038,7 @@ namespace Veldrid.Tests
 
             // Fill the second target with a known color
             RgbaFloat[] colors = new RgbaFloat[target2.Width * target2.Height];
-            for (int i = 0; i < colors.Length; i++)
-            { colors[i] = RgbaFloat.Pink; }
+            colors.AsSpan().Fill(RgbaFloat.Pink);
             GD.UpdateTexture(target2, colors, 0, 0, 0, target2.Width, target2.Height, 1, 0, 0);
 
             ResourceLayout textureLayout = RF.CreateResourceLayout(new ResourceLayoutDescription(
@@ -1132,10 +1133,7 @@ namespace Veldrid.Tests
             Texture tex2D = RF.CreateTexture(
                 TextureDescription.Texture2D(128, 128, 1, 1, PixelFormat.R32_G32_B32_A32_Float, TextureUsage.Sampled));
             RgbaFloat[] colors = new RgbaFloat[tex2D.Width * tex2D.Height];
-            for (int i = 0; i < colors.Length; i++)
-            {
-                colors[i] = RgbaFloat.Pink;
-            }
+            colors.AsSpan().Fill(RgbaFloat.Pink);
             GD.UpdateTexture(tex2D, colors, 0, 0, 0, tex2D.Width, 1, 1, 0, 0);
 
             ResourceLayout layout = RF.CreateResourceLayout(new ResourceLayoutDescription(
@@ -1205,8 +1203,7 @@ namespace Veldrid.Tests
             Texture tex2D = RF.CreateTexture(
                 TextureDescription.Texture2D(128, 128, 1, 1, PixelFormat.R32_G32_B32_A32_Float, TextureUsage.Sampled));
             RgbaFloat[] colors = new RgbaFloat[tex2D.Width * tex2D.Height];
-            for (int i = 0; i < colors.Length; i++)
-            { colors[i] = RgbaFloat.Pink; }
+            colors.AsSpan().Fill(RgbaFloat.Pink);
             GD.UpdateTexture(tex2D, colors, 0, 0, 0, tex2D.Width, 1, 1, 0, 0);
 
             ResourceLayout layout = RF.CreateResourceLayout(new ResourceLayoutDescription(
@@ -1385,10 +1382,12 @@ namespace Veldrid.Tests
             {
                 MappedResourceView<RgbaFloat> readView = GD.Map<RgbaFloat>(readback, MapMode.Read);
                 for (uint y = 0; y < height; y++)
+                {
                     for (uint x = 0; x < width; x++)
                     {
                         Assert.Equal(new RgbaFloat(0.25f, 0.5f, 0.75f, 1), readView[x, y]);
                     }
+                }
                 GD.Unmap(readback);
             }
 
@@ -1414,10 +1413,12 @@ namespace Veldrid.Tests
             {
                 MappedResourceView<RgbaFloat> readView = GD.Map<RgbaFloat>(readback, MapMode.Read);
                 for (uint y = 0; y < height; y++)
+                {
                     for (uint x = 0; x < width; x++)
                     {
                         Assert.Equal(new RgbaFloat(0.25f, 1, 0.875f, 1), readView[x, y]);
                     }
+                }
                 GD.Unmap(readback);
             }
         }
@@ -1495,11 +1496,12 @@ namespace Veldrid.Tests
             {
                 MappedResourceView<RgbaFloat> readView = GD.Map<RgbaFloat>(readback, MapMode.Read);
                 for (uint y = 0; y < output.Height; y++)
+                {
                     for (uint x = 0; x < output.Width; x++)
                     {
                         Assert.Equal(RgbaFloat.White, readView[x, y]);
                     }
-
+                }
                 GD.Unmap(readback);
             }
 
@@ -1526,6 +1528,7 @@ namespace Veldrid.Tests
                 {
                     MappedResourceView<RgbaFloat> readView = GD.Map<RgbaFloat>(readback, MapMode.Read);
                     for (uint y = 0; y < output.Height; y++)
+                    {
                         for (uint x = 0; x < output.Width; x++)
                         {
                             Assert.Equal(mask.HasFlag(ColorWriteMask.Red) ? 1 : 0.25f, readView[x, y].R);
@@ -1533,6 +1536,7 @@ namespace Veldrid.Tests
                             Assert.Equal(mask.HasFlag(ColorWriteMask.Blue) ? 1 : 0.25f, readView[x, y].B);
                             Assert.Equal(mask.HasFlag(ColorWriteMask.Alpha) ? 1 : 0.25f, readView[x, y].A);
                         }
+                    }
                     GD.Unmap(readback);
                 }
             }

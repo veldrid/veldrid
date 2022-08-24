@@ -338,13 +338,13 @@ namespace Veldrid.Vulkan
                 return;
             }
 
-            VkImageLayout oldLayout = _imageLayouts[CalculateSubresource(baseMipLevel, baseArrayLayer)];
+            VkImageLayout oldLayout = GetImageLayout(baseMipLevel, baseArrayLayer);
 #if DEBUG
             for (uint level = 0; level < levelCount; level++)
             {
                 for (uint layer = 0; layer < layerCount; layer++)
                 {
-                    if (_imageLayouts[CalculateSubresource(baseMipLevel + level, baseArrayLayer + layer)] != oldLayout)
+                    if (GetImageLayout(baseMipLevel + level, baseArrayLayer + layer) != oldLayout)
                     {
                         throw new VeldridException("Unexpected image layout.");
                     }
@@ -372,14 +372,14 @@ namespace Veldrid.Vulkan
                     baseArrayLayer,
                     layerCount,
                     aspectMask,
-                    _imageLayouts[CalculateSubresource(baseMipLevel, baseArrayLayer)],
+                    GetImageLayout(baseMipLevel, baseArrayLayer),
                     newLayout);
 
                 for (uint level = 0; level < levelCount; level++)
                 {
                     for (uint layer = 0; layer < layerCount; layer++)
                     {
-                        _imageLayouts[CalculateSubresource(baseMipLevel + level, baseArrayLayer + layer)] = newLayout;
+                        SetImageLayout(baseMipLevel + level, baseArrayLayer + layer, newLayout);
                     }
                 }
             }
@@ -402,9 +402,7 @@ namespace Veldrid.Vulkan
             {
                 for (uint layer = baseArrayLayer; layer < baseArrayLayer + layerCount; layer++)
                 {
-                    uint subresource = CalculateSubresource(level, layer);
-                    VkImageLayout oldLayout = _imageLayouts[subresource];
-
+                    VkImageLayout oldLayout = GetImageLayout(level, layer);
                     if (oldLayout != newLayout)
                     {
                         VkImageAspectFlags aspectMask;
@@ -430,7 +428,7 @@ namespace Veldrid.Vulkan
                             oldLayout,
                             newLayout);
 
-                        _imageLayouts[subresource] = newLayout;
+                        SetImageLayout(level, layer, newLayout);
                     }
                 }
             }

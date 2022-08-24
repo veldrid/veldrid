@@ -708,7 +708,7 @@ namespace Veldrid.Vulkan
                                 vkClearValue.color.float32[1],
                                 vkClearValue.color.float32[2],
                                 vkClearValue.color.float32[3]);
-                            ClearColorTarget(i, clearColor);
+                            ClearColorTargetCore(i, clearColor);
                         }
                     }
                 }
@@ -723,11 +723,11 @@ namespace Veldrid.Vulkan
                     renderPassBI.pClearValues = clearValuesPtr;
                     if (_depthClearValue.HasValue)
                     {
-                        _clearValues[colorTargetCount] = _depthClearValue.Value;
+                        _clearValues[colorTargetCount] = _depthClearValue.GetValueOrDefault();
                         _depthClearValue = null;
                     }
                     vkCmdBeginRenderPass(_cb, &renderPassBI, VkSubpassContents.VK_SUBPASS_CONTENTS_INLINE);
-                    _activeRenderPass = _currentFramebuffer.RenderPassClear;
+                    _activeRenderPass = renderPassBI.renderPass;
                     Util.ClearArray(_validColorClearValues);
                 }
             }

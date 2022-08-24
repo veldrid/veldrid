@@ -1505,7 +1505,7 @@ namespace Veldrid.OpenGL
                             if (!isCompressed)
                             {
                                 // Read data into buffer.
-                                if (_gd.Extensions.ARB_DirectStateAccess && texture.ArrayLayers == 1)
+                                if (_gd.Extensions.ARB_DirectStateAccess)
                                 {
                                     int zoffset = texture.ArrayLayers > 1 ? (int)arrayLayer : 0;
                                     glGetTextureSubImage(

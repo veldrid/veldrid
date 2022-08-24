@@ -347,15 +347,20 @@ namespace Veldrid.Tests
                 uint mipSize = (uint)(TexSize / (1 << (int)mip));
                 for (uint face = 0; face < 6; face++)
                 {
-                    byte[] data = Enumerable.Repeat((face + 1) * 42, (int)(mipSize * mipSize)).Select(n => (byte)n).ToArray();
+                    byte[] data = Enumerable.Repeat((mip + face + 1) * 42, (int)(mipSize * mipSize)).Select(n => (byte)n).ToArray();
                     GD.UpdateTexture(src, data, 0, 0, 0, mipSize, mipSize, 1, mip, face);
                 }
             }
 
             CommandList cl = RF.CreateCommandList();
             cl.Begin();
-            for (uint face = 0; face < 6; face++)
-                cl.CopyTexture(src, dst, CopiedMip, face);
+            for (uint mip = 0; mip < MipLevels; mip++)
+            {
+                for (uint face = 0; face < 6; face++)
+                {
+                    cl.CopyTexture(src, dst, mip, face);
+                }
+            }
             cl.End();
             GD.SubmitCommands(cl);
             GD.WaitForIdle();
@@ -366,7 +371,7 @@ namespace Veldrid.Tests
                 {
                     uint subresource = dst.CalculateSubresource(mip, face);
                     uint mipSize = (uint)(TexSize / (1 << (int)mip));
-                    byte expectedColor = mip == CopiedMip ? (byte)((face + 1) * 42) : (byte)0;
+                    byte expectedColor = (byte)((mip + face + 1) * 42);
                     MappedResourceView<byte> map = GD.Map<byte>(dst, MapMode.Read, subresource);
                     for (int y = 0; y < mipSize; y++)
                     {

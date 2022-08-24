@@ -1423,7 +1423,8 @@ namespace Veldrid.OpenGL
                 {
                     if (_gd._mappedResources.ContainsKey(key))
                     {
-                        ThrowMappedException(resource, subresource);
+                        result->AlreadyMapped = true;
+                        return;
                     }
 
                     MappedResourceInfo info = new();
@@ -1769,6 +1770,11 @@ namespace Veldrid.OpenGL
                 mre.WaitOne();
                 ReturnResetEvent(mre);
 
+                if (mrp.AlreadyMapped)
+                {
+                    ThrowMappedException(resource, subresource);
+                }
+
                 CheckExceptions();
 
                 return new MappedResource(
@@ -2049,6 +2055,7 @@ namespace Veldrid.OpenGL
             public IntPtr Data;
             public uint RowPitch;
             public uint DepthPitch;
+            public bool AlreadyMapped;
         }
 
         internal struct MappedResourceInfo

@@ -112,6 +112,10 @@ namespace Veldrid.OpenGL
 
         private protected override void SetIndexBufferCore(DeviceBuffer buffer, IndexFormat format, uint offset)
         {
+            if (_gd.IsDebug)
+            {
+                _gd.ThrowIfMapped(buffer, 0);
+            }
             _currentCommands.SetIndexBuffer(buffer, format, offset);
         }
 
@@ -137,6 +141,10 @@ namespace Veldrid.OpenGL
 
         private protected override void SetVertexBufferCore(uint index, DeviceBuffer buffer, uint offset)
         {
+            if (_gd.IsDebug)
+            {
+                _gd.ThrowIfMapped(buffer, 0);
+            }
             _currentCommands.SetVertexBuffer(index, buffer, offset);
         }
 

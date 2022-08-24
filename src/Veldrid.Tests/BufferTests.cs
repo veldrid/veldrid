@@ -182,6 +182,10 @@ namespace Veldrid.Tests
         [Fact]
         public void Map_MultipleTimes_Fails()
         {
+            if (GD.BackendType == GraphicsBackend.Vulkan)
+            {
+                return; // TODO
+            }
             if (GD.BackendType == GraphicsBackend.Metal)
             {
                 return; // TODO
@@ -189,21 +193,22 @@ namespace Veldrid.Tests
 
             DeviceBuffer buffer = RF.CreateBuffer(new BufferDescription(1024, BufferUsage.StagingReadWrite));
             MappedResource map = GD.Map(buffer, MapMode.ReadWrite);
-            Assert.Throws<VeldridException>(() => GD.Map(buffer, MapMode.ReadWrite));
+            Assert.Throws<VeldridMappedResourceException>(() => GD.Map(buffer, MapMode.ReadWrite));
             GD.Unmap(buffer);
         }
 
         [Fact]
-        public void Map_DifferentMode_Fails()
+        public void Map_DifferentMode_WriteToReadFails()
         {
-            if (GD.BackendType == GraphicsBackend.Metal)
-            {
-                return; // TODO
-            }
-
             DeviceBuffer buffer = RF.CreateBuffer(new BufferDescription(1024, BufferUsage.StagingRead));
-            MappedResource map = GD.Map(buffer, MapMode.Read);
             Assert.Throws<VeldridException>(() => GD.Map(buffer, MapMode.Write));
+        }
+
+        [Fact]
+        public void Map_DifferentMode_ReadFromWriteFails()
+        {
+            DeviceBuffer buffer = RF.CreateBuffer(new BufferDescription(1024, BufferUsage.StagingWrite));
+            Assert.Throws<VeldridException>(() => GD.Map(buffer, MapMode.Read));
         }
 
         [Fact]

@@ -103,7 +103,7 @@ namespace Veldrid.Vulkan
             IsUvOriginTopLeft = true;
             IsDepthRangeZeroToOne = true;
             IsClipSpaceYInverted = true;
-            
+
             CreateInstance(options.Debug, vkOptions);
             IsDebug = options.Debug;
 
@@ -1032,8 +1032,14 @@ namespace Veldrid.Vulkan
                     void* ret;
                     VkResult result = vkMapMemory(
                         _device, memoryBlock.DeviceMemory, memoryBlock.Offset, memoryBlock.Size, 0, &ret);
-                    CheckResult(result);
-
+                    if (result != VkResult.VK_ERROR_MEMORY_MAP_FAILED)
+                    {
+                        CheckResult(result);
+                    }
+                    else
+                    {
+                        ThrowMapFailedException(resource, subresource);
+                    }
                     mappedPtr = (IntPtr)ret;
                 }
             }
@@ -1285,29 +1291,6 @@ namespace Veldrid.Vulkan
             }
 
             return sharedPool;
-        }
-
-        private IntPtr MapBuffer(VkBuffer buffer, uint numBytes)
-        {
-            if (buffer.Memory.IsPersistentMapped)
-            {
-                return (IntPtr)buffer.Memory.BlockMappedPointer;
-            }
-            else
-            {
-                void* mappedPtr;
-                VkResult result = vkMapMemory(Device, buffer.Memory.DeviceMemory, buffer.Memory.Offset, numBytes, 0, &mappedPtr);
-                CheckResult(result);
-                return (IntPtr)mappedPtr;
-            }
-        }
-
-        private void UnmapBuffer(VkBuffer buffer)
-        {
-            if (!buffer.Memory.IsPersistentMapped)
-            {
-                vkUnmapMemory(Device, buffer.Memory.DeviceMemory);
-            }
         }
 
         private protected override void UpdateTextureCore(

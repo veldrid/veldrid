@@ -973,6 +973,12 @@ namespace Veldrid
             throw new VeldridMappedResourceException($"The mapped resource ({resource}@{subresource}) is corrupted.");
         }
 
+        [DoesNotReturn]
+        protected static void ThrowMapFailedException(MappableResource resource, uint subresource)
+        {
+            throw new VeldridMappedResourceException($"Failed to map the resource ({resource}@{subresource}).");
+        }
+
         /// <summary>
         /// Gets a simple point-filtered <see cref="Sampler"/> object owned by this instance.
         /// This object is created with <see cref="SamplerDescription.Point"/>.

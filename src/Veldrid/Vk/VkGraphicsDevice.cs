@@ -630,6 +630,8 @@ namespace Veldrid.Vulkan
 
         public void EnableDebugCallback(
             VkDebugReportFlagsEXT flags =
+                VkDebugReportFlagsEXT.VK_DEBUG_REPORT_INFORMATION_BIT_EXT |
+                VkDebugReportFlagsEXT.VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT |
                 VkDebugReportFlagsEXT.VK_DEBUG_REPORT_WARNING_BIT_EXT |
                 VkDebugReportFlagsEXT.VK_DEBUG_REPORT_ERROR_BIT_EXT)
         {
@@ -666,9 +668,12 @@ namespace Veldrid.Vulkan
             VkDebugReportFlagsEXT debugReportFlags = flags;
 
 #if DEBUG
-            if (Debugger.IsAttached)
+            if ((flags & VkDebugReportFlagsEXT.VK_DEBUG_REPORT_ERROR_BIT_EXT) != 0)
             {
-                Debugger.Break();
+                if (Debugger.IsAttached)
+                {
+                    Debugger.Break();
+                }
             }
 #endif
 

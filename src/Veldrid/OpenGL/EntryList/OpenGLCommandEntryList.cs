@@ -511,6 +511,11 @@ namespace Veldrid.OpenGL.EntryList
 
             foreach (ref readonly BufferCopyCommand command in commands)
             {
+                if (command.Length == 0)
+                {
+                    continue;
+                }
+
                 CopyBufferEntry entry = new(
                     trackedSrc,
                     (uint)command.ReadOffset,

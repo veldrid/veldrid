@@ -1248,6 +1248,11 @@ namespace Veldrid.D3D11
 
             foreach (ref readonly BufferCopyCommand command in commands)
             {
+                if (command.Length == 0)
+                {
+                    continue;
+                }
+
                 Box region = new((int)command.ReadOffset, 0, 0, (int)(command.ReadOffset + command.Length), 1, 1);
 
                 _context.CopySubresourceRegion(dstD3D11Buffer.Buffer, 0, (int)command.WriteOffset, 0, 0, srcD3D11Buffer.Buffer, 0, region);

@@ -385,6 +385,11 @@ namespace Veldrid.MTL
 
                 foreach (ref readonly BufferCopyCommand command in commands)
                 {
+                    if (command.Length == 0)
+                    {
+                        continue;
+                    }
+
                     _bce.copy(
                         mtlSrc.DeviceBuffer, (UIntPtr)command.ReadOffset,
                         mtlDst.DeviceBuffer, (UIntPtr)command.WriteOffset,
@@ -403,6 +408,11 @@ namespace Veldrid.MTL
 
             foreach (ref readonly BufferCopyCommand command in commands)
             {
+                if (command.Length == 0)
+                {
+                    continue;
+                }
+
                 MTLUnalignedBufferCopyInfo copyInfo;
                 copyInfo.SourceOffset = (uint)command.ReadOffset;
                 copyInfo.DestinationOffset = (uint)command.WriteOffset;

@@ -904,7 +904,51 @@ namespace Veldrid.Vulkan
 
             fixed (BufferCopyCommand* commandPtr = commands)
             {
-                vkCmdCopyBuffer(_cb, srcVkBuffer.DeviceBuffer, dstVkBuffer.DeviceBuffer, (uint)commands.Length, (VkBufferCopy*)commandPtr);
+                int offset = 0;
+                int prevOffset = 0;
+
+                while (offset < commands.Length)
+                {
+                    if (commands[offset].Length != 0)
+                    {
+                        offset++;
+                        continue;
+                    }
+
+                    int count = offset - prevOffset;
+                    if (count > 0)
+                    {
+                        vkCmdCopyBuffer(
+                            _cb,
+                            srcVkBuffer.DeviceBuffer,
+                            dstVkBuffer.DeviceBuffer,
+                            (uint)count,
+                            (VkBufferCopy*)(commandPtr + prevOffset));
+                    }
+
+                    while (offset < commands.Length)
+                    {
+                        if (commands[offset].Length != 0)
+                        {
+                            break;
+                        }
+                        offset++;
+                    }
+                    prevOffset = offset;
+            }
+
+                {
+                    int count = offset - prevOffset;
+                    if (count > 0)
+                    {
+                        vkCmdCopyBuffer(
+                            _cb,
+                            srcVkBuffer.DeviceBuffer,
+                            dstVkBuffer.DeviceBuffer,
+                            (uint)count,
+                            (VkBufferCopy*)(commandPtr + prevOffset));
+                    }
+                }
             }
 
             VkMemoryBarrier barrier = new()

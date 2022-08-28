@@ -1178,7 +1178,7 @@ namespace Veldrid.Vulkan
                 uint depthPitch = FormatHelpers.GetDepthPitch(rowPitch, bufferImageHeight, dstVkTexture.Format);
 
                 VkBufferImageCopy* layers = stackalloc VkBufferImageCopy[(int)layerCount];
-                for(uint layer = 0; layer < layerCount; layer++)
+                for (uint layer = 0; layer < layerCount; layer++)
                 {
                     VkSubresourceLayout dstLayout = dstVkTexture.GetSubresourceLayout(dstMipLevel, dstBaseArrayLayer + layer);
 
@@ -1294,11 +1294,7 @@ namespace Veldrid.Vulkan
             VkTexture vkTex = Util.AssertSubtype<Texture, VkTexture>(texture);
             _currentStagingInfo.AddResource(vkTex.RefCount);
 
-            uint layerCount = vkTex.ArrayLayers;
-            if ((vkTex.Usage & TextureUsage.Cubemap) != 0)
-            {
-                layerCount *= 6;
-            }
+            uint layerCount = vkTex.ActualArrayLayers;
 
             VkImageBlit region;
 

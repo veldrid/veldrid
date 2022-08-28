@@ -1473,11 +1473,7 @@ namespace Veldrid.Vulkan
 
         internal void ClearColorTexture(VkTexture texture, VkClearColorValue color)
         {
-            uint effectiveLayers = texture.ArrayLayers;
-            if ((texture.Usage & TextureUsage.Cubemap) != 0)
-            {
-                effectiveLayers *= 6;
-            }
+            uint effectiveLayers = texture.ActualArrayLayers;
 
             VkImageSubresourceRange range = new()
             {
@@ -1501,11 +1497,7 @@ namespace Veldrid.Vulkan
 
         internal void ClearDepthTexture(VkTexture texture, VkClearDepthStencilValue clearValue)
         {
-            uint effectiveLayers = texture.ArrayLayers;
-            if ((texture.Usage & TextureUsage.Cubemap) != 0)
-            {
-                effectiveLayers *= 6;
-            }
+            uint effectiveLayers = texture.ActualArrayLayers;
 
             VkImageAspectFlags aspect = FormatHelpers.IsStencilFormat(texture.Format)
                 ? VkImageAspectFlags.VK_IMAGE_ASPECT_DEPTH_BIT | VkImageAspectFlags.VK_IMAGE_ASPECT_STENCIL_BIT

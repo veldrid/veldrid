@@ -40,7 +40,7 @@ namespace Veldrid.Vulkan
             Depth = description.Depth;
             MipLevels = description.MipLevels;
             ArrayLayers = description.ArrayLayers;
-            bool isCubemap = ((description.Usage) & TextureUsage.Cubemap) == TextureUsage.Cubemap;
+            bool isCubemap = (description.Usage & TextureUsage.Cubemap) == TextureUsage.Cubemap;
             _actualImageArrayLayers = isCubemap
                 ? 6 * ArrayLayers
                 : ArrayLayers;
@@ -129,10 +129,7 @@ namespace Veldrid.Vulkan
                 CheckResult(result);
 
                 _imageLayouts = new VkImageLayout[subresourceCount];
-                for (int i = 0; i < _imageLayouts.Length; i++)
-                {
-                    _imageLayouts[i] = VkImageLayout.VK_IMAGE_LAYOUT_PREINITIALIZED;
-                }
+                _imageLayouts.AsSpan().Fill(VkImageLayout.VK_IMAGE_LAYOUT_PREINITIALIZED);
             }
             else // isStaging
             {
@@ -247,6 +244,10 @@ namespace Veldrid.Vulkan
             VkFormat = vkFormat;
             Format = VkFormats.VkToVdPixelFormat(VkFormat);
             ArrayLayers = arrayLayers;
+            bool isCubemap = (usage & TextureUsage.Cubemap) == TextureUsage.Cubemap;
+            _actualImageArrayLayers = isCubemap
+                ? 6 * ArrayLayers
+                : ArrayLayers;
             Usage = usage;
             Type = TextureType.Texture2D;
             SampleCount = sampleCount;

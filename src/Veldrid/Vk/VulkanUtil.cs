@@ -211,7 +211,20 @@ namespace Veldrid.Vulkan
                 srcStageFlags = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
                 dstStageFlags = VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
             }
-
+            else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
+            {
+                barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+                barrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+                srcStageFlags = VK_PIPELINE_STAGE_TRANSFER_BIT;
+                dstStageFlags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+            }
+            else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
+            {
+                barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+                barrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+                srcStageFlags = VK_PIPELINE_STAGE_TRANSFER_BIT;
+                dstStageFlags = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+            }
             else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
             {
                 barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
@@ -316,6 +329,41 @@ namespace Veldrid.Vulkan
                 barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
                 srcStageFlags = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
                 dstStageFlags = VK_PIPELINE_STAGE_TRANSFER_BIT;
+            }
+            else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_GENERAL)
+            {
+                barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+                barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+                srcStageFlags = VK_PIPELINE_STAGE_TRANSFER_BIT;
+                dstStageFlags = VK_PIPELINE_STAGE_TRANSFER_BIT;
+            }
+            else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_GENERAL)
+            {
+                barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+                barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+                srcStageFlags = VK_PIPELINE_STAGE_TRANSFER_BIT;
+                dstStageFlags = VK_PIPELINE_STAGE_TRANSFER_BIT;
+            }
+            else if (oldLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
+            {
+                barrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+                barrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+                srcStageFlags = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+                dstStageFlags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+            }
+            else if (oldLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
+            {
+                barrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+                barrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+                srcStageFlags = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+                dstStageFlags = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+            }
+            else if (oldLayout == VK_IMAGE_LAYOUT_PRESENT_SRC_KHR && newLayout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
+            {
+                barrier.srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+                barrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+                srcStageFlags = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+                dstStageFlags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
             }
             else
             {

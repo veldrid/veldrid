@@ -163,12 +163,16 @@ namespace Veldrid.Vulkan
             }
         }
 
-        public override void TransitionToFinalLayout(VkCommandBuffer cb)
+        public override void TransitionToFinalLayout(VkCommandBuffer cb, bool attachment)
         {
+            VkImageLayout layout = attachment
+                ? VkImageLayout.VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
+                : VkImageLayout.VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
             foreach (ref readonly FramebufferAttachment ca in ColorTargets)
             {
                 VkTexture vkTex = Util.AssertSubtype<Texture, VkTexture>(ca.Target);
-                vkTex.TransitionImageLayout(cb, 0, 1, ca.ArrayLayer, 1, VkImageLayout.VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+                vkTex.TransitionImageLayout(cb, 0, 1, ca.ArrayLayer, 1, layout);
             }
         }
 

@@ -165,7 +165,7 @@ namespace Veldrid.Vulkan
                 if (DepthTarget != null)
                 {
                     attachments[attachments.Count - 1].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-                    attachments[attachments.Count - 1].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+                    attachments[attachments.Count - 1].initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
                     bool hasStencil = FormatHelpers.IsStencilFormat(DepthTarget.Value.Target.Format);
                     if (hasStencil)
                     {
@@ -176,7 +176,7 @@ namespace Veldrid.Vulkan
                 for (int i = 0; i < colorAttachmentCount; i++)
                 {
                     attachments[i].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-                    attachments[i].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+                    attachments[i].initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
                 }
 
                 VkRenderPass renderPassClear;
@@ -314,33 +314,43 @@ namespace Veldrid.Vulkan
             }
         }
 
-        public override void TransitionToFinalLayout(VkCommandBuffer cb)
+        public override void TransitionToFinalLayout(VkCommandBuffer cb, bool attachment)
         {
+            VkImageLayout colorLayout = attachment
+                ? VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
+                : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
             foreach (ref readonly FramebufferAttachment ca in ColorTargets)
             {
                 VkTexture vkTex = Util.AssertSubtype<Texture, VkTexture>(ca.Target);
-                if ((vkTex.Usage & TextureUsage.Sampled) != 0)
+                if ((vkTex.Usage & TextureUsage.Sampled) != 0 ||
+                    colorLayout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
                 {
                     vkTex.TransitionImageLayout(
                         cb,
                         ca.MipLevel, 1,
                         ca.ArrayLayer, 1,
-                        VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+                        colorLayout);
                 }
             }
 
             if (DepthTarget != null)
             {
+                VkImageLayout depthLayout = attachment
+                    ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
+                    : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
                 FramebufferAttachment depthTarget = DepthTarget.GetValueOrDefault();
 
                 VkTexture vkTex = Util.AssertSubtype<Texture, VkTexture>(depthTarget.Target);
-                if ((vkTex.Usage & TextureUsage.Sampled) != 0)
+                if ((vkTex.Usage & TextureUsage.Sampled) != 0 ||
+                    depthLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
                 {
                     vkTex.TransitionImageLayout(
                         cb,
                         depthTarget.MipLevel, 1,
                         depthTarget.ArrayLayer, 1,
-                        VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+                        depthLayout);
                 }
             }
         }

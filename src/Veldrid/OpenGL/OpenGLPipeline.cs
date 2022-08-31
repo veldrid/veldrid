@@ -412,18 +412,26 @@ namespace Veldrid.OpenGL
 
         private void ProcessLinkedProgram(Span<byte> byteBuffer)
         {
-            int linkStatus;
+            int linkStatus = 0;
             glGetProgramiv(_program, GetProgramParameterName.LinkStatus, &linkStatus);
             CheckLastError();
 
             if (linkStatus != 1)
             {
-                uint bytesWritten;
+                int infoLogLength;
+                glGetProgramiv(_program, GetProgramParameterName.InfoLogLength, &infoLogLength);
+                CheckLastError();
+
+                if (infoLogLength > byteBuffer.Length)
+                    byteBuffer = new byte[infoLogLength];
+
+                uint bytesWritten = 0;
                 fixed (byte* infoLog = byteBuffer)
                 {
                     glGetProgramInfoLog(_program, (uint)byteBuffer.Length, &bytesWritten, infoLog);
                     CheckLastError();
                 }
+
                 string log = Util.UTF8.GetString(byteBuffer[..(int)bytesWritten]);
                 throw new VeldridException($"Error linking GL program: {log}");
             }

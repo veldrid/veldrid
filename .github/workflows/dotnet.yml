@@ -1,4 +1,4 @@
-name: .NET
+name: Veldrid CI build
 
 on:
   create: # when tags are created

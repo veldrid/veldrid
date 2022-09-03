@@ -26,7 +26,6 @@ jobs:
     - name: Test
       run: dotnet test --no-build --verbosity normal src --filter "Backend=D3D11"
     - name: Build Packages
-      if: github.ref == 'refs/heads/master'
       run: dotnet pack src -c Release
     - name: Publish to MyGet
       if: github.ref == 'refs/heads/master'

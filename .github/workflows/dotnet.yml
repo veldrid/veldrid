@@ -1,6 +1,7 @@
 name: .NET
 
 on:
+  create: # when tags are created
   push:
     branches: [ master ]
   pull_request:

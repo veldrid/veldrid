@@ -97,6 +97,9 @@ namespace Veldrid.OpenGL
             glClearDepth_Compat(depth);
             CheckLastError();
 
+            glStencilMask(~0u);
+            CheckLastError();
+
             glClearStencil(stencil);
             CheckLastError();
 

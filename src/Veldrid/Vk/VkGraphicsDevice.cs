@@ -506,6 +506,20 @@ namespace Veldrid.Vk
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
+                // The new MoltenVK now requires the following code
+                if (availableInstanceExtensions.Contains(CommonStrings.VK_KHR_portability_enumeration))
+                {
+                    instanceExtensions.Add(new FixedUtf8String("VK_KHR_portability_enumeration"));
+
+                    //
+                    // Vulkan.RawConstants.VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR
+                    // does not exist
+                    //
+                    // #define VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR = 0x00000001
+                    //
+                    instanceCI.flags |= 0x00000001;
+                }
+
                 if (availableInstanceExtensions.Contains(CommonStrings.VK_EXT_METAL_SURFACE_EXTENSION_NAME))
                 {
                     _surfaceExtensions.Add(CommonStrings.VK_EXT_METAL_SURFACE_EXTENSION_NAME);

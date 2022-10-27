@@ -99,9 +99,9 @@ namespace Veldrid.D3D11
                     ArraySize = arraySize,
                     Format = TypelessDxgiFormat,
                     BindFlags = bindFlags,
-                    CpuAccessFlags = cpuFlags,
+                    CPUAccessFlags = cpuFlags,
                     Usage = resourceUsage,
-                    OptionFlags = optionFlags,
+                    MiscFlags= optionFlags,
                 };
 
                 DeviceTexture = device.CreateTexture1D(desc1D);
@@ -116,10 +116,10 @@ namespace Veldrid.D3D11
                     ArraySize = arraySize,
                     Format = TypelessDxgiFormat,
                     BindFlags = bindFlags,
-                    CpuAccessFlags = cpuFlags,
+                    CPUAccessFlags = cpuFlags,
                     Usage = resourceUsage,
                     SampleDescription = new Vortice.DXGI.SampleDescription((int)FormatHelpers.GetSampleCountUInt32(SampleCount), 0),
-                    OptionFlags = optionFlags,
+                    MiscFlags = optionFlags,
                 };
 
                 DeviceTexture = device.CreateTexture2D(deviceDescription);
@@ -135,9 +135,9 @@ namespace Veldrid.D3D11
                     MipLevels = (int)description.MipLevels,
                     Format = TypelessDxgiFormat,
                     BindFlags = bindFlags,
-                    CpuAccessFlags = cpuFlags,
+                    CPUAccessFlags = cpuFlags,
                     Usage = resourceUsage,
-                    OptionFlags = optionFlags,
+                    MiscFlags = optionFlags,
                 };
 
                 DeviceTexture = device.CreateTexture3D(desc3D);
@@ -158,8 +158,8 @@ namespace Veldrid.D3D11
             Type = type;
             Usage = D3D11Formats.GetVdUsage(
                 existingTexture.Description.BindFlags,
-                existingTexture.Description.CpuAccessFlags,
-                existingTexture.Description.OptionFlags);
+                existingTexture.Description.CPUAccessFlags,
+                existingTexture.Description.MiscFlags);
 
             DxgiFormat = D3D11Formats.ToDxgiFormat(
                 format,

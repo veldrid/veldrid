@@ -919,10 +919,22 @@ namespace Veldrid.OpenGLBinding
             => p_glDispatchCompute(num_groups_x, num_groups_y, num_groups_z);
 
         [UnmanagedFunctionPointer(CallConv)]
+        private delegate uint glGetProgramInterfaceiv_t(uint program, ProgramInterface programInterface, ProgramInterfaceParameterName pname, int* @params);
+        private static glGetProgramInterfaceiv_t p_glGetProgramInterfaceiv;
+        public static uint glGetProgramInterfaceiv(uint program, ProgramInterface programInterface, ProgramInterfaceParameterName pname, int* @params)
+            => p_glGetProgramInterfaceiv(program, programInterface, pname, @params);
+
+        [UnmanagedFunctionPointer(CallConv)]
         private delegate uint glGetProgramResourceIndex_t(uint program, ProgramInterface programInterface, byte* name);
         private static glGetProgramResourceIndex_t p_glGetProgramResourceIndex;
         public static uint glGetProgramResourceIndex(uint program, ProgramInterface programInterface, byte* name)
             => p_glGetProgramResourceIndex(program, programInterface, name);
+
+        [UnmanagedFunctionPointer(CallConv)]
+        private delegate uint glGetProgramResourceName_t(uint program, ProgramInterface programInterface, uint index, uint bufSize, uint* length, byte* name);
+        private static glGetProgramResourceName_t p_glGetProgramResourceName;
+        public static uint glGetProgramResourceName(uint program, ProgramInterface programInterface, uint index, uint bufSize, uint* length, byte* name)
+            => p_glGetProgramResourceName(program, programInterface, index, bufSize, length, name);
 
         [UnmanagedFunctionPointer(CallConv)]
         private delegate void glShaderStorageBlockBinding_t(uint program, uint storageBlockIndex, uint storageBlockBinding);
@@ -1815,6 +1827,9 @@ namespace Veldrid.OpenGLBinding
             LoadFunction("glLinkProgram", out p_glLinkProgram);
             LoadFunction("glGetProgramiv", out p_glGetProgramiv);
             LoadFunction("glGetProgramInfoLog", out p_glGetProgramInfoLog);
+            LoadFunction("glGetProgramInterfaceiv", out p_glGetProgramInterfaceiv);
+            LoadFunction("glGetProgramResourceIndex", out p_glGetProgramResourceIndex);
+            LoadFunction("glGetProgramResourceName", out p_glGetProgramResourceName);
             LoadFunction("glUniformBlockBinding", out p_glUniformBlockBinding);
             LoadFunction("glDeleteProgram", out p_glDeleteProgram);
             LoadFunction("glUniform1i", out p_glUniform1i);
@@ -1844,7 +1859,6 @@ namespace Veldrid.OpenGLBinding
             LoadFunction("glBlitFramebuffer", out p_glBlitFramebuffer);
             LoadFunction("glFramebufferTextureLayer", out p_glFramebufferTextureLayer);
             LoadFunction("glDispatchCompute", out p_glDispatchCompute);
-            LoadFunction("glGetProgramResourceIndex", out p_glGetProgramResourceIndex);
             LoadFunction("glShaderStorageBlockBinding", out p_glShaderStorageBlockBinding);
             LoadFunction("glDrawElementsIndirect", out p_glDrawElementsIndirect);
             LoadFunction("glMultiDrawElementsIndirect", out p_glMultiDrawElementsIndirect);

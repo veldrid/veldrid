@@ -12,7 +12,7 @@
   <PropertyGroup>
     <VeldridSpirvVersion>1.0.14</VeldridSpirvVersion>
     <NativeLibraryLoaderVersion>1.0.12</NativeLibraryLoaderVersion>
-    <VorticeWindowsVersion>2.1.0</VorticeWindowsVersion>
+    <VorticeWindowsVersion>2.1.32</VorticeWindowsVersion>
   </PropertyGroup>
 
   <PropertyGroup>

@@ -358,13 +358,14 @@ namespace Veldrid.D3D11
                         lock (_immediateContextLock)
                         {
                             Util.GetMipLevelAndArrayLayer(texture, subresource, out uint mipLevel, out uint arrayLayer);
-                            MappedSubresource msr = _immediateContext.Map(
+                            _immediateContext.Map(
                                 texture.DeviceTexture,
                                 (int)mipLevel,
                                 (int)arrayLayer,
                                 D3D11Formats.VdToD3D11MapMode(false, mode),
                                 Vortice.Direct3D11.MapFlags.None,
-                                out int mipSize);
+                                out int mipSize,
+                                out MappedSubresource msr);
 
                             info.MappedResource = new MappedResource(
                                 resource,

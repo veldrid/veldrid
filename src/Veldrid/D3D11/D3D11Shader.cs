@@ -88,10 +88,10 @@ namespace Veldrid.D3D11
 
             if (result == null)
             {
-                throw new VeldridException($"Failed to compile HLSL code: {Encoding.ASCII.GetString(error.GetBytes())}");
+                throw new VeldridException($"Failed to compile HLSL code: {Encoding.ASCII.GetString(error.AsBytes())}");
             }
 
-            return result.GetBytes();
+            return result.AsBytes();
         }
 
         public override string Name

@@ -44,28 +44,28 @@ namespace Veldrid.D3D11
             {
                 if (rawBuffer)
                 {
-                    bd.OptionFlags = ResourceOptionFlags.BufferAllowRawViews;
+                    bd.MiscFlags = ResourceOptionFlags.BufferAllowRawViews;
                 }
                 else
                 {
-                    bd.OptionFlags = ResourceOptionFlags.BufferStructured;
+                    bd.MiscFlags = ResourceOptionFlags.BufferStructured;
                     bd.StructureByteStride = (int)structureByteStride;
                 }
             }
             if ((usage & BufferUsage.IndirectBuffer) == BufferUsage.IndirectBuffer)
             {
-                bd.OptionFlags = ResourceOptionFlags.DrawIndirectArguments;
+                bd.MiscFlags = ResourceOptionFlags.DrawIndirectArguments;
             }
 
             if ((usage & BufferUsage.Dynamic) == BufferUsage.Dynamic)
             {
                 bd.Usage = ResourceUsage.Dynamic;
-                bd.CpuAccessFlags = CpuAccessFlags.Write;
+                bd.CPUAccessFlags = CpuAccessFlags.Write;
             }
             else if ((usage & BufferUsage.Staging) == BufferUsage.Staging)
             {
                 bd.Usage = ResourceUsage.Staging;
-                bd.CpuAccessFlags = CpuAccessFlags.Read | CpuAccessFlags.Write;
+                bd.CPUAccessFlags = CpuAccessFlags.Read | CpuAccessFlags.Write;
             }
 
             _buffer = device.CreateBuffer(bd);

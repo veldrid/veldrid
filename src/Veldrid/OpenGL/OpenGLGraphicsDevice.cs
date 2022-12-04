@@ -354,56 +354,11 @@ namespace Veldrid.OpenGL
                 options.SyncToVerticalBlank = swapchainDescription.Value.SyncToVerticalBlank;
             }
 
-            glGenTextures(1, out uint copySrc);
-            CheckLastError();
-
-            float* data = stackalloc float[4];
-            data[0] = 0.5f;
-            data[1] = 0.5f;
-            data[2] = 0.5f;
-            data[3] = 1f;
-
-            glActiveTexture(TextureUnit.Texture0);
-            CheckLastError();
-            glBindTexture(TextureTarget.Texture2D, copySrc);
-            CheckLastError();
-            glTexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba32f, 1, 1, 0, GLPixelFormat.Rgba, GLPixelType.Float, data);
-            CheckLastError();
-            glGenFramebuffers(1, out uint copySrcFb);
-            CheckLastError();
-
-            glBindFramebuffer(FramebufferTarget.ReadFramebuffer, copySrcFb);
-            CheckLastError();
-            glFramebufferTexture2D(FramebufferTarget.ReadFramebuffer, GLFramebufferAttachment.ColorAttachment0, TextureTarget.Texture2D, copySrc, 0);
-            CheckLastError();
-
-            glEnable(EnableCap.FramebufferSrgb);
-            CheckLastError();
-            glBlitFramebuffer(
-                0, 0, 1, 1,
-                0, 0, 1, 1,
-                ClearBufferMask.ColorBufferBit,
-                BlitFramebufferFilter.Nearest);
-            CheckLastError();
-
-            glDisable(EnableCap.FramebufferSrgb);
-            CheckLastError();
-
-            glBindFramebuffer(FramebufferTarget.ReadFramebuffer, 0);
-            CheckLastError();
-            glBindFramebuffer(FramebufferTarget.DrawFramebuffer, copySrcFb);
-            CheckLastError();
-            glBlitFramebuffer(
-                0, 0, 1, 1,
-                0, 0, 1, 1,
-                ClearBufferMask.ColorBufferBit,
-                BlitFramebufferFilter.Nearest);
-            CheckLastError();
             if (_backendType == GraphicsBackend.OpenGLES)
             {
                 if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 {
-                    throw new VeldridException($"Creating headless OpenGL devices is only supported on Windows.");
+                    throw new VeldridException($"Creating headless OpenGL ES devices is only supported on Windows.");
                 }
 
                 InitializeWin32(options, null, backend);
@@ -431,11 +386,11 @@ namespace Veldrid.OpenGL
                     androidSource.Surface);
                 InitializeANativeWindow(options, aNativeWindow, swapchainDescription.Value);
             }
-            else if (source is Win32SwapchainSource win32Source)
+            else if (source is Win32SwapchainSource)
             {
                 InitializeWin32(options, swapchainDescription, backend);
             }
-            else if (source is XlibSwapchainSource xlibSource)
+            else if (source is XlibSwapchainSource)
             {
                 InitializeXlib(options, swapchainDescription, backend);
             }

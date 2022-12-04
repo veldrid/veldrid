@@ -828,7 +828,7 @@ namespace Veldrid
         /// <param name="bufferOffsetInBytes">An offset, in bytes, from the beginning of the <see cref="DeviceBuffer"/>'s storage, at
         /// which new data will be uploaded.</param>
         /// <param name="source">An array containing the data to upload.</param>
-        public unsafe void UpdateBuffer<T>(
+        public void UpdateBuffer<T>(
             DeviceBuffer buffer,
             uint bufferOffsetInBytes,
             T[] source) where T : unmanaged
@@ -854,6 +854,23 @@ namespace Veldrid
             {
                 UpdateBuffer(buffer, bufferOffsetInBytes, (IntPtr)pin, (uint)(sizeof(T) * source.Length));
             }
+        }
+
+        /// <summary>
+        /// Updates a <see cref="DeviceBuffer"/> region with new data.
+        /// This function must be used with a blittable value type <typeparamref name="T"/>.
+        /// </summary>
+        /// <typeparam name="T">The type of data to upload.</typeparam>
+        /// <param name="buffer">The resource to update.</param>
+        /// <param name="bufferOffsetInBytes">An offset, in bytes, from the beginning of the <see cref="DeviceBuffer"/>'s storage, at
+        /// which new data will be uploaded.</param>
+        /// <param name="source">An span containing the data to upload.</param>
+        public void UpdateBuffer<T>(
+            DeviceBuffer buffer,
+            uint bufferOffsetInBytes,
+            Span<T> source) where T : unmanaged
+        {
+            UpdateBuffer(buffer, bufferOffsetInBytes, (ReadOnlySpan<T>)source);
         }
 
         /// <summary>
@@ -927,10 +944,10 @@ namespace Veldrid
         /// <param name="destination">The destination of Texture data.</param>
         public void CopyTexture(Texture source, Texture destination)
         {
-#if VALIDATE_USAGE
             uint effectiveSrcArrayLayers = (source.Usage & TextureUsage.Cubemap) != 0
                 ? source.ArrayLayers * 6
                 : source.ArrayLayers;
+#if VALIDATE_USAGE
             uint effectiveDstArrayLayers = (destination.Usage & TextureUsage.Cubemap) != 0
                 ? destination.ArrayLayers * 6
                 : destination.ArrayLayers;
@@ -970,14 +987,13 @@ namespace Veldrid
             uint effectiveDstArrayLayers = (destination.Usage & TextureUsage.Cubemap) != 0
                 ? destination.ArrayLayers * 6
                 : destination.ArrayLayers;
-            if (effectiveSrcArrayLayers != effectiveDstArrayLayers || source.MipLevels != destination.MipLevels
-                || source.SampleCount != destination.SampleCount || source.Width != destination.Width
+            if (source.SampleCount != destination.SampleCount || source.Width != destination.Width
                 || source.Height != destination.Height || source.Depth != destination.Depth
                 || source.Format != destination.Format)
             {
                 throw new VeldridException("Source and destination Textures are not compatible to be copied.");
             }
-            if (mipLevel >= source.MipLevels || arrayLayer >= effectiveSrcArrayLayers)
+            if (mipLevel >= source.MipLevels || mipLevel >= destination.MipLevels || arrayLayer >= effectiveSrcArrayLayers || arrayLayer >= effectiveDstArrayLayers)
             {
                 throw new VeldridException(
                     $"{nameof(mipLevel)} and {nameof(arrayLayer)} must be less than the given Textures' mip level count and array layer count.");

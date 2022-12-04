@@ -1730,12 +1730,12 @@ namespace Veldrid.OpenGLBinding
         Vendor = 0x1F00,
         Renderer = 0x1F01,
         Version = 0x1F02,
+        ShadingLanguageVersion = 35724,
     }
 
     public enum StringNameIndexed
     {
-        Extensions = 7939,
-        ShadingLanguageVersion = 35724
+        Extensions = 7939
     }
 
     public enum ObjectLabelIdentifier
@@ -1800,6 +1800,14 @@ namespace Veldrid.OpenGLBinding
         FragmentSubroutineUniform = ((int)0x92F2),
         ComputeSubroutineUniform = ((int)0x92F3),
         TransformFeedbackVarying = ((int)0x92F4),
+    }
+
+    public enum ProgramInterfaceParameterName : int
+    {
+        ActiveResources = 0x92F5,
+        MaxNameLength = 0x92F6,
+        MaxNumActiveVariables = 0x92F7,
+        MaxNumCompatibleSubroutines = 0x92F8,
     }
 
     public enum TextureAccess : int

@@ -214,7 +214,7 @@ namespace Veldrid.WebGL
                         _vertexAttribDivisors[totalSlotsBound] = stepRate;
                     }
 
-                    offset += FormatHelpers.GetSizeInBytes(element.Format);
+                    offset += FormatSizeHelpers.GetSizeInBytes(element.Format);
                     totalSlotsBound += 1;
                 }
             }
@@ -855,7 +855,7 @@ namespace Veldrid.WebGL
             uint unpackAlignment = 4;
             if (!isCompressed)
             {
-                unpackAlignment = FormatHelpers.GetSizeInBytes(glTex.Format);
+                unpackAlignment = FormatSizeHelpers.GetSizeInBytes(glTex.Format);
             }
             if (unpackAlignment < 4)
             {

@@ -22,6 +22,10 @@ namespace Veldrid.WebGL
 
         public override string DeviceName => "WebGL";
 
+        public override string VendorName => "WebGL"; // TODO: Query from browser.
+
+        public override GraphicsApiVersion ApiVersion => new GraphicsApiVersion(2, 0, 0, 0); // TODO: Query from browser.
+
         public WebGLGraphicsDevice(GraphicsDeviceOptions options, object canvas)
             : base(ref options)
         {

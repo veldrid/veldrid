@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <RootNamespace>Veldrid.NeoDemo</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <AssetsDir>$(MSBuildThisFileDirectory)..\NeoDemo\Assets</AssetsDir>

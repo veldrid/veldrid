@@ -1,16 +1,18 @@
-﻿using System;
+﻿using System.Collections;
 using System.Collections.Generic;
 
 namespace Veldrid.OpenGL
 {
-    internal class OpenGLExtensions
+    internal class OpenGLExtensions : IReadOnlyCollection<string>
     {
         private readonly HashSet<string> _extensions;
         private readonly GraphicsBackend _backend;
         private readonly int _major;
         private readonly int _minor;
 
-        public OpenGLExtensions(HashSet<string> extensions, GraphicsBackend backend, int major, int minor)
+        public int Count => _extensions.Count;
+
+        internal OpenGLExtensions(HashSet<string> extensions, GraphicsBackend backend, int major, int minor)
         {
             _extensions = extensions;
             _backend = backend;
@@ -23,7 +25,8 @@ namespace Veldrid.OpenGL
                 || GLESVersion(3, 1);
             ARB_DirectStateAccess = IsExtensionSupported("GL_ARB_direct_state_access");
             ARB_MultiBind = IsExtensionSupported("GL_ARB_multi_bind");
-            ARB_TextureView = GLVersion(4, 3) || IsExtensionSupported("GL_ARB_texture_view"); // OpenGL 4.3
+            ARB_TextureView = GLVersion(4, 3) || IsExtensionSupported("GL_ARB_texture_view") // OpenGL 4.3
+                || IsExtensionSupported("GL_OES_texture_view");
             CopyImage = IsExtensionSupported("GL_ARB_copy_image")
                 || GLESVersion(3, 2)
                 || IsExtensionSupported("GL_OES_copy_image")
@@ -57,6 +60,10 @@ namespace Veldrid.OpenGL
             EXT_DebugMarker = _backend == GraphicsBackend.OpenGLES && IsExtensionSupported("GL_EXT_debug_marker");
 
             ARB_GpuShaderFp64 = GLVersion(4, 0) || IsExtensionSupported("GL_ARB_gpu_shader_fp64");
+
+            ARB_uniform_buffer_object = IsExtensionSupported("GL_ARB_uniform_buffer_object");
+
+            AnisotropicFilter = IsExtensionSupported("GL_EXT_texture_filter_anisotropic") || IsExtensionSupported("GL_ARB_texture_filter_anisotropic");
         }
 
         public readonly bool ARB_DirectStateAccess;
@@ -69,6 +76,7 @@ namespace Veldrid.OpenGL
         public readonly bool EXT_sRGBWriteControl;
         public readonly bool EXT_DebugMarker;
         public readonly bool ARB_GpuShaderFp64;
+        public readonly bool ARB_uniform_buffer_object;
 
         // Differs between GL / GLES
         public readonly bool TextureStorage;
@@ -83,6 +91,7 @@ namespace Veldrid.OpenGL
         public readonly bool DrawIndirect;
         public readonly bool MultiDrawIndirect;
         public readonly bool StorageBuffers;
+        public readonly bool AnisotropicFilter;
 
         /// <summary>
         /// Returns a value indicating whether the given extension is supported.
@@ -126,6 +135,16 @@ namespace Veldrid.OpenGL
             }
 
             return false;
+        }
+
+        public IEnumerator<string> GetEnumerator()
+        {
+            return _extensions.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
         }
     }
 }

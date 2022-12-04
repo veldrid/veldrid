@@ -82,16 +82,16 @@ namespace Veldrid.D3D11
             }
 
             ShaderFlags flags = description.Debug ? ShaderFlags.Debug : ShaderFlags.OptimizationLevel3;
-            Compiler.Compile(description.ShaderBytes,
+            Compiler.Compile(description.ShaderBytes, null, null,
                              description.EntryPoint, null,
-                             profile, out Blob result, out Blob error);
+                             profile, flags, out Blob result, out Blob error);
 
             if (result == null)
             {
-                throw new VeldridException($"Failed to compile HLSL code: {Encoding.ASCII.GetString(error.GetBytes())}");
+                throw new VeldridException($"Failed to compile HLSL code: {Encoding.ASCII.GetString(error.AsBytes())}");
             }
 
-            return result.GetBytes();
+            return result.AsBytes();
         }
 
         public override string Name
@@ -104,7 +104,7 @@ namespace Veldrid.D3D11
             }
         }
 
-        public override bool IsDisposed => DeviceShader.IsDisposed;
+        public override bool IsDisposed => DeviceShader.NativePointer == IntPtr.Zero;
 
         public override void Dispose()
         {

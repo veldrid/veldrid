@@ -369,7 +369,7 @@ namespace Veldrid.D3D11
                 case BlendFactor.BlendFactor:
                     return Blend.BlendFactor;
                 case BlendFactor.InverseBlendFactor:
-                    return Blend.BlendFactor;
+                    return Blend.InverseBlendFactor;
                 default:
                     throw Illegal.Value<BlendFactor>();
             }
@@ -399,15 +399,15 @@ namespace Veldrid.D3D11
                 case StencilOperation.Replace:
                     return Vortice.Direct3D11.StencilOperation.Replace;
                 case StencilOperation.IncrementAndClamp:
-                    return Vortice.Direct3D11.StencilOperation.IncrSat;
+                    return Vortice.Direct3D11.StencilOperation.IncrementSaturate;
                 case StencilOperation.DecrementAndClamp:
-                    return Vortice.Direct3D11.StencilOperation.DecrSat;
+                    return Vortice.Direct3D11.StencilOperation.DecrementSaturate;
                 case StencilOperation.Invert:
-                    return Vortice.Direct3D11.StencilOperation.InverseErt;
+                    return Vortice.Direct3D11.StencilOperation.Invert;
                 case StencilOperation.IncrementAndWrap:
-                    return Vortice.Direct3D11.StencilOperation.Incr;
+                    return Vortice.Direct3D11.StencilOperation.Increment;
                 case StencilOperation.DecrementAndWrap:
-                    return Vortice.Direct3D11.StencilOperation.Decr;
+                    return Vortice.Direct3D11.StencilOperation.Decrement;
                 default:
                     throw Illegal.Value<StencilOperation>();
             }
@@ -558,6 +558,22 @@ namespace Veldrid.D3D11
                 default:
                     throw Illegal.Value<BlendFunction>();
             }
+        }
+
+        internal static ColorWriteEnable VdToD3D11ColorWriteEnable(ColorWriteMask mask)
+        {
+            ColorWriteEnable enable = ColorWriteEnable.None;
+
+            if ((mask & ColorWriteMask.Red) == ColorWriteMask.Red)
+                enable |= ColorWriteEnable.Red;
+            if ((mask & ColorWriteMask.Green) == ColorWriteMask.Green)
+                enable |= ColorWriteEnable.Green;
+            if ((mask & ColorWriteMask.Blue) == ColorWriteMask.Blue)
+                enable |= ColorWriteEnable.Blue;
+            if ((mask & ColorWriteMask.Alpha) == ColorWriteMask.Alpha)
+                enable |= ColorWriteEnable.Alpha;
+
+            return enable;
         }
 
         internal static Filter ToD3D11Filter(SamplerFilter filter, bool isComparison)

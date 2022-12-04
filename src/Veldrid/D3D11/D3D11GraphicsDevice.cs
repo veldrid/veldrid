@@ -10,6 +10,7 @@ using Vortice.Mathematics;
 using Vortice.Direct3D11.Debug;
 using VorticeDXGI = Vortice.DXGI.DXGI;
 using VorticeD3D11 = Vortice.Direct3D11.D3D11;
+using Vortice.DXGI.Debug;
 
 namespace Veldrid.D3D11
 {
@@ -18,6 +19,9 @@ namespace Veldrid.D3D11
         private readonly IDXGIAdapter _dxgiAdapter;
         private readonly ID3D11Device _device;
         private readonly string _deviceName;
+        private readonly string _vendorName;
+        private readonly GraphicsApiVersion _apiVersion;
+        private readonly int _deviceId;
         private readonly ID3D11DeviceContext _immediateContext;
         private readonly D3D11ResourceFactory _d3d11ResourceFactory;
         private readonly D3D11Swapchain _mainSwapchain;
@@ -35,6 +39,10 @@ namespace Veldrid.D3D11
 
         public override string DeviceName => _deviceName;
 
+        public override string VendorName => _vendorName;
+
+        public override GraphicsApiVersion ApiVersion => _apiVersion;
+
         public override GraphicsBackend BackendType => GraphicsBackend.Direct3D11;
 
         public override bool IsUvOriginTopLeft => true;
@@ -49,9 +57,13 @@ namespace Veldrid.D3D11
 
         public IDXGIAdapter Adapter => _dxgiAdapter;
 
+        public bool IsDebugEnabled { get; }
+
         public bool SupportsConcurrentResources => _supportsConcurrentResources;
 
         public bool SupportsCommandLists => _supportsCommandLists;
+
+        public int DeviceId => _deviceId;
 
         public override Swapchain MainSwapchain => _mainSwapchain;
 
@@ -118,7 +130,42 @@ namespace Veldrid.D3D11
                 // Store a pointer to the DXGI adapter.
                 // This is for the case of no preferred DXGI adapter, or fallback to WARP.
                 dxgiDevice.GetAdapter(out _dxgiAdapter).CheckError();
-                _deviceName = _dxgiAdapter.Description.Description;
+
+                AdapterDescription desc = _dxgiAdapter.Description;
+                _deviceName = desc.Description;
+                _vendorName = "id:" + ((uint)desc.VendorId).ToString("x8");
+                _deviceId = desc.DeviceId;
+            }
+
+            switch (_device.FeatureLevel)
+            {
+                case Vortice.Direct3D.FeatureLevel.Level_10_0:
+                    _apiVersion = new GraphicsApiVersion(10, 0, 0, 0);
+                    break;
+
+                case Vortice.Direct3D.FeatureLevel.Level_10_1:
+                    _apiVersion = new GraphicsApiVersion(10, 1, 0, 0);
+                    break;
+
+                case Vortice.Direct3D.FeatureLevel.Level_11_0:
+                    _apiVersion = new GraphicsApiVersion(11, 0, 0, 0);
+                    break;
+
+                case Vortice.Direct3D.FeatureLevel.Level_11_1:
+                    _apiVersion = new GraphicsApiVersion(11, 1, 0, 0);
+                    break;
+
+                case Vortice.Direct3D.FeatureLevel.Level_12_0:
+                    _apiVersion = new GraphicsApiVersion(12, 0, 0, 0);
+                    break;
+
+                case Vortice.Direct3D.FeatureLevel.Level_12_1:
+                    _apiVersion = new GraphicsApiVersion(12, 1, 0, 0);
+                    break;
+
+                case Vortice.Direct3D.FeatureLevel.Level_12_2:
+                    _apiVersion = new GraphicsApiVersion(12, 2, 0, 0);
+                    break;
             }
 
             if (swapchainDesc != null)
@@ -128,6 +175,8 @@ namespace Veldrid.D3D11
             }
             _immediateContext = _device.ImmediateContext;
             _device.CheckThreadingSupport(out _supportsConcurrentResources, out _supportsCommandLists);
+
+            IsDebugEnabled = (flags & DeviceCreationFlags.Debug) != 0;
 
             Features = new GraphicsDeviceFeatures(
                 computeShader: true,
@@ -313,13 +362,14 @@ namespace Veldrid.D3D11
                         lock (_immediateContextLock)
                         {
                             Util.GetMipLevelAndArrayLayer(texture, subresource, out uint mipLevel, out uint arrayLayer);
-                            MappedSubresource msr = _immediateContext.Map(
+                            _immediateContext.Map(
                                 texture.DeviceTexture,
                                 (int)mipLevel,
                                 (int)arrayLayer,
                                 D3D11Formats.VdToD3D11MapMode(false, mode),
                                 Vortice.Direct3D11.MapFlags.None,
-                                out int mipSize);
+                                out int mipSize,
+                                out MappedSubresource msr);
 
                             info.MappedResource = new MappedResource(
                                 resource,
@@ -371,6 +421,10 @@ namespace Veldrid.D3D11
                         bool result = _mappedResources.Remove(key);
                         Debug.Assert(result);
                     }
+                }
+                else
+                {
+                    _mappedResources[key] = info;
                 }
             }
         }
@@ -613,26 +667,32 @@ namespace Veldrid.D3D11
             _mainSwapchain?.Dispose();
             _immediateContext.Dispose();
 
-            ID3D11Debug deviceDebug = _device.QueryInterfaceOrNull<ID3D11Debug>();
-
-            _device.Dispose();
-            _dxgiAdapter.Dispose();
-
-            // Report live objects using DXGI if available (DXGIGetDebugInterface1 will fail on pre Windows 8 OS).
-            if (VorticeDXGI.DXGIGetDebugInterface1(out IDXGIDebug1 dxgiDebug).Success)
+            if (IsDebugEnabled)
             {
-                deviceDebug?.Dispose();
-                dxgiDebug.ReportLiveObjects(VorticeDXGI.All, ReportLiveObjectFlags.Summary | ReportLiveObjectFlags.IgnoreInternal);
-                dxgiDebug.Dispose();
+                uint refCount = _device.Release();
+                if (refCount > 0)
+                {
+                    ID3D11Debug deviceDebug = _device.QueryInterfaceOrNull<ID3D11Debug>();
+                    if (deviceDebug != null)
+                    {
+                        deviceDebug.ReportLiveDeviceObjects(ReportLiveDeviceObjectFlags.Summary | ReportLiveDeviceObjectFlags.Detail | ReportLiveDeviceObjectFlags.IgnoreInternal);
+                        deviceDebug.Dispose();
+                    }
+                }
+
+                _dxgiAdapter.Dispose();
+
+                // Report live objects using DXGI if available (DXGIGetDebugInterface1 will fail on pre Windows 8 OS).
+                if (VorticeDXGI.DXGIGetDebugInterface1(out IDXGIDebug1 dxgiDebug).Success)
+                {
+                    dxgiDebug.ReportLiveObjects(VorticeDXGI.DebugAll, ReportLiveObjectFlags.Summary | ReportLiveObjectFlags.IgnoreInternal);
+                    dxgiDebug.Dispose();
+                }
             }
             else
             {
-                // Need to enable native debugging to see live objects in VisualStudio console.
-                if (deviceDebug != null)
-                {
-                    deviceDebug.ReportLiveDeviceObjects(ReportLiveDeviceObjectFlags.Summary | ReportLiveDeviceObjectFlags.Detail | ReportLiveDeviceObjectFlags.IgnoreInternal);
-                    deviceDebug.Dispose();
-                }
+                _device.Dispose();
+                _dxgiAdapter.Dispose();
             }
         }
 

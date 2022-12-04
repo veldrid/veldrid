@@ -437,6 +437,34 @@ namespace Veldrid.OpenGLBinding
         public static void glDeleteSamplers(uint n, ref uint samplers) => p_glDeleteSamplers(n, ref samplers);
 
         [UnmanagedFunctionPointer(CallConv)]
+        private delegate void glColorMask_t(
+            GLboolean red,
+            GLboolean green,
+            GLboolean blue,
+            GLboolean alpha);
+        private static glColorMask_t p_glColorMask;
+        public static void glColorMask(
+            GLboolean red,
+            GLboolean green,
+            GLboolean blue,
+            GLboolean alpha) => p_glColorMask(red, green, blue, alpha);
+
+        [UnmanagedFunctionPointer(CallConv)]
+        private delegate void glColorMaski_t(
+            uint buf,
+            GLboolean red,
+            GLboolean green,
+            GLboolean blue,
+            GLboolean alpha);
+        private static glColorMaski_t p_glColorMaski;
+        public static void glColorMaski(
+            uint buf,
+            GLboolean red,
+            GLboolean green,
+            GLboolean blue,
+            GLboolean alpha) => p_glColorMaski(buf, red, green, blue, alpha);
+
+        [UnmanagedFunctionPointer(CallConv)]
         private delegate void glBlendFuncSeparatei_t(
             uint buf,
             BlendingFactorSrc srcRGB,
@@ -891,10 +919,22 @@ namespace Veldrid.OpenGLBinding
             => p_glDispatchCompute(num_groups_x, num_groups_y, num_groups_z);
 
         [UnmanagedFunctionPointer(CallConv)]
+        private delegate uint glGetProgramInterfaceiv_t(uint program, ProgramInterface programInterface, ProgramInterfaceParameterName pname, int* @params);
+        private static glGetProgramInterfaceiv_t p_glGetProgramInterfaceiv;
+        public static uint glGetProgramInterfaceiv(uint program, ProgramInterface programInterface, ProgramInterfaceParameterName pname, int* @params)
+            => p_glGetProgramInterfaceiv(program, programInterface, pname, @params);
+
+        [UnmanagedFunctionPointer(CallConv)]
         private delegate uint glGetProgramResourceIndex_t(uint program, ProgramInterface programInterface, byte* name);
         private static glGetProgramResourceIndex_t p_glGetProgramResourceIndex;
         public static uint glGetProgramResourceIndex(uint program, ProgramInterface programInterface, byte* name)
             => p_glGetProgramResourceIndex(program, programInterface, name);
+
+        [UnmanagedFunctionPointer(CallConv)]
+        private delegate uint glGetProgramResourceName_t(uint program, ProgramInterface programInterface, uint index, uint bufSize, uint* length, byte* name);
+        private static glGetProgramResourceName_t p_glGetProgramResourceName;
+        public static uint glGetProgramResourceName(uint program, ProgramInterface programInterface, uint index, uint bufSize, uint* length, byte* name)
+            => p_glGetProgramResourceName(program, programInterface, index, bufSize, length, name);
 
         [UnmanagedFunctionPointer(CallConv)]
         private delegate void glShaderStorageBlockBinding_t(uint program, uint storageBlockIndex, uint storageBlockBinding);
@@ -1779,6 +1819,8 @@ namespace Veldrid.OpenGLBinding
             LoadFunction("glSamplerParameterfv", out p_glSamplerParameterfv);
             LoadFunction("glBindSampler", out p_glBindSampler);
             LoadFunction("glDeleteSamplers", out p_glDeleteSamplers);
+            LoadFunction("glColorMaski", out p_glColorMaski);
+            LoadFunction("glColorMask", out p_glColorMask);
             LoadFunction("glBlendFuncSeparatei", out p_glBlendFuncSeparatei);
             LoadFunction("glBlendFuncSeparate", out p_glBlendFuncSeparate);
             LoadFunction("glEnable", out p_glEnable);
@@ -1797,6 +1839,9 @@ namespace Veldrid.OpenGLBinding
             LoadFunction("glLinkProgram", out p_glLinkProgram);
             LoadFunction("glGetProgramiv", out p_glGetProgramiv);
             LoadFunction("glGetProgramInfoLog", out p_glGetProgramInfoLog);
+            LoadFunction("glGetProgramInterfaceiv", out p_glGetProgramInterfaceiv);
+            LoadFunction("glGetProgramResourceIndex", out p_glGetProgramResourceIndex);
+            LoadFunction("glGetProgramResourceName", out p_glGetProgramResourceName);
             LoadFunction("glUniformBlockBinding", out p_glUniformBlockBinding);
             LoadFunction("glDeleteProgram", out p_glDeleteProgram);
             LoadFunction("glUniform1i", out p_glUniform1i);
@@ -1826,7 +1871,6 @@ namespace Veldrid.OpenGLBinding
             LoadFunction("glBlitFramebuffer", out p_glBlitFramebuffer);
             LoadFunction("glFramebufferTextureLayer", out p_glFramebufferTextureLayer);
             LoadFunction("glDispatchCompute", out p_glDispatchCompute);
-            LoadFunction("glGetProgramResourceIndex", out p_glGetProgramResourceIndex);
             LoadFunction("glShaderStorageBlockBinding", out p_glShaderStorageBlockBinding);
             LoadFunction("glDrawElementsIndirect", out p_glDrawElementsIndirect);
             LoadFunction("glMultiDrawElementsIndirect", out p_glMultiDrawElementsIndirect);
@@ -1845,7 +1889,7 @@ namespace Veldrid.OpenGLBinding
             LoadFunction("glTextureStorage3DMultisample", out p_glTextureStorage3DMultisample);
             LoadFunction("glTexStorage2DMultisample", out p_glTexStorage2DMultisample);
             LoadFunction("glTexStorage3DMultisample", out p_glTexStorage3DMultisample);
-            LoadFunction("glTextureView", out p_glTextureView);
+            
             LoadFunction("glMapBuffer", out p_glMapBuffer);
             LoadFunction("glMapNamedBuffer", out p_glMapNamedBuffer);
             LoadFunction("glUnmapBuffer", out p_glUnmapBuffer);
@@ -1882,6 +1926,7 @@ namespace Veldrid.OpenGLBinding
                 LoadFunction("glPolygonMode", out p_glPolygonMode);
                 LoadFunction("glViewportIndexedf", out p_glViewportIndexedf);
                 LoadFunction("glCopyImageSubData", out p_glCopyImageSubData);
+                LoadFunction("glTextureView", out p_glTextureView);
                 LoadFunction("glGenerateTextureMipmap", out p_glGenerateTextureMipmap);
                 LoadFunction("glClipControl", out p_glClipControl);
                 LoadFunction("glDrawElementsInstancedBaseVertexBaseInstance", out p_glDrawElementsInstancedBaseVertexBaseInstance);
@@ -1899,6 +1944,12 @@ namespace Veldrid.OpenGLBinding
                 if (p_glCopyImageSubData == null)
                 {
                     LoadFunction("glCopyImageSubDataEXT", out p_glCopyImageSubData);
+                }
+
+                LoadFunction("glTextureView", out p_glTextureView);
+                if(p_glTextureView == null)
+                {
+                    LoadFunction("glTextureViewOES", out p_glTextureView);
                 }
 
                 LoadFunction("glRenderbufferStorage", out p_glRenderbufferStorage);

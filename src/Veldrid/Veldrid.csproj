@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFrameworks>netstandard2.0;net6.0</TargetFrameworks>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DocumentationFile>$(BinDir)\$(AssemblyName).xml</DocumentationFile>
     <NoWarn Condition="'$(Configuration)' == 'Debug'">1591</NoWarn>
@@ -13,17 +13,19 @@
     <LangVersion>7.3</LangVersion>
   </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="System.Memory" Version="4.5.3" />
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <PackageReference Include="System.Memory" Version="4.5.5" />
     <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
-    <PackageReference Include="System.Buffers" Version="4.4.0" />
-    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.5.2" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="NativeLibraryLoader" Version="1.0.12" />
 
     <PackageReference Include="Vk" Version="1.0.25" Condition="'$(ExcludeVulkan)' != 'true'" />
 
-    <PackageReference Include="Vortice.D3DCompiler" Version="1.8.54" Condition="'$(ExcludeD3D11)' != 'true'" />
-    <PackageReference Include="Vortice.Direct3D11" Version="1.8.54" Condition="'$(ExcludeD3D11)' != 'true'" />
+    <PackageReference Include="Vortice.D3DCompiler" Version="$(VorticeWindowsVersion)" Condition="'$(ExcludeD3D11)' != 'true'" />
+    <PackageReference Include="Vortice.Direct3D11" Version="$(VorticeWindowsVersion)" Condition="'$(ExcludeD3D11)' != 'true'" />
 
     <ProjectReference Include="..\Veldrid.MetalBindings\Veldrid.MetalBindings.csproj" Condition="'$(ExcludeMetal)' != 'true'" />
 

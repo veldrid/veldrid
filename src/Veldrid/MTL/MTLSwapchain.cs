@@ -40,8 +40,6 @@ namespace Veldrid.MTL
             _gd = gd;
             _syncToVerticalBlank = description.SyncToVerticalBlank;
 
-            _metalLayer = CAMetalLayer.New();
-
             uint width;
             uint height;
 
@@ -49,12 +47,17 @@ namespace Veldrid.MTL
             if (source is NSWindowSwapchainSource nsWindowSource)
             {
                 NSWindow nswindow = new NSWindow(nsWindowSource.NSWindow);
-                CGSize windowContentSize = nswindow.contentView.frame.size;
+                NSView contentView = nswindow.contentView;
+                CGSize windowContentSize = contentView.frame.size;
                 width = (uint)windowContentSize.width;
                 height = (uint)windowContentSize.height;
-                NSView contentView = nswindow.contentView;
-                contentView.wantsLayer = true;
-                contentView.layer = _metalLayer.NativePtr;
+
+                if (!CAMetalLayer.TryCast(contentView.layer, out _metalLayer))
+                {
+                    _metalLayer = CAMetalLayer.New();
+                    contentView.wantsLayer = true;
+                    contentView.layer = _metalLayer.NativePtr;
+                }
             }
             else if (source is NSViewSwapchainSource nsViewSource)
             {
@@ -62,8 +65,13 @@ namespace Veldrid.MTL
                 CGSize windowContentSize = contentView.frame.size;
                 width = (uint)windowContentSize.width;
                 height = (uint)windowContentSize.height;
-                contentView.wantsLayer = true;
-                contentView.layer = _metalLayer.NativePtr;
+
+                if (!CAMetalLayer.TryCast(contentView.layer, out _metalLayer))
+                {
+                    _metalLayer = CAMetalLayer.New();
+                    contentView.wantsLayer = true;
+                    contentView.layer = _metalLayer.NativePtr;
+                }
             }
             else if (source is UIViewSwapchainSource uiViewSource)
             {
@@ -74,9 +82,14 @@ namespace Veldrid.MTL
                 CGSize viewSize = _uiView.frame.size;
                 width = (uint)(viewSize.width * nativeScale);
                 height = (uint)(viewSize.height * nativeScale);
-                _metalLayer.frame = _uiView.frame;
-                _metalLayer.opaque = true;
-                _uiView.layer.addSublayer(_metalLayer.NativePtr);
+
+                if (!CAMetalLayer.TryCast(_uiView.layer, out _metalLayer))
+                {
+                    _metalLayer = CAMetalLayer.New();
+                    _metalLayer.frame = _uiView.frame;
+                    _metalLayer.opaque = true;
+                    _uiView.layer.addSublayer(_metalLayer.NativePtr);
+                }
             }
             else
             {

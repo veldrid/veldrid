@@ -1,3 +1,4 @@
+using System;
 ﻿using System.Diagnostics;
 using System.Text;
 using Veldrid.OpenGLBinding;
@@ -43,11 +44,15 @@ namespace Veldrid.OpenGL
                     byteCount = Encoding.UTF8.GetByteCount(name);
                 }
 
-                byte* utf8Ptr = stackalloc byte[byteCount];
+                Span<byte> utf8bytes = stackalloc byte[128];
+                if(byteCount + 1 > 128) utf8bytes = new byte[byteCount + 1];
+
                 fixed (char* namePtr = name)
+                fixed (byte* utf8bytePtr = utf8bytes)
                 {
-                    Encoding.UTF8.GetBytes(namePtr, name.Length, utf8Ptr, byteCount);
-                    glObjectLabel(identifier, target, (uint)byteCount, utf8Ptr);
+                    int written = Encoding.UTF8.GetBytes(namePtr, name.Length, utf8bytePtr, byteCount);
+                    utf8bytePtr[written] = 0;
+                    glObjectLabel(identifier, target, (uint)byteCount, utf8bytePtr);
                     CheckLastError();
                 }
             }

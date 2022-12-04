@@ -54,8 +54,8 @@ namespace Veldrid.Vk
                 attachmentState.srcAlphaBlendFactor = VkFormats.VdToVkBlendFactor(vdDesc.SourceAlphaFactor);
                 attachmentState.dstAlphaBlendFactor = VkFormats.VdToVkBlendFactor(vdDesc.DestinationAlphaFactor);
                 attachmentState.alphaBlendOp = VkFormats.VdToVkBlendOp(vdDesc.AlphaFunction);
+                attachmentState.colorWriteMask = VkFormats.VdToVkColorWriteMask(vdDesc.ColorWriteMask.GetOrDefault());
                 attachmentState.blendEnable = vdDesc.BlendEnabled;
-                attachmentState.colorWriteMask = VkColorComponentFlags.R | VkColorComponentFlags.G | VkColorComponentFlags.B | VkColorComponentFlags.A;
                 attachmentsPtr[i] = attachmentState;
             }
 
@@ -171,7 +171,7 @@ namespace Veldrid.Vk
                     };
 
                     targetIndex += 1;
-                    currentOffset += FormatHelpers.GetSizeInBytes(inputElement.Format);
+                    currentOffset += FormatSizeHelpers.GetSizeInBytes(inputElement.Format);
                 }
 
                 targetLocation += inputDesc.Elements.Length;

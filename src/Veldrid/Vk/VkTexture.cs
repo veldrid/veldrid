@@ -32,6 +32,7 @@ namespace Veldrid.Vk
         public override uint MipLevels { get; }
 
         public override uint ArrayLayers { get; }
+        public uint ActualArrayLayers => _actualImageArrayLayers;
 
         public override TextureUsage Usage { get; }
 
@@ -186,10 +187,16 @@ namespace Veldrid.Vk
                     prefersDedicatedAllocation = false;
                 }
 
+                // Use "host cached" memory when available, for better performance of GPU -> CPU transfers
+                var propertyFlags = VkMemoryPropertyFlags.HostVisible | VkMemoryPropertyFlags.HostCoherent | VkMemoryPropertyFlags.HostCached;
+                if (!TryFindMemoryType(_gd.PhysicalDeviceMemProperties, bufferMemReqs.memoryTypeBits, propertyFlags, out _))
+                {
+                    propertyFlags ^= VkMemoryPropertyFlags.HostCached;
+                }
                 _memoryBlock = _gd.MemoryManager.Allocate(
                     _gd.PhysicalDeviceMemProperties,
                     bufferMemReqs.memoryTypeBits,
-                    VkMemoryPropertyFlags.HostVisible | VkMemoryPropertyFlags.HostCoherent,
+                    propertyFlags,
                     true,
                     bufferMemReqs.size,
                     bufferMemReqs.alignment,

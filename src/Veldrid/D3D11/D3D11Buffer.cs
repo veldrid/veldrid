@@ -23,7 +23,7 @@ namespace Veldrid.D3D11
 
         public override BufferUsage Usage { get; }
 
-        public override bool IsDisposed => _buffer.IsDisposed;
+        public override bool IsDisposed => _buffer.NativePointer == IntPtr.Zero;
 
         public ID3D11Buffer Buffer => _buffer;
 
@@ -39,34 +39,34 @@ namespace Veldrid.D3D11
             Vortice.Direct3D11.BufferDescription bd = new Vortice.Direct3D11.BufferDescription(
                 (int)sizeInBytes,
                 D3D11Formats.VdToD3D11BindFlags(usage),
-                Vortice.Direct3D11.Usage.Default);
+                ResourceUsage.Default);
             if ((usage & BufferUsage.StructuredBufferReadOnly) == BufferUsage.StructuredBufferReadOnly
                 || (usage & BufferUsage.StructuredBufferReadWrite) == BufferUsage.StructuredBufferReadWrite)
             {
                 if (rawBuffer)
                 {
-                    bd.OptionFlags = ResourceOptionFlags.BufferAllowRawViews;
+                    bd.MiscFlags = ResourceOptionFlags.BufferAllowRawViews;
                 }
                 else
                 {
-                    bd.OptionFlags = ResourceOptionFlags.BufferStructured;
+                    bd.MiscFlags = ResourceOptionFlags.BufferStructured;
                     bd.StructureByteStride = (int)structureByteStride;
                 }
             }
             if ((usage & BufferUsage.IndirectBuffer) == BufferUsage.IndirectBuffer)
             {
-                bd.OptionFlags = ResourceOptionFlags.DrawIndirectArgs;
+                bd.MiscFlags = ResourceOptionFlags.DrawIndirectArguments;
             }
 
             if ((usage & BufferUsage.Dynamic) == BufferUsage.Dynamic)
             {
-                bd.Usage = Vortice.Direct3D11.Usage.Dynamic;
-                bd.CpuAccessFlags = CpuAccessFlags.Write;
+                bd.Usage = ResourceUsage.Dynamic;
+                bd.CPUAccessFlags = CpuAccessFlags.Write;
             }
             else if ((usage & BufferUsage.Staging) == BufferUsage.Staging)
             {
-                bd.Usage = Vortice.Direct3D11.Usage.Staging;
-                bd.CpuAccessFlags = CpuAccessFlags.Read | CpuAccessFlags.Write;
+                bd.Usage = ResourceUsage.Staging;
+                bd.CPUAccessFlags = CpuAccessFlags.Read | CpuAccessFlags.Write;
             }
 
             _buffer = gd.Device.CreateBuffer(bd);
@@ -137,14 +137,12 @@ namespace Veldrid.D3D11
         {
             if (_rawBuffer)
             {
-                ShaderResourceViewDescription srvDesc = new ShaderResourceViewDescription
-                {
-                    ViewDimension = ShaderResourceViewDimension.BufferExtended,
-                    Format = Format.R32_Typeless
-                };
-                srvDesc.BufferEx.NumElements = (int)size / 4;
-                srvDesc.BufferEx.Flags = BufferExtendedShaderResourceViewFlag.Raw;
-                srvDesc.BufferEx.FirstElement = (int)offset / 4;
+                ShaderResourceViewDescription srvDesc = new ShaderResourceViewDescription(_buffer,
+                    Format.R32_Typeless,
+                    (int)offset / 4,
+                    (int)size / 4,
+                    BufferExtendedShaderResourceViewFlags.Raw);
+
                 return _device.CreateShaderResourceView(_buffer, srvDesc);
             }
             else
@@ -163,29 +161,21 @@ namespace Veldrid.D3D11
         {
             if (_rawBuffer)
             {
-                UnorderedAccessViewDescription uavDesc = new UnorderedAccessViewDescription
-                {
-                    ViewDimension = UnorderedAccessViewDimension.Buffer
-                };
-
-                uavDesc.Buffer.NumElements = (int)size / 4;
-                uavDesc.Buffer.Flags = BufferUnorderedAccessViewFlag.Raw;
-                uavDesc.Format = Format.R32_Typeless;
-                uavDesc.Buffer.FirstElement = (int)offset / 4;
+                UnorderedAccessViewDescription uavDesc = new UnorderedAccessViewDescription(_buffer,
+                    Format.R32_Typeless,
+                    (int)offset / 4,
+                    (int)size / 4,
+                    BufferUnorderedAccessViewFlags.Raw);
 
                 return _device.CreateUnorderedAccessView(_buffer, uavDesc);
-
             }
             else
             {
-                UnorderedAccessViewDescription uavDesc = new UnorderedAccessViewDescription
-                {
-                    ViewDimension = UnorderedAccessViewDimension.Buffer
-                };
-
-                uavDesc.Buffer.NumElements = (int)(size / _structureByteStride);
-                uavDesc.Format = Format.Unknown;
-                uavDesc.Buffer.FirstElement = (int)(offset / _structureByteStride);
+                UnorderedAccessViewDescription uavDesc = new UnorderedAccessViewDescription(_buffer,
+                    Format.Unknown,
+                    (int)(offset / _structureByteStride),
+                    (int)(size / _structureByteStride)
+                    );
 
                 return _device.CreateUnorderedAccessView(_buffer, uavDesc);
             }

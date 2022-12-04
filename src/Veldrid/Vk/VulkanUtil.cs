@@ -19,18 +19,21 @@ namespace Veldrid.Vk
             }
         }
 
-        public static uint FindMemoryType(VkPhysicalDeviceMemoryProperties memProperties, uint typeFilter, VkMemoryPropertyFlags properties)
+        public static bool TryFindMemoryType(VkPhysicalDeviceMemoryProperties memProperties, uint typeFilter, VkMemoryPropertyFlags properties, out uint typeIndex)
         {
+            typeIndex = 0;
+
             for (int i = 0; i < memProperties.memoryTypeCount; i++)
             {
                 if (((typeFilter & (1 << i)) != 0)
                     && (memProperties.GetMemoryType((uint)i).propertyFlags & properties) == properties)
                 {
-                    return (uint)i;
+                    typeIndex = (uint)i;
+                    return true;
                 }
             }
 
-            throw new VeldridException("No suitable memory type.");
+            return false;
         }
 
         public static string[] EnumerateInstanceLayers()
@@ -307,6 +310,20 @@ namespace Veldrid.Vk
                 barrier.dstAccessMask = VkAccessFlags.ShaderRead;
                 srcStageFlags = VkPipelineStageFlags.Transfer;
                 dstStageFlags = VkPipelineStageFlags.ComputeShader;
+            }
+            else if (oldLayout == VkImageLayout.General && newLayout == VkImageLayout.TransferDstOptimal)
+            {
+                barrier.srcAccessMask = VkAccessFlags.ShaderWrite;
+                barrier.dstAccessMask = VkAccessFlags.TransferWrite;
+                srcStageFlags = VkPipelineStageFlags.ComputeShader;
+                dstStageFlags = VkPipelineStageFlags.Transfer;
+            }
+            else if (oldLayout == VkImageLayout.PresentSrcKHR && newLayout == VkImageLayout.TransferSrcOptimal)
+            {
+                barrier.srcAccessMask = VkAccessFlags.MemoryRead;
+                barrier.dstAccessMask = VkAccessFlags.TransferRead;
+                srcStageFlags = VkPipelineStageFlags.BottomOfPipe;
+                dstStageFlags = VkPipelineStageFlags.Transfer;
             }
             else
             {

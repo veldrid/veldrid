@@ -279,33 +279,29 @@ namespace Veldrid.Vk
             FlushNewResourceSets(
                 _currentGraphicsResourceSets,
                 _graphicsResourceSetsChanged,
+                _currentGraphicsPipeline.ResourceSetCount,
                 VkPipelineBindPoint.Graphics,
                 _currentGraphicsPipeline.PipelineLayout);
-
-            if (!_currentGraphicsPipeline.ScissorTestEnabled)
-            {
-                SetFullScissorRects();
-            }
         }
 
         private void FlushNewResourceSets(
             BoundResourceSetInfo[] resourceSets,
             bool[] resourceSetsChanged,
+            uint resourceSetCount,
             VkPipelineBindPoint bindPoint,
             VkPipelineLayout pipelineLayout)
         {
             VkPipeline pipeline = bindPoint == VkPipelineBindPoint.Graphics ? _currentGraphicsPipeline : _currentComputePipeline;
 
-            int setCount = resourceSets.Length;
-            VkDescriptorSet* descriptorSets = stackalloc VkDescriptorSet[setCount];
+            VkDescriptorSet* descriptorSets = stackalloc VkDescriptorSet[(int)resourceSetCount];
             uint* dynamicOffsets = stackalloc uint[pipeline.DynamicOffsetsCount];
             uint currentBatchCount = 0;
             uint currentBatchFirstSet = 0;
             uint currentBatchDynamicOffsetCount = 0;
 
-            for (uint currentSlot = 0; currentSlot < resourceSets.Length; currentSlot++)
+            for (uint currentSlot = 0; currentSlot < resourceSetCount; currentSlot++)
             {
-                bool batchEnded = !resourceSetsChanged[currentSlot] || currentSlot == resourceSets.Length - 1;
+                bool batchEnded = !resourceSetsChanged[currentSlot] || currentSlot == resourceSetCount - 1;
 
                 if (resourceSetsChanged[currentSlot])
                 {
@@ -314,7 +310,7 @@ namespace Veldrid.Vk
                     descriptorSets[currentBatchCount] = vkSet.DescriptorSet;
                     currentBatchCount += 1;
 
-                    SmallFixedOrDynamicArray curSetOffsets = resourceSets[currentSlot].Offsets;
+                    ref SmallFixedOrDynamicArray curSetOffsets = ref resourceSets[currentSlot].Offsets;
                     for (uint i = 0; i < curSetOffsets.Count; i++)
                     {
                         dynamicOffsets[currentBatchDynamicOffsetCount] = curSetOffsets.Get(i);
@@ -351,12 +347,12 @@ namespace Veldrid.Vk
             }
         }
 
-        private void TransitionImages(IReadOnlyList<VkTexture> sampledTextures, VkImageLayout layout)
+        private void TransitionImages(List<VkTexture> sampledTextures, VkImageLayout layout)
         {
             for (int i = 0; i < sampledTextures.Count; i++)
             {
                 VkTexture tex = sampledTextures[i];
-                tex.TransitionImageLayout(_cb, 0, tex.MipLevels, 0, tex.ArrayLayers, layout);
+                tex.TransitionImageLayout(_cb, 0, tex.MipLevels, 0, tex.ActualArrayLayers, layout);
             }
         }
 
@@ -371,13 +367,14 @@ namespace Veldrid.Vk
         {
             EnsureNoRenderPass();
 
-            for (uint currentSlot = 0; currentSlot < _currentComputeResourceSets.Length; currentSlot++)
+            for (uint currentSlot = 0; currentSlot < _currentComputePipeline.ResourceSetCount; currentSlot++)
             {
                 VkResourceSet vkSet = Util.AssertSubtype<ResourceSet, VkResourceSet>(
                     _currentComputeResourceSets[currentSlot].Set);
+
                 TransitionImages(vkSet.SampledTextures, VkImageLayout.ShaderReadOnlyOptimal);
                 TransitionImages(vkSet.StorageTextures, VkImageLayout.General);
-                for (var texIdx = 0; texIdx < vkSet.StorageTextures.Count; texIdx++)
+                for (int texIdx = 0; texIdx < vkSet.StorageTextures.Count; texIdx++)
                 {
                     VkTexture storageTex = vkSet.StorageTextures[texIdx];
                     if ((storageTex.Usage & TextureUsage.Sampled) != 0)
@@ -390,6 +387,7 @@ namespace Veldrid.Vk
             FlushNewResourceSets(
                 _currentComputeResourceSets,
                 _computeResourceSetsChanged,
+                _currentComputePipeline.ResourceSetCount,
                 VkPipelineBindPoint.Compute,
                 _currentComputePipeline.PipelineLayout);
         }
@@ -944,7 +942,7 @@ namespace Veldrid.Vk
                 uint compressedX = srcX / blockSize;
                 uint compressedY = srcY / blockSize;
                 uint blockSizeInBytes = blockSize == 1
-                    ? FormatHelpers.GetSizeInBytes(srcVkTexture.Format)
+                    ? FormatSizeHelpers.GetSizeInBytes(srcVkTexture.Format)
                     : FormatHelpers.GetBlockSizeInBytes(srcVkTexture.Format);
                 uint rowPitch = FormatHelpers.GetRowPitch(bufferRowLength, srcVkTexture.Format);
                 uint depthPitch = FormatHelpers.GetDepthPitch(rowPitch, bufferImageHeight, srcVkTexture.Format);
@@ -987,20 +985,11 @@ namespace Veldrid.Vk
                     VkImageLayout.TransferSrcOptimal);
 
                 Vulkan.VkBuffer dstBuffer = dstVkTexture.StagingBuffer;
-                VkSubresourceLayout dstLayout = dstVkTexture.GetSubresourceLayout(
-                    dstVkTexture.CalculateSubresource(dstMipLevel, dstBaseArrayLayer));
 
                 VkImageAspectFlags aspect = (srcVkTexture.Usage & TextureUsage.DepthStencil) != 0
                     ? VkImageAspectFlags.Depth
                     : VkImageAspectFlags.Color;
-                VkImageSubresourceLayers srcSubresource = new VkImageSubresourceLayers
-                {
-                    aspectMask = aspect,
-                    layerCount = layerCount,
-                    mipLevel = srcMipLevel,
-                    baseArrayLayer = srcBaseArrayLayer
-                };
-
+                
                 Util.GetMipDimensions(dstVkTexture, dstMipLevel, out uint mipWidth, out uint mipHeight, out uint mipDepth);
                 uint blockSize = FormatHelpers.IsCompressedFormat(srcVkTexture.Format) ? 4u : 1u;
                 uint bufferRowLength = Math.Max(mipWidth, blockSize);
@@ -1008,25 +997,42 @@ namespace Veldrid.Vk
                 uint compressedDstX = dstX / blockSize;
                 uint compressedDstY = dstY / blockSize;
                 uint blockSizeInBytes = blockSize == 1
-                    ? FormatHelpers.GetSizeInBytes(dstVkTexture.Format)
+                    ? FormatSizeHelpers.GetSizeInBytes(dstVkTexture.Format)
                     : FormatHelpers.GetBlockSizeInBytes(dstVkTexture.Format);
                 uint rowPitch = FormatHelpers.GetRowPitch(bufferRowLength, dstVkTexture.Format);
                 uint depthPitch = FormatHelpers.GetDepthPitch(rowPitch, bufferImageHeight, dstVkTexture.Format);
 
-                VkBufferImageCopy region = new VkBufferImageCopy
+                var layers = stackalloc VkBufferImageCopy[(int)layerCount];
+                for(uint layer = 0; layer < layerCount; layer++)
                 {
-                    bufferRowLength = mipWidth,
-                    bufferImageHeight = mipHeight,
-                    bufferOffset = dstLayout.offset
-                        + (dstZ * depthPitch)
-                        + (compressedDstY * rowPitch)
-                        + (compressedDstX * blockSizeInBytes),
-                    imageExtent = new VkExtent3D { width = width, height = height, depth = depth },
-                    imageOffset = new VkOffset3D { x = (int)srcX, y = (int)srcY, z = (int)srcZ },
-                    imageSubresource = srcSubresource
-                };
+                    VkSubresourceLayout dstLayout = dstVkTexture.GetSubresourceLayout(
+                        dstVkTexture.CalculateSubresource(dstMipLevel, dstBaseArrayLayer + layer));
 
-                vkCmdCopyImageToBuffer(cb, srcImage, VkImageLayout.TransferSrcOptimal, dstBuffer, 1, ref region);
+                    VkImageSubresourceLayers srcSubresource = new VkImageSubresourceLayers
+                    {
+                        aspectMask = aspect,
+                        layerCount = 1,
+                        mipLevel = srcMipLevel,
+                        baseArrayLayer = srcBaseArrayLayer + layer
+                    };
+
+                    VkBufferImageCopy region = new VkBufferImageCopy
+                    {
+                        bufferRowLength = bufferRowLength,
+                        bufferImageHeight = bufferImageHeight,
+                        bufferOffset = dstLayout.offset
+                            + (dstZ * depthPitch)
+                            + (compressedDstY * rowPitch)
+                            + (compressedDstX * blockSizeInBytes),
+                        imageExtent = new VkExtent3D { width = width, height = height, depth = depth },
+                        imageOffset = new VkOffset3D { x = (int)srcX, y = (int)srcY, z = (int)srcZ },
+                        imageSubresource = srcSubresource
+                    };
+
+                    layers[layer] = region;
+                }
+
+                vkCmdCopyImageToBuffer(cb, srcImage, VkImageLayout.TransferSrcOptimal, dstBuffer, layerCount, layers);
 
                 srcVkTexture.TransitionImageLayout(
                     cb,
@@ -1049,7 +1055,7 @@ namespace Veldrid.Vk
                 uint zLimit = Math.Max(depth, layerCount);
                 if (!FormatHelpers.IsCompressedFormat(source.Format))
                 {
-                    uint pixelSize = FormatHelpers.GetSizeInBytes(srcVkTexture.Format);
+                    uint pixelSize = FormatSizeHelpers.GetSizeInBytes(srcVkTexture.Format);
                     for (uint zz = 0; zz < zLimit; zz++)
                     {
                         for (uint yy = 0; yy < height; yy++)
@@ -1238,7 +1244,7 @@ namespace Veldrid.Vk
                     {
                         ret = buffer;
                         _availableStagingBuffers.Remove(buffer);
-                        break; ;
+                        break;
                     }
                 }
                 if (ret == null)

@@ -1,0 +1,19 @@
+#version 450
+
+const vec4[] ComputeOutputColor =
+{
+    vec4(0 * (42.0f / 255.0f)),
+    vec4(1 * (42.0f / 255.0f)),
+    vec4(2 * (42.0f / 255.0f)),
+    vec4(3 * (42.0f / 255.0f)),
+    vec4(4 * (42.0f / 255.0f)),
+    vec4(5 * (42.0f / 255.0f)),
+};
+
+layout(set = 0, binding = 0, Rgba8) restrict writeonly uniform imageCube ComputeOutput;
+
+layout(local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
+void main()
+{
+    imageStore(ComputeOutput, ivec3(gl_GlobalInvocationID), ComputeOutputColor[gl_GlobalInvocationID.z]);
+}

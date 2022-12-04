@@ -29,9 +29,11 @@ namespace Veldrid.Vk
             VkDescriptorSetLayoutBinding* bindings = stackalloc VkDescriptorSetLayoutBinding[elements.Length];
 
             uint uniformBufferCount = 0;
+            uint uniformBufferDynamicCount = 0;
             uint sampledImageCount = 0;
             uint samplerCount = 0;
             uint storageBufferCount = 0;
+            uint storageBufferDynamicCount = 0;
             uint storageImageCount = 0;
 
             uint usedCount = 0;
@@ -69,8 +71,14 @@ namespace Veldrid.Vk
                     case VkDescriptorType.UniformBuffer:
                         uniformBufferCount += 1;
                         break;
+                    case VkDescriptorType.UniformBufferDynamic:
+                        uniformBufferDynamicCount += 1;
+                        break;
                     case VkDescriptorType.StorageBuffer:
                         storageBufferCount += 1;
+                        break;
+                    case VkDescriptorType.StorageBufferDynamic:
+                        storageBufferDynamicCount += 1;
                         break;
                 }
 
@@ -79,9 +87,11 @@ namespace Veldrid.Vk
 
             DescriptorResourceCounts = new DescriptorResourceCounts(
                 uniformBufferCount,
+                uniformBufferDynamicCount,
                 sampledImageCount,
                 samplerCount,
                 storageBufferCount,
+                storageBufferDynamicCount,
                 storageImageCount);
 
             dslCI.bindingCount = usedCount;

@@ -1,10 +1,8 @@
-﻿using NativeLibraryLoader;
-using System;
-using System.Diagnostics;
+﻿using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading;
+using NativeLibrary = NativeLibraryLoader.NativeLibrary;
 
 namespace Veldrid.OpenGL.WGL
 {

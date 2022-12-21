@@ -452,19 +452,19 @@ namespace Veldrid
             {
                 case Key.ShiftLeft:
                 case Key.ShiftRight:
-                    result = ImGuiKey.ModShift;
+                    result = ImGuiKey.ImGuiMod_Shift;
                     return true;
                 case Key.ControlLeft:
                 case Key.ControlRight:
-                    result = ImGuiKey.ModCtrl;
+                    result = ImGuiKey.ImGuiMod_Ctrl;
                     return true;
                 case Key.AltLeft:
                 case Key.AltRight:
-                    result = ImGuiKey.ModAlt;
+                    result = ImGuiKey.ImGuiMod_Alt;
                     return true;
                 case Key.WinLeft:
                 case Key.WinRight:
-                    result = ImGuiKey.ModSuper;
+                    result = ImGuiKey.ImGuiMod_Super;
                     return true;
                 case Key.Menu:
                     result = ImGuiKey.Menu;

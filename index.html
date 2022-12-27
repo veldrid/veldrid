@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <title>WebGallery</title>
+    <base href="/" />
+    <link href="css/app.css" rel="stylesheet" />
+    
+    <!-- If you add any scoped CSS files, uncomment the following to load them
+    <link href="WebGallery.styles.css" rel="stylesheet" /> -->
+</head>
+
+<body>
+    <canvas id="canvas" width="960" height="540"></canvas>
+    <script type="text/javascript">
+        var canvas = document.getElementById("canvas");
+
+        //make the canvas fullscreen
+        // canvas.width = window.innerWidth;
+        // canvas.height = window.innerHeight;
+        //show Emscripten environment where the canvas is
+        var Module = {};
+        Module.canvas = canvas;
+    </script>
+    <div id="app">Loading...</div>
+
+    <div id="blazor-error-ui">
+        An unhandled error has occurred.
+        <a href="" class="reload">Reload</a>
+        <a class="dismiss">🗙</a>
+    </div>
+    <script src="_framework/blazor.webassembly.js"></script>
+</body>
+
+</html>

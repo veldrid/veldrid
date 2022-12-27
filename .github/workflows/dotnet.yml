@@ -42,6 +42,9 @@ jobs:
     - name: Publish WebGallery
       if: github.ref == 'refs/heads/sample-gallery'
       run: dotnet publish samples\WebGallery\WebGallery.csproj -c Release -o release --nologo
+    - name: Add .nojekyll file so that GH pages will serve underscore-prefixed pages (_framework/*)
+      if: github.ref == 'refs/heads/sample-gallery'
+      run: touch release/wwwroot/.nojekyll
     - name: Upload site artifacts
       if: github.ref == 'refs/heads/sample-gallery'
       uses: actions/upload-artifact@v1
@@ -62,6 +65,9 @@ jobs:
       uses: actions/download-artifact@v1
       with:
         name: site
+    - name: Fix base href tag to match GH pages layout.
+      if: github.ref == 'refs/heads/sample-gallery'
+      run: sed -i 's/<base href="\/" \/>/<base href="\/veldrid\/" \/>/g' site/wwwroot/index.html
     - name: Commit wwwroot gh-pages branch
       if: github.ref == 'refs/heads/sample-gallery'
       uses: JamesIves/github-pages-deploy-action@v4.4.1

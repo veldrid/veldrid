@@ -10,7 +10,6 @@ on:
 jobs:
   build_windows:
     runs-on: windows-latest
-
     steps:
     - uses: actions/checkout@v2
       with:
@@ -43,10 +42,25 @@ jobs:
     - name: Publish WebGallery
       if: github.ref == 'refs/heads/sample-gallery'
       run: dotnet publish samples\WebGallery\WebGallery.csproj -c Release -o release --nologo
+    - name: Upload site artifacts
+      if: github.ref == 'refs/heads/sample-gallery'
+      uses: actions/upload-artifact@v1
+      with:
+        name: site
+        path: release
+
+  publish_site_ubuntu:
+    runs-on: ubuntu-latest
+    needs: [build_windows]
+    steps:
+    - name: Download Artifacts
+      if: github.ref == 'refs/heads/sample-gallery'
+      uses: actions/download-artifact@v1
+      with:
+        name: site
     - name: Commit wwwroot gh-pages branch
       if: github.ref == 'refs/heads/sample-gallery'
       uses: JamesIves/github-pages-deploy-action@v4.4.1
       with:
         branch: gh-pages
-        folder: release/wwwroot
-
+        folder: site/wwwroot

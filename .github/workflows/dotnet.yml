@@ -35,6 +35,9 @@ jobs:
       run: dotnet nuget push bin\Packages\Release\*.nupkg -s https://api.nuget.org/v3/index.json --api-key ${{secrets.NUGET_KEY}}
 
     # Publish sample-gallery to gh-pages
+    - name: Install .NET wasm tools
+      if: github.ref == 'refs/heads/sample-gallery'
+      run: dotnet workload restore samples\WebGallery\WebGallery.csproj
     - name: Publish WebGallery
       if: github.ref == 'refs/heads/sample-gallery'
       run: dotnet publish samples\WebGallery\WebGallery.csproj -c Release -o release --nologo

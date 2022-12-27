@@ -39,6 +39,7 @@ jobs:
       if: github.ref == 'refs/heads/sample-gallery'
       run: dotnet publish samples\WebGallery\WebGallery.csproj -c Release -o release --nologo
     - name: Commit wwwroot gh-pages branch
+      if: github.ref == 'refs/heads/sample-gallery'
       uses: JamesIves/github-pages-deploy-action@v4.4.1
       with:
         branch: gh-pages

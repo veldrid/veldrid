@@ -11,7 +11,7 @@ jobs:
   build_windows:
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 0
     - name: Setup .NET
@@ -53,6 +53,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build_windows]
     steps:
+    - name: Checkout 🛎️
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
     - name: Download Artifacts
       if: github.ref == 'refs/heads/sample-gallery'
       uses: actions/download-artifact@v1

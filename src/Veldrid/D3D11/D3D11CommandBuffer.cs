@@ -314,7 +314,7 @@ namespace Veldrid.D3D11
             }
         }
 
-        private protected override void BindPipelineCore(Pipeline pipeline)
+        private protected unsafe override void BindPipelineCore(Pipeline pipeline)
         {
             if (!pipeline.IsComputePipeline && _graphicsPipeline != pipeline)
             {

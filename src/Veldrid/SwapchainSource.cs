@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+#if NET7_0_OR_GREATER
+using System.Runtime.InteropServices.JavaScript;
+#endif
 
 namespace Veldrid
 {
@@ -89,6 +92,10 @@ namespace Veldrid
         /// </returns>
         public static SwapchainSource CreateNSView(IntPtr nsView)
             => new NSViewSwapchainSource(nsView);
+
+#if NET7_0_OR_GREATER
+        public static SwapchainSource CreateHtml5Canvas(JSObject canvas) => new Html5CanvasSwapchainSource(canvas);
+#endif
     }
 
     internal class Win32SwapchainSource : SwapchainSource
@@ -240,4 +247,22 @@ namespace Veldrid
             throw new NotImplementedException();
         }
     }
+
+#if NET7_0_OR_GREATER
+    internal class Html5CanvasSwapchainSource : SwapchainSource
+    {
+        public JSObject Canvas { get; }
+
+        public Html5CanvasSwapchainSource(JSObject canvas)
+        {
+            Canvas = canvas;
+        }
+
+        internal override void GetSize(out uint width, out uint height)
+        {
+            width = (uint)Canvas.GetPropertyAsInt32("width");
+            height = (uint)Canvas.GetPropertyAsInt32("height");
+        }
+    }
+#endif
 }

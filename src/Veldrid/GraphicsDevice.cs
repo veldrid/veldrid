@@ -1283,7 +1283,7 @@ namespace Veldrid
         /// <summary>
         /// Creates a new <see cref="GraphicsDevice"/> using OpenGL ES, with a main Swapchain.
         /// This overload can only be used on Windows, iOS or Android to create a GraphicsDevice for a Win32 window, an iOS
-        /// UIView, or an Android Surface.
+        /// UIView, an Android Surface, or an HTML5 Canvas (using WebGL).
         /// </summary>
         /// <param name="options">Describes several common properties of the GraphicsDevice.</param>
         /// <param name="swapchainDescription">A description of the main Swapchain to create.

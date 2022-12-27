@@ -10,9 +10,9 @@ namespace Snake
     {
         public bool LowResolution { get; } = false;
 
-        public int Width { get; } = 32;
+        public int Width { get; } = 60;
 
-        public int Height { get; } = 24;
+        public int Height { get; } = 34;
 
         private SpriteRenderer _spriteRenderer;
         private World _world;

@@ -836,6 +836,7 @@ namespace Veldrid.OpenGL
                     CheckLastError();
 
                     glClear(ClearBufferMask.ColorBufferBit);
+                    CheckLastError();
                 }
             }
 
@@ -1110,6 +1111,11 @@ namespace Veldrid.OpenGL
                             CheckLastError();
                             ubOffset += 1;
                         }
+                        else
+                        {
+                            Console.WriteLine($"Warning: no uniform binding found for slot {slot}, element {element}");
+                        }
+
                         break;
                     }
                     case ResourceKind.StructuredBufferReadWrite:
@@ -1365,7 +1371,7 @@ namespace Veldrid.OpenGL
             }
             else
             {
-                BufferTarget bufferTarget = BufferTarget.CopyWriteBuffer;
+                BufferTarget bufferTarget = (glBuffer.Usage & BufferUsage.IndexBuffer) != 0 ? BufferTarget.ElementArrayBuffer : BufferTarget.CopyWriteBuffer;
                 glBindBuffer(bufferTarget, glBuffer.Buffer);
                 CheckLastError();
                 glBufferSubData(

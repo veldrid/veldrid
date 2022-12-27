@@ -32,7 +32,7 @@ namespace Veldrid.SampleGallery
             List<Task> tasks = new List<Task>();
 
             Console.WriteLine($"Loading cat model.");
-            using (Stream catFS = OpenEmbeddedAsset("cat.obj"))
+            Stream catFS = OpenEmbeddedAsset("cat.obj");
             {
                 ObjParser objParser = new ObjParser();
                 ObjFile model = objParser.Parse(catFS);
@@ -133,7 +133,7 @@ namespace Veldrid.SampleGallery
                     Framebuffers[frameIndex],
                     LoadAction.Clear,
                     StoreAction.Store,
-                    RgbaFloat.Red,
+                    RgbaFloat.Pink,
                     Device.IsDepthRangeZeroToOne ? 0f : 1f);
                 cb.BindPipeline(_pipeline);
                 cb.BindVertexBuffer(0, _vertexBuffer);

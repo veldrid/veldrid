@@ -17,12 +17,4 @@
     <!-- <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0-beta2-19351-01" PrivateAssets="All"/> -->
   </ItemGroup>
 
-  <PropertyGroup>
-    <NerdbankGitVersioningVersion>2.3.181</NerdbankGitVersioningVersion>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Nerdbank.GitVersioning" Version="$(NerdbankGitVersioningVersion)" PrivateAssets="all" />
-  </ItemGroup>
-
 </Project>

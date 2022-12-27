@@ -37,6 +37,7 @@ namespace Veldrid.SampleGallery
         {
             GraphicsDeviceOptions options = Gallery.GetPreferredOptions();
             GraphicsBackend backend = VeldridStartup.GetPlatformDefaultBackend();
+            backend = GraphicsBackend.OpenGLES;
 
             WindowCreateInfo windowCI = new WindowCreateInfo(
                 Sdl2Native.SDL_WINDOWPOS_CENTERED, Sdl2Native.SDL_WINDOWPOS_CENTERED,

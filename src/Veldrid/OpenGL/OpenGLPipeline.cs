@@ -82,6 +82,10 @@ namespace Veldrid.OpenGL
             }
 
             VertexAttributeLocations = new uint[numVertexAttributes];
+            for (uint i = 0; i < numVertexAttributes; i++)
+            {
+                VertexAttributeLocations[i] = i;
+            }
 
 #if !VALIDATE_USAGE
             ResourceLayouts = Util.ShallowClone(description.ResourceLayouts);
@@ -279,7 +283,7 @@ namespace Veldrid.OpenGL
 
                     if (resource.Kind == ResourceKind.UniformBuffer)
                     {
-                        uint blockIndex = GetUniformBlockIndex(resource.Name);
+                        uint blockIndex = GetUniformBlockIndex(resourceName);
                         if (blockIndex != GL_INVALID_INDEX)
                         {
                             int blockSize;

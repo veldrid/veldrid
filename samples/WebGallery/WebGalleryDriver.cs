@@ -1,16 +1,18 @@
-﻿using System;
-using System.Numerics;
+﻿using System.Numerics;
 using System.Runtime.InteropServices.JavaScript;
 using System.Runtime.Versioning;
-using System.Threading.Tasks;
+using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
 using Snake;
 
 [assembly: SupportedOSPlatform("browser")]
 
 namespace Veldrid.SampleGallery
 {
-    public partial class WebGalleryDriver : IGalleryDriver
+    public partial class WebGalleryDriver : IComponent, IGalleryDriver
     {
+        private RenderHandle _renderHandle;
+
         const int CanvasWidth = 1280;
         const int CanvasHeight = 720;
 
@@ -42,8 +44,10 @@ namespace Veldrid.SampleGallery
         public event Action<double> Update;
         public event Func<double, CommandBuffer[]> Render;
 
-        public WebGalleryDriver()
+        public void Attach(RenderHandle renderHandle)
         {
+            _renderHandle = renderHandle;
+
             JSObject canvas = JSHost.GlobalThis.GetPropertyAsJSObject("window")!.GetPropertyAsJSObject("canvas")!;
             uint width = (uint)canvas.GetPropertyAsInt32("width");
             uint height = (uint)canvas.GetPropertyAsInt32("height");
@@ -110,6 +114,11 @@ namespace Veldrid.SampleGallery
             }), false);
         }
 
+        public Task SetParametersAsync(ParameterView parameters)
+        {
+            return Task.CompletedTask;
+        }
+
         [JSImport("globalThis.document.addEventListener")]
         private static partial void AddEventListener(string type, [JSMarshalAs<JSType.Function<JSType.Object>>] Action<JSObject> callback, bool capture);
 
@@ -132,6 +141,10 @@ namespace Veldrid.SampleGallery
                     key = Key.Down; return true;
                 case " ":
                     key = Key.Space; return true;
+                case "Shift":
+                    key = Key.ShiftLeft; return true;
+                case "Control":
+                    key = Key.ControlLeft; return true;
 
                 default:
                     Console.WriteLine($"Couldn't parse key string: {keyStr}");

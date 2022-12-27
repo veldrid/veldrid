@@ -78,11 +78,13 @@ namespace Veldrid.OpenGL
                 glGenBuffers(1, out _buffer);
                 CheckLastError();
 
-                glBindBuffer(BufferTarget.CopyReadBuffer, _buffer);
+                BufferTarget bufferTarget = (Usage & BufferUsage.IndexBuffer) != 0 ? BufferTarget.ElementArrayBuffer : BufferTarget.CopyWriteBuffer;
+
+                glBindBuffer(bufferTarget, _buffer);
                 CheckLastError();
 
                 glBufferData(
-                    BufferTarget.CopyReadBuffer,
+                    bufferTarget,
                     (UIntPtr)SizeInBytes,
                     null,
                     _dynamic ? BufferUsageHint.DynamicDraw : BufferUsageHint.StaticDraw);

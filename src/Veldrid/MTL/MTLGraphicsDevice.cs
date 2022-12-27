@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using NativeLibrary = NativeLibraryLoader.NativeLibrary;
 using Veldrid.MetalBindings;
+using System.Runtime.Versioning;
 
 namespace Veldrid.MTL
 {
@@ -191,7 +192,7 @@ namespace Veldrid.MTL
         }
 
         // Xamarin AOT requires native callbacks be static.
-        [MonoPInvokeCallback(typeof(MTLCommandBufferHandler))]
+        // [MonoPInvokeCallback(typeof(MTLCommandBufferHandler))]
         private static void OnCommandBufferCompleted_Static(IntPtr block, MetalBindings.MTLCommandBuffer cb)
         {
             lock (s_aotRegisteredBlocks)

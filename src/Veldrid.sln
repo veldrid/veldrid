@@ -33,8 +33,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Veldrid.InputPrimitives", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NeoDemo2", "NeoDemo2\NeoDemo2.csproj", "{BB9BA1A4-147E-449D-98C9-F124E0FB417D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommandBuffer.Demo", "CommandBuffer.Demo\CommandBuffer.Demo.csproj", "{15AEF15A-7C33-4037-B66E-3AAA913D5830}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

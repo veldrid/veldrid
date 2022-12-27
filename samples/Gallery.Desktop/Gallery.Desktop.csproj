@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp2.2</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <AssemblyName>VeldridGallery</AssemblyName>
     <RootNamespace>Veldrid.SampleGallery</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -13,10 +13,6 @@
     <ProjectReference Include="..\SimpleMeshRender\SimpleMeshRender.csproj" />
     <ProjectReference Include="$(RepositoryRootDirectory)\src\Veldrid.StartupUtilities\Veldrid.StartupUtilities.csproj" />
     <ProjectReference Include="..\Snake\Snake.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.5.2" />
   </ItemGroup>
 
   <ItemGroup>

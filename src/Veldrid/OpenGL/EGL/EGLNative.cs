@@ -3,9 +3,10 @@ using System.Runtime.InteropServices;
 
 namespace Veldrid.OpenGL.EGL
 {
-    internal static unsafe class EGLNative
+    // TODO: Make this internal again.
+    public static unsafe class EGLNative
     {
-        private const string LibName = "libEGL.so";
+        private const string LibName = "EGL";
 
         public const int EGL_DRAW = 0x3059;
         public const int EGL_READ = 0x305A;
@@ -63,7 +64,7 @@ namespace Veldrid.OpenGL.EGL
         public static extern int eglGetConfigAttrib(IntPtr display, IntPtr config, int attribute, int* value);
     }
 
-    internal enum EGLError
+    public enum EGLError
     {
         Success = 0x3000,
         NotInitialized = 0x3001,

@@ -3,7 +3,7 @@ name: Veldrid CI build
 on:
   create: # when tags are created
   push:
-    branches: [ master ]
+    branches: [ master, sample-gallery ]
   pull_request:
     branches: [ master ]
 

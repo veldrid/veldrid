@@ -1,9 +1,8 @@
-﻿using System.Numerics;
+﻿using Microsoft.AspNetCore.Components;
+using Snake;
+using System.Numerics;
 using System.Runtime.InteropServices.JavaScript;
 using System.Runtime.Versioning;
-using Microsoft.AspNetCore.Components;
-using Microsoft.JSInterop;
-using Snake;
 
 [assembly: SupportedOSPlatform("browser")]
 
@@ -28,7 +27,7 @@ namespace Veldrid.SampleGallery
         public uint Width => MainSwapchain.Width;
         public uint Height => MainSwapchain.Height;
 
-        public GraphicsDevice Device { get; set;  }
+        public GraphicsDevice Device { get; set; }
 
         private Vector2 _previousMousePosition;
 
@@ -93,7 +92,7 @@ namespace Veldrid.SampleGallery
 
             AddEventListener("keydown", new Action<JSObject>((keyEvent) =>
             {
-                string keyStr = keyEvent.GetPropertyAsString("key")!;
+                string keyStr = keyEvent.GetPropertyAsString("code")!;
                 if (TryParseKeyCode(keyStr, out Key key))
                 {
                     _inputState.KeyEvents.Add(new KeyEvent(key, true, ModifierKeys.None));
@@ -104,7 +103,7 @@ namespace Veldrid.SampleGallery
 
             AddEventListener("keyup", new Action<JSObject>((keyEvent) =>
             {
-                string keyStr = keyEvent.GetPropertyAsString("key")!;
+                string keyStr = keyEvent.GetPropertyAsString("code")!;
                 if (TryParseKeyCode(keyStr, out Key key))
                 {
                     _inputState.KeyEvents.Add(new KeyEvent(key, false, ModifierKeys.None));
@@ -128,6 +127,7 @@ namespace Veldrid.SampleGallery
         private bool TryParseKeyCode(string keyStr, out Key key)
         {
             if (Enum.TryParse(keyStr, ignoreCase: true, out key)) { return true; }
+            if (keyStr.StartsWith("Key") && Enum.TryParse(keyStr.Substring(3), ignoreCase: true, out key)) { return true; }
 
             switch (keyStr)
             {
@@ -163,7 +163,6 @@ namespace Veldrid.SampleGallery
             _frameloop.RunFrame(HandleFrame);
 
             RequestAnimationFrame(_loop);
-            Console.WriteLine("Submitting frame.");
         }
 
         private void FlushInput()

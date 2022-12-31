@@ -6,13 +6,13 @@
     <title>WebGallery</title>
     <base href="/veldrid/" />
     <link href="css/app.css" rel="stylesheet" />
-    
+
     <!-- If you add any scoped CSS files, uncomment the following to load them
     <link href="WebGallery.styles.css" rel="stylesheet" /> -->
 </head>
 
 <body>
-    <canvas id="canvas" width="960" height="540"></canvas>
+    <canvas style="aspect-ratio:16/9; width:99%" id="canvas"></canvas>
     <script type="text/javascript">
         var canvas = document.getElementById("canvas");
 
@@ -31,6 +31,7 @@
         <a class="dismiss">🗙</a>
     </div>
     <script src="_framework/blazor.webassembly.js"></script>
+    <script>window.getElementBoundingClientRect = element => { return element.getBoundingClientRect(); };</script>
 </body>
 
 </html>

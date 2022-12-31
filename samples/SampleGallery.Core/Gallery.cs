@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using System.Runtime.CompilerServices;
+using System.Text;
 
 namespace Veldrid.SampleGallery
 {
@@ -40,11 +40,11 @@ namespace Veldrid.SampleGallery
             if (_driver.SupportsImGui)
             {
                 _imguiRenderer = new ImGuiCBRenderer(
-                _gd,
-                _mainSwapchain.Framebuffer.OutputDescription,
-                (int)_driver.Width, (int)_driver.Height,
-                ColorSpaceHandling.Linear,
-                _mainSwapchain.BufferCount);
+                    _gd,
+                    _mainSwapchain.Framebuffer.OutputDescription,
+                    (int)_driver.Width, (int)_driver.Height,
+                    ColorSpaceHandling.Linear,
+                    _mainSwapchain.BufferCount);
             }
 
             PixelFormat format = _mainSwapchain.Framebuffer.OutputDescription.ColorAttachments[0].Format;
@@ -65,8 +65,9 @@ namespace Veldrid.SampleGallery
 
         public void LoadExample(string name)
         {
+            Console.WriteLine($"Loading example \"{name}\".");
             if (_loadedExampleName != name
-                &&_availableExamples.TryGetValue(name, out Func<Example> load))
+                && _availableExamples.TryGetValue(name, out Func<Example> load))
             {
                 if (_example != null)
                 {
@@ -91,20 +92,33 @@ namespace Veldrid.SampleGallery
             {
                 _imguiRenderer.Update((float)deltaSeconds, _driver.GetInputState());
                 InputTracker.WantCaptureMouse = ImGui.GetIO().WantCaptureMouse;
-                ImGui.Text($"Framerate: {ImGui.GetIO().Framerate}");
-                ImGui.Text($"Mouse pos: {ImGui.GetIO().MousePos}");
-                ImGui.Text($"Backend: {_driver.Device.BackendType}");
-
-                if (ImGui.BeginCombo("Examples", _loadedExampleName))
+                if (ImGui.Button($"Mouse pos: {ImGui.GetIO().MousePos}"))
                 {
-                    foreach (KeyValuePair<string, Func<Example>> kvp in _availableExamples)
+                    Console.WriteLine("Pressed.");
+                }
+                ImGui.Button($"Framerate: {ImGui.GetIO().Framerate}");
+                ImGui.Button($"Backend: {_driver.Device.BackendType}");
+
+                string exampleName = null;
+                foreach (KeyValuePair<string, Func<Example>> kvp in _availableExamples)
+                {
+                    if (_loadedExampleName == kvp.Key)
                     {
-                        if (ImGui.Selectable(kvp.Key, _loadedExampleName == kvp.Key))
-                        {
-                            LoadExample(kvp.Key);
-                        }
+                        ImGui.PushStyleColor(ImGuiCol.Button, RgbaFloat.Cyan.ToVector4());
                     }
-                    ImGui.EndCombo();
+                    if (ImGui.Button(kvp.Key))
+                    {
+                        exampleName = kvp.Key;
+                    }
+                    if (_loadedExampleName == kvp.Key)
+                    {
+                        ImGui.PopStyleColor();
+                    }
+                }
+
+                if (exampleName != null)
+                {
+                    LoadExample(exampleName);
                 }
             }
         }

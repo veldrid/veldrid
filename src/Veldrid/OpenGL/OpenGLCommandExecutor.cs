@@ -27,6 +27,7 @@ namespace Veldrid.OpenGL
         private uint[] _vbOffsets = Array.Empty<uint>();
         private uint[] _vertexAttribDivisors = Array.Empty<uint>();
         private readonly Viewport[] _viewports = new Viewport[20];
+        private readonly uint _maxVertexAttribs;
         private DrawElementsType _drawElementsType;
         private uint _ibOffset;
         private PrimitiveType _primitiveType;
@@ -47,6 +48,10 @@ namespace Veldrid.OpenGL
             _stagingMemoryPool = gd.StagingMemoryPool;
             _platformInfo = platformInfo;
             _features = gd.Features;
+            int maxVertexAttribs;
+            glGetIntegerv(GetPName.MaxVertexAttribs, &maxVertexAttribs);
+            CheckLastError();
+            _maxVertexAttribs = (uint)maxVertexAttribs;
         }
 
         public override void Begin()
@@ -284,6 +289,15 @@ namespace Veldrid.OpenGL
 
         private void FlushVertexLayouts()
         {
+            if (_extensions.WebGL)
+            {
+                for (uint i = 0; i < _maxVertexAttribs; i++)
+                {
+                    glDisableVertexAttribArray(i);
+                    CheckLastError();
+                }
+            }
+
             uint totalSlotsBound = 0;
             VertexLayoutDescription[] layouts = _graphicsPipeline.VertexLayouts;
             for (int i = 0; i < layouts.Length; i++)
@@ -1111,10 +1125,6 @@ namespace Veldrid.OpenGL
                             CheckLastError();
                             ubOffset += 1;
                         }
-                        else
-                        {
-                            Console.WriteLine($"Warning: no uniform binding found for slot {slot}, element {element}");
-                        }
 
                         break;
                     }
@@ -1797,12 +1807,21 @@ namespace Veldrid.OpenGL
                 CheckLastError();
 
                 int compressedSize;
-                glGetTexLevelParameteriv(
-                    srcTarget,
-                    (int)srcMipLevel,
-                    GetTextureParameter.TextureCompressedImageSize,
-                    &compressedSize);
-                CheckLastError();
+                if (_extensions.WebGL)
+                {
+                    Util.GetMipDimensions(srcGLTexture, srcMipLevel, out uint srcWidth, out uint srcHeight, out uint srcDepth);
+                    uint blockSizeInBytes = FormatHelpers.GetBlockSizeInBytes(srcGLTexture.Format);
+                    compressedSize = (int)((srcWidth / 4) * (srcHeight / 4) * blockSizeInBytes);
+                }
+                else
+                {
+                    glGetTexLevelParameteriv(
+                        srcTarget,
+                        (int)srcMipLevel,
+                        GetTextureParameter.TextureCompressedImageSize,
+                        &compressedSize);
+                    CheckLastError();
+                }
                 sizeInBytes = (uint)compressedSize;
             }
             else

@@ -3,6 +3,7 @@ using Veldrid.Sdl2;
 using System.Diagnostics;
 using System;
 using Snake;
+using Instancing;
 
 namespace Veldrid.SampleGallery
 {
@@ -55,7 +56,8 @@ namespace Veldrid.SampleGallery
             Gallery gallery = new Gallery(this);
             gallery.RegisterExample("Simple Mesh Render", () => new SimpleMeshRender());
             gallery.RegisterExample("Snake", () => new SnakeExample());
-            gallery.LoadExample("Simple Mesh Render");
+            gallery.RegisterExample("Instancing", () => new InstancingExample());
+            gallery.LoadExample("Instancing");
 
             _sw = Stopwatch.StartNew();
             _previousTime = _sw.Elapsed.TotalSeconds;

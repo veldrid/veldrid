@@ -202,11 +202,6 @@ namespace SampleBase
                 width, height, mipLevels, arrayLayers,
                 format, TextureUsage.Sampled));
 
-            Texture stagingTex = factory.CreateTexture(TextureDescription.Texture2D(
-                width, height, mipLevels, arrayLayers,
-                format, TextureUsage.Staging));
-
-            // Copy texture data into staging buffer
             for (uint level = 0; level < mipLevels; level++)
             {
                 KtxMipmapLevel mipmap = ktxTex2D.Mipmaps[level];
@@ -217,31 +212,12 @@ namespace SampleBase
                     byte[] pixelData = ktxLayer.Faces[0].Data;
                     fixed (byte* pixelDataPtr = &pixelData[0])
                     {
-                        gd.UpdateTexture(stagingTex, (IntPtr)pixelDataPtr, (uint)pixelData.Length,
+                        gd.UpdateTexture(ret, (IntPtr)pixelDataPtr, (uint)pixelData.Length,
                             0, 0, 0, mipmap.Width, mipmap.Height, 1, level, layer);
                     }
                 }
             }
 
-            CommandList copyCL = factory.CreateCommandList();
-            copyCL.Begin();
-            for (uint level = 0; level < mipLevels; level++)
-            {
-                KtxMipmapLevel mipLevel = ktxTex2D.Mipmaps[level];
-                for (uint layer = 0; layer < arrayLayers; layer++)
-                {
-                    copyCL.CopyTexture(
-                        stagingTex, 0, 0, 0, level, layer,
-                        ret, 0, 0, 0, level, layer,
-                        mipLevel.Width, mipLevel.Height, mipLevel.Depth,
-                        1);
-                }
-            }
-            copyCL.End();
-            gd.SubmitCommands(copyCL);
-
-            gd.DisposeWhenIdle(copyCL);
-            gd.DisposeWhenIdle(stagingTex);
 
             return ret;
         }

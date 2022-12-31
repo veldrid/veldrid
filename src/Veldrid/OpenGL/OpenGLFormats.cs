@@ -670,7 +670,7 @@ namespace Veldrid.OpenGL
                 case PixelFormat.ETC2_R8_G8_B8_UNorm:
                 case PixelFormat.ETC2_R8_G8_B8_A1_UNorm:
                 case PixelFormat.ETC2_R8_G8_B8_A8_UNorm:
-                    return extensions.GLESVersion(3, 0) || extensions.GLVersion(4, 3);
+                    return (!extensions.WebGL && extensions.GLESVersion(3, 0)) || extensions.GLVersion(4, 3);
 
                 case PixelFormat.BC1_Rgb_UNorm:
                 case PixelFormat.BC1_Rgb_UNorm_SRgb:
@@ -680,13 +680,15 @@ namespace Veldrid.OpenGL
                 case PixelFormat.BC2_UNorm_SRgb:
                 case PixelFormat.BC3_UNorm:
                 case PixelFormat.BC3_UNorm_SRgb:
-                    return extensions.IsExtensionSupported("GL_EXT_texture_compression_s3tc");
+                    return extensions.IsExtensionSupported("GL_EXT_texture_compression_s3tc")
+                        || extensions.IsExtensionSupported("GL_WEBGL_compressed_texture_s3tc");
 
                 case PixelFormat.BC4_UNorm:
                 case PixelFormat.BC4_SNorm:
                 case PixelFormat.BC5_UNorm:
                 case PixelFormat.BC5_SNorm:
-                    return extensions.GLVersion(3, 0) || extensions.IsExtensionSupported("GL_ARB_texture_compression_rgtc");
+                    return extensions.GLVersion(3, 0) || extensions.IsExtensionSupported("GL_ARB_texture_compression_rgtc")
+                        || extensions.IsExtensionSupported("GL_EXT_texture_compression_rgtc");
 
                 case PixelFormat.BC7_UNorm:
                 case PixelFormat.BC7_UNorm_SRgb:

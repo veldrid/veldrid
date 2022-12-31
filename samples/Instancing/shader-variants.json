@@ -1,0 +1,83 @@
+[
+  {
+    "Name": "Instance",
+    "Shaders": [
+      {
+        "Stage": "Vertex",
+        "FileName": "Instance-vertex.glsl"
+      },
+      {
+        "Stage": "Fragment",
+        "FileName": "Instance-fragment.glsl"
+      }
+    ],
+    "Macros": [
+    ],
+    "CrossCompileOptions": {
+      "FixClipSpaceZ": false,
+      "InvertVertexOutputY": false,
+      "Specializations": [
+      ]
+    },
+    "Targets": [
+      "ESSL",
+      "GLSL",
+      "MSL",
+      "HLSL"
+    ]
+  },
+  {
+    "Name": "Planet",
+    "Shaders": [
+      {
+        "Stage": "Vertex",
+        "FileName": "Planet-vertex.glsl"
+      },
+      {
+        "Stage": "Fragment",
+        "FileName": "Planet-fragment.glsl"
+      }
+    ],
+    "Macros": [
+    ],
+    "CrossCompileOptions": {
+      "FixClipSpaceZ": false,
+      "InvertVertexOutputY": false,
+      "Specializations": [
+      ]
+    },
+    "Targets": [
+      "ESSL",
+      "GLSL",
+      "MSL",
+      "HLSL"
+    ]
+  },
+  {
+    "Name": "Starfield",
+    "Shaders": [
+      {
+        "Stage": "Vertex",
+        "FileName": "Starfield-vertex.glsl"
+      },
+      {
+        "Stage": "Fragment",
+        "FileName": "Starfield-fragment.glsl"
+      }
+    ],
+    "Macros": [
+    ],
+    "CrossCompileOptions": {
+      "FixClipSpaceZ": false,
+      "InvertVertexOutputY": false,
+      "Specializations": [
+      ]
+    },
+    "Targets": [
+      "ESSL",
+      "GLSL",
+      "MSL",
+      "HLSL"
+    ]
+  }
+]

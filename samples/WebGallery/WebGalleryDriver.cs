@@ -1,8 +1,12 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿using Instancing;
+using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
 using Snake;
 using System.Numerics;
 using System.Runtime.InteropServices.JavaScript;
 using System.Runtime.Versioning;
+using Vulkan.Xcb;
+using Vulkan.Xlib;
 
 [assembly: SupportedOSPlatform("browser")]
 
@@ -11,10 +15,8 @@ namespace Veldrid.SampleGallery
     public partial class WebGalleryDriver : IComponent, IGalleryDriver
     {
         private RenderHandle _renderHandle;
-
-        const int CanvasWidth = 1280;
-        const int CanvasHeight = 720;
-
+        private JSObject _window;
+        private JSObject _canvas;
         private Action<double> _loop;
         private double _deltaSeconds;
         private double _previousMilliseconds;
@@ -24,12 +26,13 @@ namespace Veldrid.SampleGallery
         private uint _height;
         private InputState _inputState = new InputState();
 
-        public uint Width => MainSwapchain.Width;
-        public uint Height => MainSwapchain.Height;
+        public uint Width => (uint)_canvas.GetPropertyAsInt32("clientWidth");
+        public uint Height => (uint)_canvas.GetPropertyAsInt32("clientHeight");
 
         public GraphicsDevice Device { get; set; }
 
         private Vector2 _previousMousePosition;
+        private Gallery _gallery;
 
         public Swapchain MainSwapchain => Device.MainSwapchain;
 
@@ -37,7 +40,7 @@ namespace Veldrid.SampleGallery
 
         public uint BufferCount => MainSwapchain.BufferCount;
 
-        public bool SupportsImGui => false;
+        public bool SupportsImGui => true;
 
         public event Action Resized;
         public event Action<double> Update;
@@ -47,13 +50,12 @@ namespace Veldrid.SampleGallery
         {
             _renderHandle = renderHandle;
 
-            JSObject canvas = JSHost.GlobalThis.GetPropertyAsJSObject("window")!.GetPropertyAsJSObject("canvas")!;
-            uint width = (uint)canvas.GetPropertyAsInt32("width");
-            uint height = (uint)canvas.GetPropertyAsInt32("height");
+            _window = JSHost.GlobalThis.GetPropertyAsJSObject("window")!;
+            _canvas = _window.GetPropertyAsJSObject("canvas")!;
 
             Device = GraphicsDevice.CreateOpenGLES(
                 GraphicsDeviceOptions.Recommended_4_7_0,
-                new SwapchainDescription(SwapchainSource.CreateHtml5Canvas(canvas), width, height, PixelFormat.R32_Float, true));
+                new SwapchainDescription(SwapchainSource.CreateHtml5Canvas(_canvas), Width, Height, PixelFormat.R32_Float, true));
 
             GraphicsDeviceOptions options = Gallery.GetPreferredOptions();
             _loop = new Action<double>(Loop);
@@ -61,35 +63,30 @@ namespace Veldrid.SampleGallery
 
             AddEventListener("mousemove", new Action<JSObject>((mouseEvent) =>
             {
-                int mX = mouseEvent.GetPropertyAsInt32("clientX");
-                int mY = mouseEvent.GetPropertyAsInt32("clientY");
-                _inputState.MousePosition = new Vector2(mX, mY);
+                JSObject canvasRect = GetElementBoundingClientRect(_canvas);
+                int canvasLeft = (int)canvasRect.GetPropertyAsDouble("left");
+                int canvasTop = (int)canvasRect.GetPropertyAsDouble("left");
+                int mX = (int)mouseEvent.GetPropertyAsDouble    ("clientX");
+                int mY = (int)mouseEvent.GetPropertyAsDouble("clientY");
+                int scrollY = (int)_window.GetPropertyAsDouble("scrollY");
+                _inputState.MousePosition = new Vector2(mX - canvasLeft, mY - canvasTop + scrollY);
 
                 mouseEvent.Dispose();
-            }), false);
+            }), true);
             AddEventListener("mousedown", new Action<JSObject>((mouseEvent) =>
             {
                 int button = mouseEvent.GetPropertyAsInt32("button");
                 _inputState.MouseDown[button] = true;
 
                 mouseEvent.Dispose();
-            }), false);
+            }), true);
             AddEventListener("mouseup", new Action<JSObject>((mouseEvent) =>
             {
                 int button = mouseEvent.GetPropertyAsInt32("button");
                 _inputState.MouseDown[button] = false;
 
                 mouseEvent.Dispose();
-            }), false);
-
-            Gallery gallery = new Gallery(this);
-            gallery.RegisterExample("Simple Mesh Render", () => new SimpleMeshRender());
-            gallery.RegisterExample("Snake", () => new SnakeExample());
-            gallery.LoadExample("Simple Mesh Render");
-            //gallery.LoadExample("Snake");
-
-            RequestAnimationFrame(_loop);
-
+            }), true);
             AddEventListener("keydown", new Action<JSObject>((keyEvent) =>
             {
                 string keyStr = keyEvent.GetPropertyAsString("code")!;
@@ -99,8 +96,7 @@ namespace Veldrid.SampleGallery
                 }
 
                 keyEvent.Dispose();
-            }), false);
-
+            }), true);
             AddEventListener("keyup", new Action<JSObject>((keyEvent) =>
             {
                 string keyStr = keyEvent.GetPropertyAsString("code")!;
@@ -110,7 +106,15 @@ namespace Veldrid.SampleGallery
                 }
 
                 keyEvent.Dispose();
-            }), false);
+            }), true);
+
+            _gallery = new Gallery(this);
+            _gallery.RegisterExample("Simple Mesh Render", () => new SimpleMeshRender());
+            _gallery.RegisterExample("Snake", () => new SnakeExample());
+            _gallery.RegisterExample("Instancing", () => new InstancingExample());
+            _gallery.LoadExample("Instancing");
+
+            RequestAnimationFrame(_loop);
         }
 
         public Task SetParametersAsync(ParameterView parameters)
@@ -123,6 +127,9 @@ namespace Veldrid.SampleGallery
 
         [JSImport("globalThis.window.requestAnimationFrame")]
         private static partial void RequestAnimationFrame([JSMarshalAs<JSType.Function<JSType.Number>>] Action<double> callback);
+
+        [JSImport("globalThis.window.getElementBoundingClientRect")]
+        private static partial JSObject GetElementBoundingClientRect([JSMarshalAs<JSType.Object>]JSObject element);
 
         private bool TryParseKeyCode(string keyStr, out Key key)
         {
@@ -145,6 +152,26 @@ namespace Veldrid.SampleGallery
                     key = Key.ShiftLeft; return true;
                 case "Control":
                     key = Key.ControlLeft; return true;
+                case "Digit1":
+                    key = Key.Number1; return true;
+                case "Digit2":
+                    key = Key.Number2; return true;
+                case "Digit3":
+                    key = Key.Number3; return true;
+                case "Digit4":
+                    key = Key.Number4; return true;
+                case "Digit5":
+                    key = Key.Number5; return true;
+                case "Digit6":
+                    key = Key.Number6; return true;
+                case "Digit7":
+                    key = Key.Number7; return true;
+                case "Digit8":
+                    key = Key.Number8; return true;
+                case "Digit9":
+                    key = Key.Number9; return true;
+                case "Digit0":
+                    key = Key.Number0; return true;
 
                 default:
                     Console.WriteLine($"Couldn't parse key string: {keyStr}");
@@ -154,6 +181,23 @@ namespace Veldrid.SampleGallery
 
         public InputStateView GetInputState() => _inputState.View;
 
+        bool forceResize = false;
+        private void ResizeCanvas()
+        {
+            int canvasWidth = _canvas.GetPropertyAsInt32("width");
+            int canvasheight = _canvas.GetPropertyAsInt32("height");
+            uint clientWidth = Width;
+            uint clientHeight = Height;
+            if (canvasWidth != clientWidth || canvasheight != clientHeight || forceResize)
+            {
+                forceResize = false;
+                _canvas.SetProperty("width", clientWidth);
+                _canvas.SetProperty("height", clientHeight);
+                MainSwapchain.Resize(clientWidth, clientHeight);
+                Resized?.Invoke();
+            }
+        }
+
         private void Loop(double milliseconds)
         {
             _deltaSeconds = (milliseconds - _previousMilliseconds) / 1000;
@@ -161,6 +205,21 @@ namespace Veldrid.SampleGallery
             FlushInput();
             Update?.Invoke(_deltaSeconds);
             _frameloop.RunFrame(HandleFrame);
+
+            if (InputTracker.GetKeyDown(Key.Number1))
+            {
+                _gallery.LoadExample("Simple Mesh Render");
+                forceResize = true;
+            }
+            if (InputTracker.GetKeyDown(Key.Number2))
+            {
+                _gallery.LoadExample("Snake");
+            }
+            if (InputTracker.GetKeyDown(Key.Number3))
+            {
+                _gallery.LoadExample("Instancing");
+            }
+            ResizeCanvas();
 
             RequestAnimationFrame(_loop);
         }
@@ -173,7 +232,7 @@ namespace Veldrid.SampleGallery
 
         private CommandBuffer[] HandleFrame(uint frameIndex, Framebuffer fb)
         {
-            return Render?.Invoke(_deltaSeconds);
+            return Render.Invoke(_deltaSeconds);
         }
     }
 }

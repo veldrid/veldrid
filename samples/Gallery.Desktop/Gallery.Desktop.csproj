@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Veldrid.ImGui\Veldrid.ImGui.csproj" />
+    <ProjectReference Include="..\Instancing\Instancing.csproj" />
     <ProjectReference Include="..\SimpleMeshRender\SimpleMeshRender.csproj" />
     <ProjectReference Include="$(RepositoryRootDirectory)\src\Veldrid.StartupUtilities\Veldrid.StartupUtilities.csproj" />
     <ProjectReference Include="..\Snake\Snake.csproj" />

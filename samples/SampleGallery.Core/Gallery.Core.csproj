@@ -5,6 +5,7 @@
     <RootNamespace>Veldrid.SampleGallery</RootNamespace>
     <ShaderVariantDef>shader-variants.json</ShaderVariantDef>
     <EmbedGeneratedShaders>true</EmbedGeneratedShaders>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>

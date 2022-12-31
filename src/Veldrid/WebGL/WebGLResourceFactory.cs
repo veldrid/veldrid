@@ -12,7 +12,7 @@ namespace Veldrid.WebGL
             _gd = gd;
         }
 
-        public override GraphicsBackend BackendType => GraphicsBackend.WebGL;
+        public override GraphicsBackend BackendType => throw new NotImplementedException();
 
         public override CommandList CreateCommandList(ref CommandListDescription description)
         {

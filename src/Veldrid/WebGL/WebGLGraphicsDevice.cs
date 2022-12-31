@@ -12,7 +12,7 @@ namespace Veldrid.WebGL
         public WebGL2RenderingContext Ctx { get; }
         public JSObject Canvas { get; }
         public WebGLTextureSamplerManager TextureSamplerManager { get; }
-        public override GraphicsBackend BackendType => GraphicsBackend.WebGL;
+        public override GraphicsBackend BackendType => throw new NotImplementedException();
         public override bool IsUvOriginTopLeft => false;
         public override bool IsDepthRangeZeroToOne => false;
         public override bool IsClipSpaceYInverted => false;

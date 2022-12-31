@@ -28,7 +28,6 @@ namespace Veldrid.SampleGallery
                     extension = "metal";
                     break;
                 case GraphicsBackend.OpenGLES:
-                case GraphicsBackend.WebGL:
                     extension = "essl";
                     break;
                 default:
@@ -44,11 +43,16 @@ namespace Veldrid.SampleGallery
                 reflection = SpirvReflection.LoadFromJson(embeddedStream);
             }
 
-            return (new[]
+            (Shader[], SpirvReflection reflection) ret = (new[]
             {
                 factory.CreateShader(new ShaderDescription(ShaderStages.Vertex, vsBytes, "main")),
                 factory.CreateShader(new ShaderDescription(ShaderStages.Fragment, fsBytes, "main")),
             }, reflection);
+
+            ret.Item1[0].Name = $"{name}_Vertex";
+            ret.Item1[1].Name = $"{name}_Fragment";
+
+            return ret;
         }
 
         private static byte[] ReadEmbeddedBytes(Assembly assembly, string name)

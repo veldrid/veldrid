@@ -12,8 +12,10 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="7.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="7.0.0" PrivateAssets="all" />
+    <PackageReference Include="ImGui.NET.SourceBuild" Version="1.89.1-g04d5331113" />
 
     <ProjectReference Include="$(RepositoryRootDirectory)\src\Veldrid\Veldrid.csproj" />
+    <ProjectReference Include="..\Instancing\Instancing.csproj" />
     <ProjectReference Include="..\SampleGallery.Core\Gallery.Core.csproj" />
     <ProjectReference Include="..\SimpleMeshRender\SimpleMeshRender.csproj" />
     <ProjectReference Include="..\Snake\Snake.csproj" />
@@ -22,7 +24,8 @@
   </ItemGroup>
 
   <PropertyGroup>
-    <EmccExtraLDFlags>-sMIN_WEBGL_VERSION=2 -sMAX_WEBGL_VERSION=2 -sFULL_ES3 -sGL_DEBUG=1 -sGL_ASSERTIONS=1</EmccExtraLDFlags>
+    <EmccExtraLDFlags>-sMIN_WEBGL_VERSION=2 -sMAX_WEBGL_VERSION=2 -sFULL_ES3 -sGL_DEBUG=1 -sGL_ASSERTIONS=1 --emit-symbol-map
+</EmccExtraLDFlags>
   </PropertyGroup>
 
 

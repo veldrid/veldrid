@@ -15,6 +15,9 @@ using Veldrid.CommandRecording;
 using System.Buffers;
 
 using NativeLibrary = NativeLibraryLoader.NativeLibrary;
+using System.Text;
+using System.Linq;
+using System.Runtime.Versioning;
 
 #if NET7_0_OR_GREATER
 using System.Runtime.InteropServices.JavaScript;
@@ -163,10 +166,18 @@ namespace Veldrid.OpenGL
 
             HashSet<string> extensions = new HashSet<string>();
             int majorVersion, minorVersion;
-            if (_version.Contains("WebGL"))
+            bool webgl = _version.Contains("WebGL");
+            if (webgl)
             {
                 majorVersion = 3;
                 minorVersion = 0;
+                const uint GL_EXTENSIONS = 0x1f03;
+                
+                string wglExtensions = Util.GetString(glGetString((StringName)GL_EXTENSIONS));
+                foreach (string s in wglExtensions.Split(' '))
+                {
+                    extensions.Add(s);
+                }
             }
             else
             {
@@ -181,7 +192,6 @@ namespace Veldrid.OpenGL
                     // This mismatch should never be hit in valid OpenGL implementations.
                     _apiVersion = new GraphicsApiVersion(majorVersion, minorVersion, 0, 0);
                 }
-
 
                 int extensionCount;
                 glGetIntegerv(GetPName.NumExtensions, &extensionCount);
@@ -198,7 +208,7 @@ namespace Veldrid.OpenGL
                 }
             }
 
-            _extensions = new OpenGLExtensions(extensions, _backendType, majorVersion, minorVersion);
+            _extensions = new OpenGLExtensions(extensions, _backendType, majorVersion, minorVersion, webgl);
 
             bool drawIndirect = _extensions.DrawIndirect || _extensions.MultiDrawIndirect;
             _features = new GraphicsDeviceFeatures(
@@ -350,11 +360,11 @@ namespace Veldrid.OpenGL
 
             _workItems = new BlockingCollection<ExecutionThreadWorkItem>(new ConcurrentQueue<ExecutionThreadWorkItem>());
             _clearCurrentContext = platformInfo.ClearCurrentContext;
-            if (!_version.Contains("WebGL"))
+            if (!webgl)
             {
                 _clearCurrentContext();
             }
-            _executionThread = new ExecutionThread(this, _workItems, _makeCurrent, _glContext, _version.Contains("WebGL"));
+            _executionThread = new ExecutionThread(this, _workItems, _makeCurrent, _glContext, webgl);
             _openglInfo = new BackendInfoOpenGL(this);
 
             PostDeviceCreated();
@@ -739,6 +749,7 @@ namespace Veldrid.OpenGL
         }
 
 #if NET7_0_OR_GREATER
+        [SupportedOSPlatform("browser")]
         private void InitializeWebGL(JSObject canvas, GraphicsDeviceOptions options)
         {
             IntPtr display = eglGetDisplay(0);
@@ -856,9 +867,8 @@ namespace Veldrid.OpenGL
                 swapBuffers,
                 setSync);
 
-            // TODO: Get these from the canvas
-            uint width = 960;
-            uint height = 540;
+            uint width = (uint)canvas.GetPropertyAsInt32("width");
+            uint height = (uint)canvas.GetPropertyAsInt32("height");
             Init(options, platformInfo, width, height, true, true);
         }
 #endif

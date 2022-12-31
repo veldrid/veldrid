@@ -65,6 +65,7 @@ namespace Snake
                 GalleryConfig.Global.MainFBOutput,
                 reflection.VertexElements,
                 reflection.ResourceLayouts));
+            _pipeline.Name = "Sprite Renderer Pipeline";
         }
 
         public void AddSprite(Vector2 position, Vector2 size, string spriteName)

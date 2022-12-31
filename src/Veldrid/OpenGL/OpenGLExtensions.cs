@@ -12,12 +12,15 @@ namespace Veldrid.OpenGL
 
         public int Count => _extensions.Count;
 
-        internal OpenGLExtensions(HashSet<string> extensions, GraphicsBackend backend, int major, int minor)
+        public bool WebGL { get; }
+
+        internal OpenGLExtensions(HashSet<string> extensions, GraphicsBackend backend, int major, int minor, bool webgl = false)
         {
             _extensions = extensions;
             _backend = backend;
             _major = major;
             _minor = minor;
+            WebGL = webgl;
 
             TextureStorage = IsExtensionSupported("GL_ARB_texture_storage") // OpenGL 4.2 / 4.3 (multisampled)
                 || GLESVersion(3, 0);

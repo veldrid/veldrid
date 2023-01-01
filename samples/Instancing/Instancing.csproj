@@ -15,10 +15,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="Assets\sphere.obj" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="$(SamplesDir)/AssetProcessor/AssetProcessor.csproj" />
     <ProjectReference Include="$(RepositoryRootDirectory)\src\Veldrid/Veldrid.csproj" />
     <ProjectReference Include="$(RepositoryRootDirectory)\src\Veldrid.Utilities\Veldrid.Utilities.csproj" />

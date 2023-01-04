@@ -12,7 +12,7 @@
 </head>
 
 <body>
-    <canvas style="aspect-ratio:16/9; width:99%" id="canvas"></canvas>
+    <canvas style="aspect-ratio:16/9; width:75%" id="canvas"></canvas>
     <script type="text/javascript">
         var canvas = document.getElementById("canvas");
 
@@ -32,6 +32,9 @@
     </div>
     <script src="_framework/blazor.webassembly.js"></script>
     <script>window.getElementBoundingClientRect = element => { return element.getBoundingClientRect(); };</script>
+    <script>window.eventPreventDefault = event => { return event.preventDefault(); };</script>
+    <script>window.elementRequestFullscreen = element => { return element.requestFullscreen(); };</script>
+    <script>window.documentExitFullscreen = () => { return document.exitFullscreen(); };</script>
 </body>
 
 </html>

@@ -15,6 +15,7 @@ namespace Veldrid.SampleGallery
         public static Vector2 MouseDelta;
         public static InputStateView State { get; private set; }
         public static bool WantCaptureMouse { get; set; }
+        public static bool WantCaptureKeyboard { get; set; }
 
         public static bool GetKey(Key key)
         {

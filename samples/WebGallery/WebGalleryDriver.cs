@@ -1,4 +1,5 @@
-﻿using Instancing;
+﻿using ImGuiNET;
+using Instancing;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using Snake;
@@ -66,10 +67,11 @@ namespace Veldrid.SampleGallery
                 JSObject canvasRect = GetElementBoundingClientRect(_canvas);
                 int canvasLeft = (int)canvasRect.GetPropertyAsDouble("left");
                 int canvasTop = (int)canvasRect.GetPropertyAsDouble("left");
-                int mX = (int)mouseEvent.GetPropertyAsDouble    ("clientX");
+                int mX = (int)mouseEvent.GetPropertyAsDouble("clientX");
                 int mY = (int)mouseEvent.GetPropertyAsDouble("clientY");
                 int scrollY = (int)_window.GetPropertyAsDouble("scrollY");
                 _inputState.MousePosition = new Vector2(mX - canvasLeft, mY - canvasTop + scrollY);
+                if (InputTracker.WantCaptureMouse) { EventPreventDefault(mouseEvent); }
 
                 mouseEvent.Dispose();
             }), true);
@@ -77,6 +79,7 @@ namespace Veldrid.SampleGallery
             {
                 int button = mouseEvent.GetPropertyAsInt32("button");
                 _inputState.MouseDown[button] = true;
+                if (InputTracker.WantCaptureMouse) { EventPreventDefault(mouseEvent); }
 
                 mouseEvent.Dispose();
             }), true);
@@ -84,6 +87,7 @@ namespace Veldrid.SampleGallery
             {
                 int button = mouseEvent.GetPropertyAsInt32("button");
                 _inputState.MouseDown[button] = false;
+                if (InputTracker.WantCaptureMouse) { EventPreventDefault(mouseEvent); }
 
                 mouseEvent.Dispose();
             }), true);
@@ -93,8 +97,8 @@ namespace Veldrid.SampleGallery
                 if (TryParseKeyCode(keyStr, out Key key))
                 {
                     _inputState.KeyEvents.Add(new KeyEvent(key, true, ModifierKeys.None));
+                    if (InputTracker.WantCaptureKeyboard) { EventPreventDefault(keyEvent); }
                 }
-
                 keyEvent.Dispose();
             }), true);
             AddEventListener("keyup", new Action<JSObject>((keyEvent) =>
@@ -103,6 +107,7 @@ namespace Veldrid.SampleGallery
                 if (TryParseKeyCode(keyStr, out Key key))
                 {
                     _inputState.KeyEvents.Add(new KeyEvent(key, false, ModifierKeys.None));
+                    if (InputTracker.WantCaptureKeyboard) { EventPreventDefault(keyEvent); }
                 }
 
                 keyEvent.Dispose();
@@ -115,6 +120,7 @@ namespace Veldrid.SampleGallery
             _gallery.LoadExample("Instancing");
 
             RequestAnimationFrame(_loop);
+            ImGui.GetStyle().ScaleAllSizes(2.0f);
         }
 
         public Task SetParametersAsync(ParameterView parameters)
@@ -129,7 +135,16 @@ namespace Veldrid.SampleGallery
         private static partial void RequestAnimationFrame([JSMarshalAs<JSType.Function<JSType.Number>>] Action<double> callback);
 
         [JSImport("globalThis.window.getElementBoundingClientRect")]
-        private static partial JSObject GetElementBoundingClientRect([JSMarshalAs<JSType.Object>]JSObject element);
+        private static partial JSObject GetElementBoundingClientRect([JSMarshalAs<JSType.Object>] JSObject element);
+
+        [JSImport("globalThis.window.eventPreventDefault")]
+        private static partial JSObject EventPreventDefault([JSMarshalAs<JSType.Object>] JSObject ev);
+
+        [JSImport("globalThis.window.elementRequestFullscreen")]
+        private static partial JSObject ElementRequestFullscreen([JSMarshalAs<JSType.Object>] JSObject element);
+
+        [JSImport("globalThis.window.documentExitFullscreen")]
+        private static partial JSObject DocumentExitFullscreen();
 
         private bool TryParseKeyCode(string keyStr, out Key key)
         {
@@ -198,30 +213,21 @@ namespace Veldrid.SampleGallery
             }
         }
 
+        private bool _fullscreen = false;
+
         private void Loop(double milliseconds)
         {
+            RequestAnimationFrame(_loop);
+
             _deltaSeconds = (milliseconds - _previousMilliseconds) / 1000;
             _previousMilliseconds = milliseconds;
+            if (_deltaSeconds <= 0) { return; }
+
             FlushInput();
             Update?.Invoke(_deltaSeconds);
-            _frameloop.RunFrame(HandleFrame);
-
-            if (InputTracker.GetKeyDown(Key.Number1))
-            {
-                _gallery.LoadExample("Simple Mesh Render");
-                forceResize = true;
-            }
-            if (InputTracker.GetKeyDown(Key.Number2))
-            {
-                _gallery.LoadExample("Snake");
-            }
-            if (InputTracker.GetKeyDown(Key.Number3))
-            {
-                _gallery.LoadExample("Instancing");
-            }
             ResizeCanvas();
 
-            RequestAnimationFrame(_loop);
+            _frameloop.RunFrame(HandleFrame);
         }
 
         private void FlushInput()
@@ -233,6 +239,31 @@ namespace Veldrid.SampleGallery
         private CommandBuffer[] HandleFrame(uint frameIndex, Framebuffer fb)
         {
             return Render.Invoke(_deltaSeconds);
+        }
+
+        public void DrawMainMenuBars()
+        {
+            if (ImGui.BeginMenu("View"))
+            {
+                if (_fullscreen)
+                {
+                    if (ImGui.MenuItem("Exit Full Screen", "F11") || InputTracker.GetKeyDown(Key.F11))
+                    {
+                        _fullscreen = false;
+                        DocumentExitFullscreen();
+                    }
+                }
+                else
+                {
+                    if (ImGui.MenuItem("Enter Full Screen", "F11") || InputTracker.GetKeyDown(Key.F11))
+                    {
+                        _fullscreen = true;
+                        ElementRequestFullscreen(_canvas);
+                    }
+                }
+
+                ImGui.EndMenu();
+            }
         }
     }
 }

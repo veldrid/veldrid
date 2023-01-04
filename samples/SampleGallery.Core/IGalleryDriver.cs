@@ -13,6 +13,7 @@ namespace Veldrid.SampleGallery
         bool SupportsImGui { get; }
 
         InputStateView GetInputState();
+        void DrawMainMenuBars();
 
         event Action Resized;
         event Action<double> Update;

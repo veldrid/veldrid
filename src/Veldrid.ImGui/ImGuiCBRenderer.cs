@@ -81,6 +81,10 @@ namespace Veldrid
             ImGui.SetCurrentContext(context);
 
             ImGui.GetIO().Fonts.AddFontDefault();
+            if (_gd.Features.DrawBaseVertex)
+            {
+                ImGui.GetIO().BackendFlags |= ImGuiBackendFlags.RendererHasVtxOffset;
+            }
 
             CreateDeviceResources(gd, outputDescription, _colorSpaceHandling);
             SetOpenTKKeyMappings();
@@ -608,7 +612,6 @@ namespace Veldrid
             {
                 ImDrawListPtr cmd_list = draw_data.CmdListsRange[i];
 
-                // TODO: Double/triple-buffered resources
                 _vertexBuffers[_frameIndex].Update(
                     vertexOffsetInVertices * (uint)sizeof(ImDrawVert),
                     cmd_list.VtxBuffer.Data,
@@ -638,7 +641,6 @@ namespace Veldrid
                 _projMatrixBuffers[_frameIndex].Update(0, ref mvp);
             }
 
-            cb.BindVertexBuffer(0, _vertexBuffers[_frameIndex]);
             cb.BindIndexBuffer(_indexBuffers[_frameIndex], IndexFormat.UInt16);
             cb.BindPipeline(_pipeline);
             cb.BindGraphicsResourceSet(0, _mainResourceSets[_frameIndex]);
@@ -679,11 +681,11 @@ namespace Veldrid
                             (uint)(pcmd.ClipRect.Z - pcmd.ClipRect.X),
                             (uint)(pcmd.ClipRect.W - pcmd.ClipRect.Y));
 
-                        cb.DrawIndexed(pcmd.ElemCount, 1, (uint)idx_offset, vtx_offset, 0);
+                        cb.BindVertexBuffer(0, _vertexBuffers[_frameIndex], (uint)(vtx_offset * sizeof(ImDrawVert)));
+                        cb.DrawIndexed(pcmd.ElemCount, 1, pcmd.IdxOffset + (uint)idx_offset, 0, 0);
                     }
-
-                    idx_offset += (int)pcmd.ElemCount;
                 }
+                idx_offset += cmd_list.IdxBuffer.Size;
                 vtx_offset += cmd_list.VtxBuffer.Size;
             }
         }

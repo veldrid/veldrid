@@ -105,6 +105,10 @@ namespace Veldrid.SampleGallery
 
         public abstract Task LoadResourcesAsync();
         public abstract CommandBuffer[] Render(double deltaSeconds);
+
+        public virtual void DrawMainMenuBars()
+        {
+        }
     }
 
     /// <summary>

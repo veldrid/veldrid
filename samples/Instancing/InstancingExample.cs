@@ -50,6 +50,11 @@ namespace Instancing
         private float _globalRotation = 0f; // Causes rocks to rotate around the global origin (where the planet is)
         private CommandBuffer[] _frameCBs;
 
+        // Settings
+        private bool _autoRotateCamera = true;
+        private float _cameraAutoRotateAngle = 0f;
+        private float _cameraAutoRotateSpeed = 0.25f;
+
         private T[] Buffered<T>(Func<T> generator)
         {
             return Enumerable.Range(0, (int)Driver.BufferCount).Select(i => generator()).ToArray();
@@ -336,6 +341,18 @@ namespace Instancing
             }).ToArray();
         }
 
+        public override void DrawMainMenuBars()
+        {
+            if (ImGui.BeginMenu("Settings"))
+            {
+                ImGui.Checkbox("Light frosm Camera", ref _lightFromCamera);
+                ImGui.Checkbox("Auto-rotate camera", ref _autoRotateCamera);
+                ImGui.SliderFloat("Auto-rotate speed", ref _cameraAutoRotateSpeed, 0.05f, 1f);
+
+                ImGui.EndMenu();
+            }
+        }
+
         public override CommandBuffer[] Render(double delta)
         {
             if (InputTracker.GetKeyDown(Key.F2))
@@ -347,6 +364,32 @@ namespace Instancing
 
             _camera.Update((float)delta);
 
+            if (_autoRotateCamera)
+            {
+                Vector3 cameraPos = new Vector3((float)Math.Cos(_cameraAutoRotateAngle), 0f, (float)Math.Sin(_cameraAutoRotateAngle));
+                float distance = 125f + 30f * (float)Math.Sin(_cameraAutoRotateAngle);
+                cameraPos *= distance;
+                cameraPos.Y = 50 + (float)Math.Cos(_cameraAutoRotateAngle) * 15.0f;
+                _camera.Position = cameraPos;
+                Vector3 forward = Vector3.Normalize(-_camera.Position);
+
+                float pitch = (float)Math.Asin(Vector3.Dot(forward, Vector3.UnitY));
+                forward.Y = 0;
+                forward = Vector3.Normalize(forward);
+                float yaw = (float)Math.Asin(Vector3.Dot(forward, Vector3.UnitX));
+                if (Vector3.Dot(forward, -Vector3.UnitZ) > 0)
+                {
+                    yaw = (2f * (float)Math.PI) - yaw;
+                }
+                else
+                {
+                    yaw = yaw - (float)Math.PI;
+                }
+
+                _camera.Pitch = pitch;
+                _camera.Yaw = yaw;
+            }
+
             // Update per-frame resources.
             Device.UpdateBuffer(_cameraProjViewBuffers[frameIndex], 0, new MatrixPair(_camera.ViewMatrix, _camera.ProjectionMatrix));
 
@@ -357,6 +400,11 @@ namespace Instancing
             else
             {
                 Device.UpdateBuffer(_lightInfoBuffers[frameIndex], 0, new LightInfo(_lightDir, _camera.Position));
+            }
+
+            if (_autoRotateCamera)
+            {
+                _cameraAutoRotateAngle += (float)delta * -_cameraAutoRotateSpeed;
             }
 
             _localRotation += (float)delta * ((float)Math.PI * 2 / 9);

@@ -92,28 +92,46 @@ namespace Veldrid.SampleGallery
             {
                 _imguiRenderer.Update((float)deltaSeconds, _driver.GetInputState());
                 InputTracker.WantCaptureMouse = ImGui.GetIO().WantCaptureMouse;
-                if (ImGui.Button($"Mouse pos: {ImGui.GetIO().MousePos}"))
-                {
-                    Console.WriteLine("Pressed.");
-                }
-                ImGui.Button($"Framerate: {ImGui.GetIO().Framerate}");
-                ImGui.Button($"Backend: {_driver.Device.BackendType}");
+                InputTracker.WantCaptureKeyboard = ImGui.GetIO().WantCaptureKeyboard;
 
                 string exampleName = null;
-                foreach (KeyValuePair<string, Func<Example>> kvp in _availableExamples)
+                if (ImGui.BeginMainMenuBar())
                 {
-                    if (_loadedExampleName == kvp.Key)
+                    if (ImGui.BeginMenu("Load"))
                     {
-                        ImGui.PushStyleColor(ImGuiCol.Button, RgbaFloat.Cyan.ToVector4());
+                        foreach (KeyValuePair<string, Func<Example>> kvp in _availableExamples)
+                        {
+                            if (_loadedExampleName == kvp.Key)
+                            {
+                                ImGui.PushStyleColor(ImGuiCol.Text, RgbaFloat.Cyan.ToVector4());
+                            }
+                            if (ImGui.MenuItem(kvp.Key))
+                            {
+                                exampleName = kvp.Key;
+                            }
+                            if (_loadedExampleName == kvp.Key)
+                            {
+                                ImGui.PopStyleColor();
+                            }
+                        }
+                        ImGui.EndMenu();
                     }
-                    if (ImGui.Button(kvp.Key))
+                    if (ImGui.BeginMenu("Settings"))
                     {
-                        exampleName = kvp.Key;
+                        ImGui.EndMenu();
                     }
-                    if (_loadedExampleName == kvp.Key)
+                    if (ImGui.BeginMenu("Debug"))
                     {
-                        ImGui.PopStyleColor();
+                        ImGui.Button($"Mouse pos: {ImGui.GetIO().MousePos}");
+                        ImGui.Button($"Framerate: {ImGui.GetIO().Framerate}");
+                        ImGui.Button($"Backend: {_driver.Device.BackendType}");
+                        ImGui.EndMenu();
                     }
+
+                    _driver.DrawMainMenuBars();
+                    _example.DrawMainMenuBars();
+
+                    ImGui.EndMainMenuBar();
                 }
 
                 if (exampleName != null)

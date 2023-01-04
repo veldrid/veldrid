@@ -91,5 +91,9 @@ namespace Veldrid.SampleGallery
         }
 
         public InputStateView GetInputState() => _inputState.View;
+
+        public void DrawMainMenuBars()
+        {
+        }
     }
 }

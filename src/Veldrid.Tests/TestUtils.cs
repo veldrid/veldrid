@@ -197,12 +197,13 @@ namespace Veldrid.Tests
             else
             {
                 readback = RF.CreateBuffer(new BufferDescription(buffer.SizeInBytes, BufferUsage.Staging));
+                Fence fence = RF.CreateFence(false);
                 CommandList cl = RF.CreateCommandList();
                 cl.Begin();
                 cl.CopyBuffer(buffer, 0, readback, 0, buffer.SizeInBytes);
                 cl.End();
-                GD.SubmitCommands(cl);
-                GD.WaitForIdle();
+                GD.SubmitCommands(cl, fence);
+                GD.WaitForFence(fence);
             }
 
             return readback;
@@ -227,12 +228,13 @@ namespace Veldrid.Tests
                     texture.Format,
                     TextureUsage.Staging, texture.Type);
                 Texture readback = RF.CreateTexture(ref desc);
+                Fence fence = RF.CreateFence(false);
                 CommandList cl = RF.CreateCommandList();
                 cl.Begin();
                 cl.CopyTexture(texture, readback);
                 cl.End();
-                GD.SubmitCommands(cl);
-                GD.WaitForIdle();
+                GD.SubmitCommands(cl, fence);
+                GD.WaitForFence(fence);
                 return readback;
             }
         }

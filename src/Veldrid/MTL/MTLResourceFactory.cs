@@ -59,10 +59,10 @@ namespace Veldrid.MTL
             return new MTLShader(description, _gd);
         }
 
-        public override DeviceBuffer CreateBuffer(in BufferDescription description, IntPtr initialData)
+        public override DeviceBuffer CreateBuffer(in BufferDescription description)
         {
             ValidateBuffer(description);
-            return new MTLBuffer(description, _gd, initialData);
+            return new MTLBuffer(description, _gd);
         }
 
         public override Texture CreateTexture(in TextureDescription description)

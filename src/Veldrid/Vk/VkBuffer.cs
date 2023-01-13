@@ -23,29 +23,29 @@ namespace Veldrid.Vulkan
 
         public VkMemoryRequirements BufferMemoryRequirements => _bufferMemoryRequirements;
 
-        public VkBuffer(VkGraphicsDevice gd, uint sizeInBytes, BufferUsage usage, IntPtr initialData) : base(sizeInBytes, usage)
+        public VkBuffer(VkGraphicsDevice gd, in BufferDescription bd) : base(bd)
         {
             _gd = gd;
 
             VkBufferUsageFlags vkUsage = VkBufferUsageFlags.VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VkBufferUsageFlags.VK_BUFFER_USAGE_TRANSFER_DST_BIT;
-            if ((usage & BufferUsage.VertexBuffer) == BufferUsage.VertexBuffer)
+            if ((bd.Usage & BufferUsage.VertexBuffer) == BufferUsage.VertexBuffer)
             {
                 vkUsage |= VkBufferUsageFlags.VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
             }
-            if ((usage & BufferUsage.IndexBuffer) == BufferUsage.IndexBuffer)
+            if ((bd.Usage & BufferUsage.IndexBuffer) == BufferUsage.IndexBuffer)
             {
                 vkUsage |= VkBufferUsageFlags.VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
             }
-            if ((usage & BufferUsage.UniformBuffer) == BufferUsage.UniformBuffer)
+            if ((bd.Usage & BufferUsage.UniformBuffer) == BufferUsage.UniformBuffer)
             {
                 vkUsage |= VkBufferUsageFlags.VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
             }
-            if ((usage & BufferUsage.StructuredBufferReadWrite) == BufferUsage.StructuredBufferReadWrite
-                || (usage & BufferUsage.StructuredBufferReadOnly) == BufferUsage.StructuredBufferReadOnly)
+            if ((bd.Usage & BufferUsage.StructuredBufferReadWrite) == BufferUsage.StructuredBufferReadWrite
+                || (bd.Usage & BufferUsage.StructuredBufferReadOnly) == BufferUsage.StructuredBufferReadOnly)
             {
                 vkUsage |= VkBufferUsageFlags.VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
             }
-            if ((usage & BufferUsage.IndirectBuffer) == BufferUsage.IndirectBuffer)
+            if ((bd.Usage & BufferUsage.IndirectBuffer) == BufferUsage.IndirectBuffer)
             {
                 vkUsage |= VkBufferUsageFlags.VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT;
             }
@@ -53,7 +53,7 @@ namespace Veldrid.Vulkan
             VkBufferCreateInfo bufferCI = new()
             {
                 sType = VkStructureType.VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-                size = sizeInBytes,
+                size = bd.SizeInBytes,
                 usage = vkUsage
             };
             VulkanBuffer deviceBuffer;
@@ -90,8 +90,8 @@ namespace Veldrid.Vulkan
                 prefersDedicatedAllocation = false;
             }
 
-            bool isStaging = (usage & BufferUsage.StagingReadWrite) != 0;
-            bool isDynamic = (usage & BufferUsage.DynamicReadWrite) != 0;
+            bool isStaging = (bd.Usage & BufferUsage.StagingReadWrite) != 0;
+            bool isDynamic = (bd.Usage & BufferUsage.DynamicReadWrite) != 0;
             bool hostVisible = isStaging || isDynamic;
 
             VkMemoryPropertyFlags memoryPropertyFlags = hostVisible
@@ -103,7 +103,7 @@ namespace Veldrid.Vulkan
                 memoryPropertyFlags |= VkMemoryPropertyFlags.VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
             }
 
-            if ((usage & BufferUsage.StagingRead) != 0)
+            if ((bd.Usage & BufferUsage.StagingRead) != 0)
             {
                 // Use "host cached" memory for staging when available, for better performance of GPU -> CPU transfers
                 bool hostCachedAvailable = TryFindMemoryType(
@@ -134,9 +134,9 @@ namespace Veldrid.Vulkan
 
             RefCount = new ResourceRefCount(this);
 
-            if (initialData != IntPtr.Zero)
+            if (bd.InitialData != IntPtr.Zero)
             {
-                gd.UpdateBuffer(this, 0, initialData, sizeInBytes);
+                gd.UpdateBuffer(this, 0, bd.InitialData, bd.SizeInBytes);
             }
         }
 

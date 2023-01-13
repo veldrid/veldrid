@@ -85,10 +85,10 @@ namespace Veldrid.Vulkan
             return new VkTextureView(_gd, description);
         }
 
-        public override DeviceBuffer CreateBuffer(in BufferDescription description, IntPtr initialData)
+        public override DeviceBuffer CreateBuffer(in BufferDescription description)
         {
             ValidateBuffer(description);
-            return new VkBuffer(_gd, description.SizeInBytes, description.Usage, initialData);
+            return new VkBuffer(_gd, description);
         }
 
         public override Fence CreateFence(bool signaled)

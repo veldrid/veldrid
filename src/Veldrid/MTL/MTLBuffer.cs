@@ -24,9 +24,9 @@ namespace Veldrid.MTL
 
         public MetalBindings.MTLBuffer DeviceBuffer { get; private set; }
 
-        public unsafe MTLBuffer(in BufferDescription bd, MTLGraphicsDevice gd, IntPtr initialData) : base(bd.SizeInBytes, bd.Usage)
+        public unsafe MTLBuffer(in BufferDescription bd, MTLGraphicsDevice gd) : base(bd)
         {
-            if (initialData == IntPtr.Zero)
+            if (bd.InitialData == IntPtr.Zero)
             {
                 DeviceBuffer = gd.Device.newBufferWithLengthOptions(
                     SizeInBytes,
@@ -35,7 +35,7 @@ namespace Veldrid.MTL
             else
             {
                 DeviceBuffer = gd.Device.newBuffer(
-                    (void*)initialData,
+                    (void*)bd.InitialData,
                     SizeInBytes,
                     0);
             }

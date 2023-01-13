@@ -32,10 +32,10 @@ namespace Veldrid
         /// </summary>
         public abstract void Dispose();
 
-        internal DeviceBuffer(uint sizeInBytes, BufferUsage usage)
+        internal DeviceBuffer(in BufferDescription description)
         {
-            SizeInBytes = sizeInBytes;
-            Usage = usage;
+            SizeInBytes = description.SizeInBytes;
+            Usage = description.Usage;
         }
 
         /// <inheritdoc/>

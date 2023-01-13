@@ -227,18 +227,7 @@ namespace Veldrid
         /// </summary>
         /// <param name="description">The desired properties of the created object.</param>
         /// <returns>A new <see cref="DeviceBuffer"/>.</returns>
-        public DeviceBuffer CreateBuffer(in BufferDescription description)
-        {
-            return CreateBuffer(description, IntPtr.Zero);
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="DeviceBuffer"/> and optionally fill it with data.
-        /// </summary>
-        /// <param name="description">The desired properties of the created object.</param>
-        /// <param name="initialData">Optional source of data to fill the buffer with.</param>
-        /// <returns>A new <see cref="DeviceBuffer"/>.</returns>
-        public abstract DeviceBuffer CreateBuffer(in BufferDescription description, IntPtr initialData);
+        public abstract DeviceBuffer CreateBuffer(in BufferDescription description);
 
         /// <summary>
         /// Validates parameters for a new <see cref="DeviceBuffer"/>.

@@ -21,64 +21,61 @@ namespace Veldrid.D3D11
 
         public ID3D11Buffer Buffer => _buffer;
 
-        public unsafe D3D11Buffer(
-            ID3D11Device device, uint sizeInBytes, BufferUsage usage, uint structureByteStride, bool rawBuffer,
-            IntPtr initialData)
-            : base(sizeInBytes, usage)
+        public unsafe D3D11Buffer(ID3D11Device device, in BufferDescription desc) : base(desc)
         {
             _device = device;
-            _structureByteStride = structureByteStride;
-            _rawBuffer = rawBuffer;
+            _structureByteStride = desc.StructureByteStride;
+            _rawBuffer = desc.RawBuffer;
 
             Vortice.Direct3D11.BufferDescription bd = new(
-                (int)sizeInBytes,
-                D3D11Formats.VdToD3D11BindFlags(usage),
+                (int)desc.SizeInBytes,
+                D3D11Formats.VdToD3D11BindFlags(desc.Usage),
                 ResourceUsage.Default);
 
-            if ((usage & BufferUsage.StructuredBufferReadOnly) == BufferUsage.StructuredBufferReadOnly
-                || (usage & BufferUsage.StructuredBufferReadWrite) == BufferUsage.StructuredBufferReadWrite)
+            if ((desc.Usage & BufferUsage.StructuredBufferReadOnly) == BufferUsage.StructuredBufferReadOnly
+                || (desc.Usage & BufferUsage.StructuredBufferReadWrite) == BufferUsage.StructuredBufferReadWrite)
             {
-                if (rawBuffer)
+                if (desc.RawBuffer)
                 {
                     bd.OptionFlags = ResourceOptionFlags.BufferAllowRawViews;
                 }
                 else
                 {
                     bd.OptionFlags = ResourceOptionFlags.BufferStructured;
-                    bd.StructureByteStride = (int)structureByteStride;
+                    bd.StructureByteStride = (int)desc.StructureByteStride;
                 }
             }
-            if ((usage & BufferUsage.IndirectBuffer) == BufferUsage.IndirectBuffer)
+            if ((desc.Usage & BufferUsage.IndirectBuffer) == BufferUsage.IndirectBuffer)
             {
                 bd.OptionFlags = ResourceOptionFlags.DrawIndirectArguments;
             }
 
-            if ((usage & BufferUsage.DynamicReadWrite) != 0)
+            if ((desc.Usage & BufferUsage.DynamicReadWrite) != 0)
             {
                 bd.Usage = ResourceUsage.Dynamic;
 
-                if ((usage & BufferUsage.DynamicWrite) != 0)
+                if ((desc.Usage & BufferUsage.DynamicWrite) != 0)
                     bd.CpuAccessFlags |= CpuAccessFlags.Write;
-                if ((usage & BufferUsage.DynamicRead) != 0)
+                if ((desc.Usage & BufferUsage.DynamicRead) != 0)
                     bd.CpuAccessFlags |= CpuAccessFlags.Read;
             }
-            else if ((usage & BufferUsage.StagingReadWrite) != 0)
+            else if ((desc.Usage & BufferUsage.StagingReadWrite) != 0)
             {
                 bd.Usage = ResourceUsage.Staging;
 
-                if ((usage & BufferUsage.StagingWrite) != 0)
+                if ((desc.Usage & BufferUsage.StagingWrite) != 0)
                     bd.CpuAccessFlags |= CpuAccessFlags.Write;
-                if ((usage & BufferUsage.StagingRead) != 0)
+                if ((desc.Usage & BufferUsage.StagingRead) != 0)
                     bd.CpuAccessFlags |= CpuAccessFlags.Read;
             }
 
-            if (initialData == IntPtr.Zero)
+            if (desc.InitialData == IntPtr.Zero)
             {
                 _buffer = device.CreateBuffer(bd);
             }
             else
             {
-                _buffer = device.CreateBuffer(bd, initialData);
+                _buffer = device.CreateBuffer(bd, desc.InitialData);
             }
         }
 

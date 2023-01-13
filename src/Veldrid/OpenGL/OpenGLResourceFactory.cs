@@ -84,14 +84,10 @@ namespace Veldrid.OpenGL
             return new OpenGLTextureView(_gd, description);
         }
 
-        public override DeviceBuffer CreateBuffer(in BufferDescription description, IntPtr initialData)
+        public override DeviceBuffer CreateBuffer(in BufferDescription description)
         {
             ValidateBuffer(description);
-            return new OpenGLBuffer(
-                _gd,
-                description.SizeInBytes,
-                description.Usage,
-                initialData);
+            return new OpenGLBuffer(_gd, description);
         }
 
         public override Fence CreateFence(bool signaled)

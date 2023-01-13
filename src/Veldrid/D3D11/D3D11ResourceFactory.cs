@@ -81,16 +81,10 @@ namespace Veldrid.D3D11
             return new D3D11TextureView(_gd, description);
         }
 
-        public override DeviceBuffer CreateBuffer(in BufferDescription description, IntPtr initialData)
+        public override DeviceBuffer CreateBuffer(in BufferDescription description)
         {
             ValidateBuffer(description);
-            return new D3D11Buffer(
-                _device,
-                description.SizeInBytes,
-                description.Usage,
-                description.StructureByteStride,
-                description.RawBuffer,
-                initialData);
+            return new D3D11Buffer(_device, description);
         }
 
         public override Fence CreateFence(bool signaled)

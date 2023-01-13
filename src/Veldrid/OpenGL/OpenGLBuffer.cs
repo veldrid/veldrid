@@ -24,13 +24,13 @@ namespace Veldrid.OpenGL
 
         public override bool IsDisposed => _disposeRequested;
 
-        public OpenGLBuffer(OpenGLGraphicsDevice gd, uint sizeInBytes, BufferUsage usage, IntPtr initialData) : base(sizeInBytes, usage)
+        public OpenGLBuffer(OpenGLGraphicsDevice gd, in BufferDescription desc) : base(desc)
         {
             _gd = gd;
 
-            if (initialData != IntPtr.Zero)
+            if (desc.InitialData != IntPtr.Zero)
             {
-                gd.CreateBuffer(this, initialData);
+                gd.CreateBuffer(this, desc.InitialData);
             }
         }
 

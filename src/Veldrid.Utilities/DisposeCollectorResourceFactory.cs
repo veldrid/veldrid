@@ -35,9 +35,9 @@ namespace Veldrid.Utilities
             return fb;
         }
 
-        public override DeviceBuffer CreateBuffer(in BufferDescription description, IntPtr initialData)
+        public override DeviceBuffer CreateBuffer(in BufferDescription description)
         {
-            DeviceBuffer buffer = Factory.CreateBuffer(description, initialData);
+            DeviceBuffer buffer = Factory.CreateBuffer(description);
             DisposeCollector.Add(buffer);
             return buffer;
         }

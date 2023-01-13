@@ -17,9 +17,6 @@ namespace Veldrid.OpenGL
 
         public override string? Name { get => _name; set { _name = value; _nameChanged = true; } }
 
-        public override uint SizeInBytes { get; }
-        public override BufferUsage Usage { get; }
-
         public uint Buffer => _buffer;
 
         public bool Created { get; private set; }
@@ -27,11 +24,9 @@ namespace Veldrid.OpenGL
 
         public override bool IsDisposed => _disposeRequested;
 
-        public OpenGLBuffer(OpenGLGraphicsDevice gd, uint sizeInBytes, BufferUsage usage, IntPtr initialData)
+        public OpenGLBuffer(OpenGLGraphicsDevice gd, uint sizeInBytes, BufferUsage usage, IntPtr initialData) : base(sizeInBytes, usage)
         {
             _gd = gd;
-            SizeInBytes = sizeInBytes;
-            Usage = usage;
 
             if (initialData != IntPtr.Zero)
             {

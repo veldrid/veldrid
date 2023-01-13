@@ -17,10 +17,6 @@ namespace Veldrid.D3D11
         private readonly bool _rawBuffer;
         private string? _name;
 
-        public override uint SizeInBytes { get; }
-
-        public override BufferUsage Usage { get; }
-
         public override bool IsDisposed => _buffer.NativePointer == IntPtr.Zero;
 
         public ID3D11Buffer Buffer => _buffer;
@@ -28,10 +24,9 @@ namespace Veldrid.D3D11
         public unsafe D3D11Buffer(
             ID3D11Device device, uint sizeInBytes, BufferUsage usage, uint structureByteStride, bool rawBuffer,
             IntPtr initialData)
+            : base(sizeInBytes, usage)
         {
             _device = device;
-            SizeInBytes = sizeInBytes;
-            Usage = usage;
             _structureByteStride = structureByteStride;
             _rawBuffer = rawBuffer;
 

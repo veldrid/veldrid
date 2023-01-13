@@ -12,12 +12,12 @@ namespace Veldrid
         /// <summary>
         /// The total capacity, in bytes, of the buffer. This value is fixed upon creation.
         /// </summary>
-        public abstract uint SizeInBytes { get; }
+        public uint SizeInBytes { get; }
 
         /// <summary>
         /// A bitmask indicating how this instance is permitted to be used.
         /// </summary>
-        public abstract BufferUsage Usage { get; }
+        public BufferUsage Usage { get; }
 
         /// <inheritdoc/>
         public abstract string? Name { get; set; }
@@ -31,6 +31,12 @@ namespace Veldrid
         /// Frees unmanaged device resources controlled by this instance.
         /// </summary>
         public abstract void Dispose();
+
+        internal DeviceBuffer(uint sizeInBytes, BufferUsage usage)
+        {
+            SizeInBytes = sizeInBytes;
+            Usage = usage;
+        }
 
         /// <inheritdoc/>
         public uint GetSizeInBytes(uint subresource)

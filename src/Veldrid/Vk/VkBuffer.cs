@@ -18,19 +18,14 @@ namespace Veldrid.Vulkan
         private string? _name;
         public override bool IsDisposed => _destroyed;
 
-        public override uint SizeInBytes { get; }
-        public override BufferUsage Usage { get; }
-
         public VulkanBuffer DeviceBuffer => _deviceBuffer;
         public VkMemoryBlock Memory => _memory;
 
         public VkMemoryRequirements BufferMemoryRequirements => _bufferMemoryRequirements;
 
-        public VkBuffer(VkGraphicsDevice gd, uint sizeInBytes, BufferUsage usage, IntPtr initialData)
+        public VkBuffer(VkGraphicsDevice gd, uint sizeInBytes, BufferUsage usage, IntPtr initialData) : base(sizeInBytes, usage)
         {
             _gd = gd;
-            SizeInBytes = sizeInBytes;
-            Usage = usage;
 
             VkBufferUsageFlags vkUsage = VkBufferUsageFlags.VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VkBufferUsageFlags.VK_BUFFER_USAGE_TRANSFER_DST_BIT;
             if ((usage & BufferUsage.VertexBuffer) == BufferUsage.VertexBuffer)

@@ -8,9 +8,6 @@ namespace Veldrid.MTL
         private string? _name;
         private bool _disposed;
 
-        public override uint SizeInBytes { get; }
-        public override BufferUsage Usage { get; }
-
         public override string? Name
         {
             get => _name;
@@ -27,11 +24,8 @@ namespace Veldrid.MTL
 
         public MetalBindings.MTLBuffer DeviceBuffer { get; private set; }
 
-        public unsafe MTLBuffer(in BufferDescription bd, MTLGraphicsDevice gd, IntPtr initialData)
+        public unsafe MTLBuffer(in BufferDescription bd, MTLGraphicsDevice gd, IntPtr initialData) : base(bd.SizeInBytes, bd.Usage)
         {
-            SizeInBytes = bd.SizeInBytes;
-            Usage = bd.Usage;
-
             if (initialData == IntPtr.Zero)
             {
                 DeviceBuffer = gd.Device.newBufferWithLengthOptions(

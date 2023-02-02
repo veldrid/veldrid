@@ -1804,6 +1804,14 @@ namespace Veldrid.OpenGLBinding
         TransformFeedbackVarying = 0x92F4,
     }
 
+    public enum ProgramInterfaceParameterName : int
+    {
+        ActiveResources = 0x92F5,
+        MaxNameLength = 0x92F6,
+        MaxNumActiveVariables = 0x92F7,
+        MaxNumCompatibleSubroutines = 0x92F8,
+    }
+
     public enum TextureAccess : int
     {
         ReadOnly = 0x88B8,

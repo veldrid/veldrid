@@ -14,8 +14,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="NativeLibraryLoader" Version="1.0.12" />
-    <PackageReference Include="TerraFX.Interop.Vulkan" Version="1.3.204-rc3" />
+    <PackageReference Include="NativeLibraryLoader" Version="$(NativeLibraryLoaderVersion)" />
+    <PackageReference Include="TerraFX.Interop.Vulkan" Version="1.3.204-rc3" Condition="'$(ExcludeVulkan)' != 'true'" />
 
     <PackageReference Include="Vortice.D3DCompiler" Version="$(VorticeWindowsVersion)" Condition="'$(ExcludeD3D11)' != 'true'" />
     <PackageReference Include="Vortice.Direct3D11" Version="$(VorticeWindowsVersion)" Condition="'$(ExcludeD3D11)' != 'true'" />

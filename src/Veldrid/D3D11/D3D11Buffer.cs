@@ -37,17 +37,17 @@ namespace Veldrid.D3D11
             {
                 if (desc.RawBuffer)
                 {
-                    bd.OptionFlags = ResourceOptionFlags.BufferAllowRawViews;
+                    bd.MiscFlags = ResourceOptionFlags.BufferAllowRawViews;
                 }
                 else
                 {
-                    bd.OptionFlags = ResourceOptionFlags.BufferStructured;
+                    bd.MiscFlags = ResourceOptionFlags.BufferStructured;
                     bd.StructureByteStride = (int)desc.StructureByteStride;
                 }
             }
             if ((desc.Usage & BufferUsage.IndirectBuffer) == BufferUsage.IndirectBuffer)
             {
-                bd.OptionFlags = ResourceOptionFlags.DrawIndirectArguments;
+                bd.MiscFlags = ResourceOptionFlags.DrawIndirectArguments;
             }
 
             if ((desc.Usage & BufferUsage.DynamicReadWrite) != 0)
@@ -55,18 +55,18 @@ namespace Veldrid.D3D11
                 bd.Usage = ResourceUsage.Dynamic;
 
                 if ((desc.Usage & BufferUsage.DynamicWrite) != 0)
-                    bd.CpuAccessFlags |= CpuAccessFlags.Write;
+                    bd.CPUAccessFlags |= CpuAccessFlags.Write;
                 if ((desc.Usage & BufferUsage.DynamicRead) != 0)
-                    bd.CpuAccessFlags |= CpuAccessFlags.Read;
+                    bd.CPUAccessFlags |= CpuAccessFlags.Read;
             }
             else if ((desc.Usage & BufferUsage.StagingReadWrite) != 0)
             {
                 bd.Usage = ResourceUsage.Staging;
 
                 if ((desc.Usage & BufferUsage.StagingWrite) != 0)
-                    bd.CpuAccessFlags |= CpuAccessFlags.Write;
+                    bd.CPUAccessFlags |= CpuAccessFlags.Write;
                 if ((desc.Usage & BufferUsage.StagingRead) != 0)
-                    bd.CpuAccessFlags |= CpuAccessFlags.Read;
+                    bd.CPUAccessFlags |= CpuAccessFlags.Read;
             }
 
             if (desc.InitialData == IntPtr.Zero)

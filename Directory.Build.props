@@ -10,7 +10,8 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <VorticeWindowsVersion>2.1.0</VorticeWindowsVersion>
+    <NativeLibraryLoaderVersion>1.0.13</NativeLibraryLoaderVersion>
+    <VorticeWindowsVersion>2.3.0</VorticeWindowsVersion>
   </PropertyGroup>
 
   <PropertyGroup>

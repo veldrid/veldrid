@@ -30,11 +30,7 @@ namespace Veldrid
 
         internal static void EnsureArrayMinimumSize<T>(ref T[] array, uint size)
         {
-            if (array == null)
-            {
-                array = new T[size];
-            }
-            else if (array.Length < size)
+            if (array == null || array.Length < size)
             {
                 Array.Resize(ref array, (int)size);
             }

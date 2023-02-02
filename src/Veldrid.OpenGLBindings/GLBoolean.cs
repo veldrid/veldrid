@@ -24,12 +24,12 @@ namespace Veldrid.OpenGLBinding
         /// <summary>
         /// Represents the boolean "true" value. Has a raw value of 1.
         /// </summary>
-        public static readonly GLboolean True = new(1);
+        public static GLboolean True => new(1);
 
         /// <summary>
         /// Represents the boolean "true" value. Has a raw value of 0.
         /// </summary>
-        public static readonly GLboolean False = new(0);
+        public static GLboolean False => new(0);
 
         /// <summary>
         /// Returns whether another <see cref="GLboolean"/> value is considered equal to this one.

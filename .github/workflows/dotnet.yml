@@ -33,4 +33,9 @@ jobs:
     - name: Publish tagged release to nuget.org
       if: startsWith(github.ref, 'refs/tags/')
       run: dotnet nuget push bin\Packages\Release\*.nupkg -s https://api.nuget.org/v3/index.json --api-key ${{secrets.NUGET_KEY}}
-
+    - name: Generate GitHub Release
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          bin\Packages\Release\*.nupkg

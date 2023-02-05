@@ -81,7 +81,7 @@ namespace Veldrid.MTL
             }
 
             // Vertex layouts
-            VertexLayoutDescription[] vdVertexLayouts = description.ShaderSet.VertexLayouts;
+            VertexLayoutDescription[] vdVertexLayouts = description.ShaderSet.VertexLayouts ?? Array.Empty<VertexLayoutDescription>();
             MTLVertexDescriptor vertexDescriptor = mtlDesc.vertexDescriptor;
 
             for (uint i = 0; i < vdVertexLayouts.Length; i++)

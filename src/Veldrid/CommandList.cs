@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Text;
 
@@ -130,10 +131,14 @@ namespace Veldrid
 #if VALIDATE_USAGE
             if ((buffer.Usage & BufferUsage.VertexBuffer) == 0)
             {
-                throw new VeldridException(
-                    $"The {nameof(buffer)} ({buffer}) cannot be bound as an vertex buffer. " +
-                    $"It must have been created with the " +
-                    $"{nameof(BufferUsage)}.{nameof(BufferUsage.VertexBuffer)} flag.");
+                void Throw()
+                {
+                    throw new VeldridException(
+                        $"The {nameof(buffer)} ({buffer}) cannot be bound as an vertex buffer. " +
+                        $"It must have been created with the " +
+                        $"{nameof(BufferUsage)}.{nameof(BufferUsage.VertexBuffer)} flag.");
+                }
+                Throw();
             }
 #endif
             SetVertexBufferCore(index, buffer, offset);
@@ -165,10 +170,14 @@ namespace Veldrid
 #if VALIDATE_USAGE
             if ((buffer.Usage & BufferUsage.IndexBuffer) == 0)
             {
-                throw new VeldridException(
-                    $"The {nameof(buffer)} ({buffer}) cannot be bound as an index buffer. " +
-                    $"It must have been created with the " +
-                    $"{nameof(BufferUsage)}.{nameof(BufferUsage.IndexBuffer)} flag.");
+                void Throw()
+                {
+                    throw new VeldridException(
+                        $"The {nameof(buffer)} ({buffer}) cannot be bound as an index buffer. " +
+                        $"It must have been created with the " +
+                        $"{nameof(BufferUsage)}.{nameof(BufferUsage.IndexBuffer)} flag.");
+                }
+                Throw();
             }
             _indexBuffer = buffer;
             _indexFormat = format;
@@ -207,16 +216,25 @@ namespace Veldrid
 #if VALIDATE_USAGE
             if (_graphicsPipeline == null)
             {
-                throw new VeldridException(
-                    $"A graphics {nameof(Pipeline)} must be active before {nameof(SetGraphicsResourceSet)} can be called.");
+                [DoesNotReturn]
+                static void Throw()
+                {
+                    throw new VeldridException(
+                        $"A graphics {nameof(Pipeline)} must be active before {nameof(SetGraphicsResourceSet)} can be called.");
+                }
+                Throw();
             }
 
             int layoutsCount = _graphicsPipeline.ResourceLayouts.Length;
             if (layoutsCount <= slot)
             {
-                throw new VeldridException(
-                    $"Failed to bind {nameof(ResourceSet)} to slot {slot}. " +
-                    $"The active graphics {nameof(Pipeline)} only contains {layoutsCount} ResourceLayouts.");
+                void Throw()
+                {
+                    throw new VeldridException(
+                        $"Failed to bind {nameof(ResourceSet)} to slot {slot}. " +
+                        $"The active graphics {nameof(Pipeline)} only contains {layoutsCount} ResourceLayouts.");
+                }
+                Throw();
             }
 
             ResourceLayout layout = _graphicsPipeline.ResourceLayouts[slot];
@@ -225,10 +243,14 @@ namespace Veldrid
             int setLength = layoutDesc.Elements.Length;
             if (pipelineLength != setLength)
             {
-                throw new VeldridException(
-                    $"Failed to bind {nameof(ResourceSet)} to slot {slot}. " +
-                    $"The number of resources in the {nameof(ResourceSet)} ({setLength}) does not " +
-                    $"match the number expected by the active {nameof(Pipeline)} ({pipelineLength}).");
+                void Throw()
+                {
+                    throw new VeldridException(
+                        $"Failed to bind {nameof(ResourceSet)} to slot {slot}. " +
+                        $"The number of resources in the {nameof(ResourceSet)} ({setLength}) does not " +
+                        $"match the number expected by the active {nameof(Pipeline)} ({pipelineLength}).");
+                }
+                Throw();
             }
 
             for (int i = 0; i < pipelineLength; i++)
@@ -237,19 +259,27 @@ namespace Veldrid
                 ResourceKind setKind = layoutDesc.Elements[i].Kind;
                 if (pipelineKind != setKind)
                 {
-                    throw new VeldridException(
-                        $"Failed to bind {nameof(ResourceSet)} to slot {slot}. " +
-                        $"Resource element in slot {i} was of the incorrect type. " +
-                        $"The bound {nameof(Pipeline)} expects {pipelineKind}, but the {nameof(ResourceSet)} contained {setKind}.");
+                    void Throw()
+                    {
+                        throw new VeldridException(
+                            $"Failed to bind {nameof(ResourceSet)} to slot {slot}. " +
+                            $"Resource element in slot {i} was of the incorrect type. " +
+                            $"The bound {nameof(Pipeline)} expects {pipelineKind}, but the {nameof(ResourceSet)} contained {setKind}.");
+                    }
+                    Throw();
                 }
             }
 
             if (rs.Layout.DynamicBufferCount != dynamicOffsets.Length)
             {
-                throw new VeldridException(
-                    $"A dynamic offset must be provided for each resource that specifies " +
-                    $"{nameof(ResourceLayoutElementOptions)}.{nameof(ResourceLayoutElementOptions.DynamicBinding)}. " +
-                    $"{rs.Layout.DynamicBufferCount} offsets were expected, but only {dynamicOffsets.Length} were provided.");
+                void Throw(int length)
+                {
+                    throw new VeldridException(
+                        $"A dynamic offset must be provided for each resource that specifies " +
+                        $"{nameof(ResourceLayoutElementOptions)}.{nameof(ResourceLayoutElementOptions.DynamicBinding)}. " +
+                        $"{rs.Layout.DynamicBufferCount} offsets were expected, but only {length} were provided.");
+                }
+                Throw(dynamicOffsets.Length);
             }
 
             int dynamicOffsetIndex = 0;
@@ -266,10 +296,14 @@ namespace Veldrid
 
                     if ((range.Offset % requiredAlignment) != 0)
                     {
-                        throw new VeldridException(
-                            $"The effective offset of the buffer in slot {i} ({range.Buffer}) does not " +
-                            $"meet the alignment requirements of this device. " +
-                            $"The offset must be a multiple of {requiredAlignment}, but it is {range.Offset}");
+                        void Throw()
+                        {
+                            throw new VeldridException(
+                                $"The effective offset of the buffer in slot {i} ({range.Buffer}) does not " +
+                                $"meet the alignment requirements of this device. " +
+                                $"The offset must be a multiple of {requiredAlignment}, but it is {range.Offset}");
+                        }
+                        Throw();
                     }
                 }
             }
@@ -312,16 +346,25 @@ namespace Veldrid
 #if VALIDATE_USAGE
             if (_computePipeline == null)
             {
-                throw new VeldridException(
-                    $"A compute Pipeline must be active before {nameof(SetComputeResourceSet)} can be called.");
+                [DoesNotReturn]
+                static void Throw()
+                {
+                    throw new VeldridException(
+                        $"A compute Pipeline must be active before {nameof(SetComputeResourceSet)} can be called.");
+                }
+                Throw();
             }
 
             int layoutsCount = _computePipeline.ResourceLayouts.Length;
             if (layoutsCount <= slot)
             {
-                throw new VeldridException(
-                    $"Failed to bind ResourceSet to slot {slot}. " +
-                    $"The active compute Pipeline only contains {layoutsCount} ResourceLayouts.");
+                void Throw()
+                {
+                    throw new VeldridException(
+                        $"Failed to bind ResourceSet to slot {slot}. " +
+                        $"The active compute Pipeline only contains {layoutsCount} ResourceLayouts.");
+                }
+                Throw();
             }
 
             ResourceLayout layout = _computePipeline.ResourceLayouts[slot];
@@ -329,10 +372,14 @@ namespace Veldrid
             int setLength = rs.Layout.Description.Elements.Length;
             if (pipelineLength != setLength)
             {
-                throw new VeldridException(
-                    $"Failed to bind ResourceSet to slot {slot}. " +
-                    $"The number of resources in the ResourceSet ({setLength}) does not " +
-                    $"match the number expected by the active Pipeline ({pipelineLength}).");
+                void Throw()
+                {
+                    throw new VeldridException(
+                        $"Failed to bind ResourceSet to slot {slot}. " +
+                        $"The number of resources in the ResourceSet ({setLength}) does not " +
+                        $"match the number expected by the active Pipeline ({pipelineLength}).");
+                }
+                Throw();
             }
 
             for (int i = 0; i < pipelineLength; i++)
@@ -341,9 +388,13 @@ namespace Veldrid
                 ResourceKind setKind = rs.Layout.Description.Elements[i].Kind;
                 if (pipelineKind != setKind)
                 {
-                    throw new VeldridException(
-                        $"Failed to bind ResourceSet to slot {slot}. Resource element {i} was of the incorrect type. " +
-                        $"The bound Pipeline expects {pipelineKind}, but the ResourceSet contained {setKind}.");
+                    void Throw()
+                    {
+                        throw new VeldridException(
+                            $"Failed to bind ResourceSet to slot {slot}. Resource element {i} was of the incorrect type. " +
+                            $"The bound Pipeline expects {pipelineKind}, but the ResourceSet contained {setKind}.");
+                    }
+                    Throw();
                 }
             }
 #endif
@@ -392,12 +443,22 @@ namespace Veldrid
 #if VALIDATE_USAGE
             if (_framebuffer == null)
             {
-                throw new VeldridException($"Cannot use ClearColorTarget. There is no Framebuffer bound.");
+                [DoesNotReturn]
+                static void Throw()
+                {
+                    throw new VeldridException($"Cannot use ClearColorTarget. There is no Framebuffer bound.");
+                }
+                Throw();
             }
+
             if (_framebuffer.ColorTargets.Length <= index)
             {
-                throw new VeldridException(
-                    "ClearColorTarget index must be less than the current Framebuffer's color target count.");
+                static void Throw()
+                {
+                    throw new VeldridException(
+                        "ClearColorTarget index must be less than the current Framebuffer's color target count.");
+                }
+                Throw();
             }
 #endif
             ClearColorTargetCore(index, clearColor);
@@ -427,12 +488,22 @@ namespace Veldrid
 #if VALIDATE_USAGE
             if (_framebuffer == null)
             {
-                throw new VeldridException($"Cannot use ClearDepthStencil. There is no Framebuffer bound.");
+                [DoesNotReturn]
+                static void Throw()
+                {
+                    throw new VeldridException($"Cannot use ClearDepthStencil. There is no Framebuffer bound.");
+                }
+                Throw();
             }
+
             if (_framebuffer.DepthTarget == null)
             {
-                throw new VeldridException(
+                static void Throw()
+                {
+                    throw new VeldridException(
                     "The current Framebuffer has no depth target, so ClearDepthStencil cannot be used.");
+                }
+                Throw();
             }
 #endif
 
@@ -552,11 +623,19 @@ namespace Veldrid
 #if VALIDATE_USAGE
             if (!_features.DrawBaseVertex && vertexOffset != 0)
             {
-                throw new VeldridException("Drawing with a non-zero base vertex is not supported on this device.");
+                static void Throw()
+                {
+                    throw new VeldridException("Drawing with a non-zero base vertex is not supported on this device.");
+                }
+                Throw();
             }
             if (!_features.DrawBaseInstance && instanceStart != 0)
             {
-                throw new VeldridException("Drawing with a non-zero base instance is not supported on this device.");
+                static void Throw()
+                {
+                    throw new VeldridException("Drawing with a non-zero base instance is not supported on this device.");
+                }
+                Throw();
             }
 #endif
 
@@ -650,7 +729,11 @@ namespace Veldrid
         {
             if ((offset % 4) != 0)
             {
-                throw new VeldridException($"The {argExpression} ({offset}) must be a multiple of 4.");
+                void Throw()
+                {
+                    throw new VeldridException($"The {argExpression} ({offset}) must be a multiple of 4.");
+                }
+                Throw();
             }
         }
 
@@ -659,7 +742,11 @@ namespace Veldrid
         {
             if (!_features.DrawIndirect)
             {
-                throw new VeldridException($"Indirect drawing is not supported by this device.");
+                static void Throw()
+                {
+                    throw new VeldridException($"Indirect drawing is not supported by this device.");
+                }
+                Throw();
             }
         }
 
@@ -670,9 +757,13 @@ namespace Veldrid
         {
             if ((indirectBuffer.Usage & BufferUsage.IndirectBuffer) != BufferUsage.IndirectBuffer)
             {
-                throw new VeldridException(
-                    $"The {argExpression} ({indirectBuffer}) must have been created with the " +
-                    $"{nameof(BufferUsage)}.{nameof(BufferUsage.IndirectBuffer)} flag. ");
+                void Throw()
+                {
+                    throw new VeldridException(
+                        $"The {argExpression} ({indirectBuffer}) must have been created with the " +
+                        $"{nameof(BufferUsage)}.{nameof(BufferUsage.IndirectBuffer)} flag. ");
+                }
+                Throw();
             }
         }
 
@@ -684,9 +775,13 @@ namespace Veldrid
         {
             if (stride < Unsafe.SizeOf<T>() || ((stride % 4) != 0))
             {
-                throw new VeldridException(
-                    $"The {argExpression} ({stride}) must be a multiple of 4, " +
-                    $"and must be larger than the size of the {typeof(T)} structure.");
+                void Throw()
+                {
+                    throw new VeldridException(
+                        $"The {argExpression} ({stride}) must be a multiple of 4, " +
+                        $"and must be larger than the size of the {typeof(T)} structure.");
+                }
+                Throw();
             }
         }
 
@@ -741,14 +836,23 @@ namespace Veldrid
 #if VALIDATE_USAGE
             if (source.SampleCount == TextureSampleCount.Count1)
             {
-                throw new VeldridException(
-                    $"The {nameof(source)} ({source}) must be a multisample texture.");
+                void Throw()
+                {
+                    throw new VeldridException(
+                        $"The {nameof(source)} ({source}) must be a multisample texture.");
+                }
+                Throw();
             }
+
             if (destination.SampleCount != TextureSampleCount.Count1)
             {
-                throw new VeldridException(
-                    $"The {nameof(destination)} ({destination}) must be a non-multisample texture. " +
-                    $"Instead, it is a texture with {FormatHelpers.GetSampleCountUInt32(source.SampleCount)} samples.");
+                void Throw()
+                {
+                    throw new VeldridException(
+                        $"The {nameof(destination)} ({destination}) must be a non-multisample texture. " +
+                        $"Instead, it is a texture with {FormatHelpers.GetSampleCountUInt32(source.SampleCount)} samples.");
+                }
+                Throw();
             }
 #endif
 
@@ -912,9 +1016,13 @@ namespace Veldrid
 #if VALIDATE_USAGE
             if (bufferOffsetInBytes + sizeInBytes > buffer.SizeInBytes)
             {
-                throw new VeldridException(
-                    $"The {nameof(buffer)} ({buffer}) is not large enough to store the amount of " +
-                    $"data specified ({sizeInBytes}) at the given offset ({bufferOffsetInBytes}).");
+                void Throw()
+                {
+                    throw new VeldridException(
+                        $"The {nameof(buffer)} ({buffer}) is not large enough to store the amount of " +
+                        $"data specified ({sizeInBytes}) at the given offset ({bufferOffsetInBytes}).");
+                }
+                Throw();
             }
 #endif
             if (sizeInBytes == 0)
@@ -972,15 +1080,24 @@ namespace Veldrid
             {
                 if (command.ReadOffset + command.Length > source.SizeInBytes)
                 {
-                    throw new VeldridException(
-                        $"The {nameof(source)} ({source}) is not large enough to read the amount of " +
-                        $"data specified ({command.Length}) at the given offset ({command.ReadOffset}).");
+                    void Throw(ulong length, ulong readOffset)
+                    {
+                        throw new VeldridException(
+                            $"The {nameof(source)} ({source}) is not large enough to read the amount of " +
+                            $"data specified ({length}) at the given offset ({readOffset}).");
+                    }
+                    Throw(command.Length, command.ReadOffset);
                 }
+
                 if (command.WriteOffset + command.Length > destination.SizeInBytes)
                 {
-                    throw new VeldridException(
-                        $"The {nameof(destination)} ({destination}) is not large enough to write the amount of " +
-                        $"data specified ({command.Length}) at the given offset ({destination}).");
+                    void Throw(ulong length)
+                    {
+                        throw new VeldridException(
+                            $"The {nameof(destination)} ({destination}) is not large enough to write the amount of " +
+                            $"data specified ({length}) at the given offset ({destination}).");
+                    }
+                    Throw(command.Length);
                 }
 
                 // TODO: check if length exceeds maximum backend length
@@ -1016,9 +1133,13 @@ namespace Veldrid
                 || source.Depth != destination.Depth
                 || source.Format != destination.Format)
             {
-                throw new VeldridException(
-                    $"The {nameof(source)} ({source}) and {nameof(destination)} ({destination}) " +
-                    $"textures are not compatible to be copied.");
+                void Throw()
+                {
+                    throw new VeldridException(
+                        $"The {nameof(source)} ({source}) and {nameof(destination)} ({destination}) " +
+                        $"textures are not compatible to be copied.");
+                }
+                Throw();
             }
 #endif
 
@@ -1050,15 +1171,19 @@ namespace Veldrid
             uint effectiveDstArrayLayers = (destination.Usage & TextureUsage.Cubemap) != 0
                 ? destination.ArrayLayers * 6
                 : destination.ArrayLayers;
-            if (source.SampleCount != destination.SampleCount 
+            if (source.SampleCount != destination.SampleCount
                 || source.Width != destination.Width
-                || source.Height != destination.Height 
+                || source.Height != destination.Height
                 || source.Depth != destination.Depth
                 || source.Format != destination.Format)
             {
-                throw new VeldridException(
-                    $"The {nameof(source)} ({source}) and {nameof(destination)} ({destination}) " +
-                    $"textures are not compatible to be copied.");
+                void Throw()
+                {
+                    throw new VeldridException(
+                        $"The {nameof(source)} ({source}) and {nameof(destination)} ({destination}) " +
+                        $"textures are not compatible to be copied.");
+                }
+                Throw();
             }
 
             if (mipLevel >= source.MipLevels ||
@@ -1066,9 +1191,13 @@ namespace Veldrid
                 arrayLayer >= effectiveSrcArrayLayers ||
                 arrayLayer >= effectiveDstArrayLayers)
             {
-                throw new VeldridException(
+                void Throw()
+                {
+                    throw new VeldridException(
                     $"The {nameof(mipLevel)} ({mipLevel}) and {nameof(arrayLayer)} ({arrayLayer}) " +
                     $"must be less than the given textures' mip level count and array layer count.");
+                }
+                Throw();
             }
 #endif
 
@@ -1114,12 +1243,20 @@ namespace Veldrid
 #if VALIDATE_USAGE
             if (width == 0 || height == 0 || depth == 0)
             {
-                throw new VeldridException($"The given copy region is empty.");
+                static void Throw()
+                {
+                    throw new VeldridException($"The given copy region is empty.");
+                }
+                Throw();
             }
 
             if (layerCount == 0)
             {
-                throw new VeldridException($"{nameof(layerCount)} must be greater than 0.");
+                static void Throw()
+                {
+                    throw new VeldridException($"{nameof(layerCount)} must be greater than 0.");
+                }
+                Throw();
             }
 
             Util.GetMipDimensions(source, srcMipLevel, out uint srcWidth, out uint srcHeight, out uint srcDepth);
@@ -1128,7 +1265,11 @@ namespace Veldrid
             uint roundedSrcHeight = (srcHeight + srcBlockSize - 1) / srcBlockSize * srcBlockSize;
             if (srcX + width > roundedSrcWidth || srcY + height > roundedSrcHeight || srcZ + depth > srcDepth)
             {
-                throw new VeldridException($"The given copy region is not valid for the source Texture.");
+                static void Throw()
+                {
+                    throw new VeldridException($"The given copy region is not valid for the source Texture.");
+                }
+                Throw();
             }
 
             Util.GetMipDimensions(destination, dstMipLevel, out uint dstWidth, out uint dstHeight, out uint dstDepth);
@@ -1137,13 +1278,21 @@ namespace Veldrid
             uint roundedDstHeight = (dstHeight + dstBlockSize - 1) / dstBlockSize * dstBlockSize;
             if (dstX + width > roundedDstWidth || dstY + height > roundedDstHeight || dstZ + depth > dstDepth)
             {
-                throw new VeldridException($"The given copy region is not valid for the destination Texture.");
+                static void Throw()
+                {
+                    throw new VeldridException($"The given copy region is not valid for the destination Texture.");
+                }
+                Throw();
             }
 
             if (srcMipLevel >= source.MipLevels)
             {
-                throw new VeldridException(
-                    $"{nameof(srcMipLevel)} must be less than the number of mip levels in the source Texture.");
+                static void Throw()
+                {
+                    throw new VeldridException(
+                        $"{nameof(srcMipLevel)} must be less than the number of mip levels in the source Texture.");
+                }
+                Throw();
             }
 
             uint effectiveSrcArrayLayers = (source.Usage & TextureUsage.Cubemap) != 0
@@ -1151,13 +1300,21 @@ namespace Veldrid
                 : source.ArrayLayers;
             if (srcBaseArrayLayer + layerCount > effectiveSrcArrayLayers)
             {
-                throw new VeldridException($"An invalid mip range was given for the source Texture.");
+                static void Throw()
+                {
+                    throw new VeldridException($"An invalid mip range was given for the source Texture.");
+                }
+                Throw();
             }
 
             if (dstMipLevel >= destination.MipLevels)
             {
-                throw new VeldridException(
+                static void Throw()
+                {
+                    throw new VeldridException(
                     $"{nameof(dstMipLevel)} must be less than the number of mip levels in the destination Texture.");
+                }
+                Throw();
             }
 
             uint effectiveDstArrayLayers = (destination.Usage & TextureUsage.Cubemap) != 0
@@ -1165,7 +1322,11 @@ namespace Veldrid
                 : destination.ArrayLayers;
             if (dstBaseArrayLayer + layerCount > effectiveDstArrayLayers)
             {
-                throw new VeldridException($"An invalid mip range was given for the destination Texture.");
+                static void Throw()
+                {
+                    throw new VeldridException($"An invalid mip range was given for the destination Texture.");
+                }
+                Throw();
             }
 #endif
             CopyTextureCore(
@@ -1204,9 +1365,13 @@ namespace Veldrid
         {
             if ((texture.Usage & TextureUsage.GenerateMipmaps) == 0)
             {
-                throw new VeldridException(
-                    $"The {nameof(texture)} ({texture}) must have been created with the " +
-                    $"{nameof(TextureUsage)}.{nameof(TextureUsage.GenerateMipmaps)} flag.");
+                void Throw()
+                {
+                    throw new VeldridException(
+                        $"The {nameof(texture)} ({texture}) must have been created with the " +
+                        $"{nameof(TextureUsage)}.{nameof(TextureUsage.GenerateMipmaps)} flag.");
+                }
+                Throw();
             }
 
             if (texture.MipLevels > 1)
@@ -1348,17 +1513,26 @@ namespace Veldrid
         {
             if (_indexBuffer == null)
             {
-                throw new VeldridException(
-                    $"An index buffer must be bound before {nameof(CommandList)}.{nameof(DrawIndexed)} can be called.");
+                [DoesNotReturn]
+                static void Throw()
+                {
+                    throw new VeldridException(
+                        $"An index buffer must be bound before {nameof(CommandList)}.{nameof(DrawIndexed)} can be called.");
+                }
+                Throw();
             }
 
             uint indexFormatSize = _indexFormat == IndexFormat.UInt16 ? 2u : 4u;
             uint bytesNeeded = indexCount * indexFormatSize;
             if (_indexBuffer.SizeInBytes < bytesNeeded)
             {
-                throw new VeldridException(
-                    $"The active index buffer does not contain enough data to satisfy the given draw command. " +
-                    $"{bytesNeeded} bytes are needed, but the buffer ({_indexBuffer}) only contains {_indexBuffer.SizeInBytes}.");
+                void Throw()
+                {
+                    throw new VeldridException(
+                        $"The active index buffer does not contain enough data to satisfy the given draw command. " +
+                        $"{bytesNeeded} bytes are needed, but the buffer ({_indexBuffer}) only contains {_indexBuffer.SizeInBytes}.");
+                }
+                Throw();
             }
         }
 
@@ -1367,17 +1541,33 @@ namespace Veldrid
         {
             if (_graphicsPipeline == null)
             {
-                throw new VeldridException($"A graphics {nameof(Pipeline)} must be set in order to issue draw commands.");
+                [DoesNotReturn]
+                static void Throw()
+                {
+                    throw new VeldridException($"A graphics {nameof(Pipeline)} must be set in order to issue draw commands.");
+                }
+                Throw();
             }
+
             if (_framebuffer == null)
             {
-                throw new VeldridException($"A {nameof(Framebuffer)} must be set in order to issue draw commands.");
+                [DoesNotReturn]
+                static void Throw()
+                {
+                    throw new VeldridException($"A {nameof(Framebuffer)} must be set in order to issue draw commands.");
+                }
+                Throw();
             }
+
             if (!_graphicsPipeline.GraphicsOutputDescription.Equals(_framebuffer.OutputDescription))
             {
-                throw new VeldridException(
-                    $"The {nameof(OutputDescription)} of the current graphics {nameof(Pipeline)} " +
-                    $"is not compatible with the current {nameof(Framebuffer)}.");
+                static void Throw()
+                {
+                    throw new VeldridException(
+                        $"The {nameof(OutputDescription)} of the current graphics {nameof(Pipeline)} " +
+                        $"is not compatible with the current {nameof(Framebuffer)}.");
+                }
+                Throw();
             }
         }
 

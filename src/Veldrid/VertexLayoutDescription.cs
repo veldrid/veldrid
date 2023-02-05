@@ -11,10 +11,12 @@ namespace Veldrid
         /// The number of bytes in between successive elements in the <see cref="DeviceBuffer"/>.
         /// </summary>
         public uint Stride;
+
         /// <summary>
         /// An array of <see cref="VertexElementDescription"/> objects, each describing a single element of vertex data.
         /// </summary>
         public VertexElementDescription[] Elements;
+
         /// <summary>
         /// A value controlling how often data for instances is advanced for this layout. For per-vertex elements, this value
         /// should be 0.

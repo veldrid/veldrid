@@ -62,12 +62,14 @@ namespace Veldrid.D3D11
                 }
             }
 
+            VertexLayoutDescription[] vertexLayouts = description.ShaderSet.VertexLayouts ?? Array.Empty<VertexLayoutDescription>();
+
             cache.GetPipelineResources(
                 description.BlendState,
                 description.DepthStencilState,
                 description.RasterizerState,
                 description.Outputs.SampleCount != TextureSampleCount.Count1,
-                description.ShaderSet.VertexLayouts,
+                vertexLayouts,
                 vsBytecode,
                 out ID3D11BlendState blendState,
                 out ID3D11DepthStencilState depthStencilState,
@@ -89,14 +91,14 @@ namespace Veldrid.D3D11
             }
 
             Debug.Assert(vsBytecode != null || ComputeShader != null);
-            if (vsBytecode != null && description.ShaderSet.VertexLayouts.Length > 0)
+            if (vsBytecode != null && vertexLayouts.Length > 0)
             {
                 InputLayout = inputLayout;
-                int numVertexBuffers = description.ShaderSet.VertexLayouts.Length;
+                int numVertexBuffers = vertexLayouts.Length;
                 VertexStrides = new int[numVertexBuffers];
                 for (int i = 0; i < numVertexBuffers; i++)
                 {
-                    VertexStrides[i] = (int)description.ShaderSet.VertexLayouts[i].Stride;
+                    VertexStrides[i] = (int)vertexLayouts[i].Stride;
                 }
             }
             else

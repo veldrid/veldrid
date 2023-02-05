@@ -62,7 +62,7 @@ namespace Veldrid
                     }
                 }
             }
-            foreach (VertexLayoutDescription layoutDesc in description.ShaderSet.VertexLayouts)
+            foreach (VertexLayoutDescription layoutDesc in description.ShaderSet.VertexLayouts.AsSpan())
             {
                 bool hasExplicitLayout = false;
                 uint minOffset = 0;

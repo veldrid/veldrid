@@ -26,7 +26,7 @@ namespace Veldrid.D3D11
             in DepthStencilStateDescription dssDesc,
             in RasterizerStateDescription rasterDesc,
             bool multisample,
-            VertexLayoutDescription[] vertexLayouts,
+            VertexLayoutDescription[]? vertexLayouts,
             byte[]? vsBytecode,
             out ID3D11BlendState blendState,
             out ID3D11DepthStencilState depthState,

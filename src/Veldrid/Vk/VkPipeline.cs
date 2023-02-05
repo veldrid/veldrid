@@ -162,7 +162,7 @@ namespace Veldrid.Vulkan
 
             // Vertex Input State
 
-            VertexLayoutDescription[] inputDescriptions = description.ShaderSet.VertexLayouts;
+            ReadOnlySpan<VertexLayoutDescription> inputDescriptions = description.ShaderSet.VertexLayouts;
             uint bindingCount = (uint)inputDescriptions.Length;
             uint attributeCount = 0;
             for (int i = 0; i < inputDescriptions.Length; i++)

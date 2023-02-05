@@ -11,16 +11,21 @@ namespace Veldrid
         /// The name of the element.
         /// </summary>
         public string Name;
+
         /// <summary>
         /// The semantic type of the element.
-        /// NOTE: When using Veldrid.SPIRV, all vertex elements will use
-        /// <see cref="VertexElementSemantic.TextureCoordinate"/>.
         /// </summary>
+        /// <remarks>
+        /// When using Veldrid.SPIRV, all vertex elements will use
+        /// <see cref="VertexElementSemantic.TextureCoordinate"/>.
+        /// </remarks>
         public VertexElementSemantic Semantic;
+
         /// <summary>
         /// The format of the element.
         /// </summary>
         public VertexElementFormat Format;
+
         /// <summary>
         /// The offset in bytes from the beginning of the vertex.
         /// </summary>

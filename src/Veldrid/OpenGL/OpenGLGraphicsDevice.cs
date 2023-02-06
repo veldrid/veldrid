@@ -20,7 +20,6 @@ namespace Veldrid.OpenGL
     {
         private string _version;
         private string _shadingLanguageVersion;
-        private uint _vao;
         private readonly ConcurrentQueue<OpenGLDeferredResource> _resourcesToDispose = new();
         private IntPtr _glContext;
         private Action<IntPtr> _makeCurrent;
@@ -183,14 +182,6 @@ namespace Veldrid.OpenGL
             }
 
             ResourceFactory = new OpenGLResourceFactory(this);
-
-            uint vao;
-            glGenVertexArrays(1, &vao);
-            CheckLastError();
-            _vao = vao;
-
-            glBindVertexArray(_vao);
-            CheckLastError();
 
             IsDriverDebug = _extensions.KHR_Debug || _extensions.ARB_DebugOutput;
             if (options.Debug && IsDriverDebug)

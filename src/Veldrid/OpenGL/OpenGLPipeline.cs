@@ -22,8 +22,8 @@ namespace Veldrid.OpenGL
 #endif
 
         // Graphics Pipeline
-        public Shader[]? GraphicsShaders { get; }
-        public VertexLayoutDescription[]? VertexLayouts { get; }
+        public Shader[] GraphicsShaders { get; }
+        public VertexLayoutDescription[] VertexLayouts { get; }
         public BlendStateDescription BlendState { get; }
         public DepthStencilStateDescription DepthStencilState { get; }
         public RasterizerStateDescription RasterizerState { get; }
@@ -34,14 +34,17 @@ namespace Veldrid.OpenGL
         public Shader? ComputeShader { get; }
 
         private uint _program;
+        private uint _vao;
+
         private bool _disposeRequested;
         private bool _disposed;
 
         private SetBindingsInfo[] _setInfos = Array.Empty<SetBindingsInfo>();
 
-        public int[]? VertexStrides { get; }
+        public uint[] VertexStrides { get; }
 
         public uint Program => _program;
+        public uint Vao => _vao;
 
         public uint GetUniformBufferCount(uint setSlot) => _setInfos[setSlot].UniformBufferCount;
         public uint GetShaderStorageBufferCount(uint setSlot) => _setInfos[setSlot].ShaderStorageBufferCount;
@@ -61,11 +64,10 @@ namespace Veldrid.OpenGL
             RasterizerState = description.RasterizerState;
             PrimitiveTopology = description.PrimitiveTopology;
 
-            int numVertexBuffers = description.ShaderSet.VertexLayouts.Length;
-            VertexStrides = new int[numVertexBuffers];
-            for (int i = 0; i < numVertexBuffers; i++)
+            VertexStrides = new uint[VertexLayouts.Length];
+            for (int i = 0; i < VertexStrides.Length; i++)
             {
-                VertexStrides[i] = (int)description.ShaderSet.VertexLayouts[i].Stride;
+                VertexStrides[i] = VertexLayouts[i].Stride;
             }
 
 #if !VALIDATE_USAGE
@@ -77,9 +79,11 @@ namespace Veldrid.OpenGL
             : base(description)
         {
             _gd = gd;
+            GraphicsShaders = Array.Empty<Shader>();
+            VertexLayouts = Array.Empty<VertexLayoutDescription>();
             IsComputePipeline = true;
             ComputeShader = description.ComputeShader;
-            VertexStrides = Array.Empty<int>();
+            VertexStrides = Array.Empty<uint>();
 #if !VALIDATE_USAGE
             ResourceLayouts = Util.ShallowClone(description.ResourceLayouts);
 #endif
@@ -115,7 +119,7 @@ namespace Veldrid.OpenGL
             _program = glCreateProgram();
             CheckLastError();
 
-            foreach (Shader stage in GraphicsShaders!)
+            foreach (Shader stage in GraphicsShaders)
             {
                 OpenGLShader glShader = Util.AssertSubtype<Shader, OpenGLShader>(stage);
                 glShader.EnsureResourcesCreated();
@@ -127,7 +131,7 @@ namespace Veldrid.OpenGL
             Span<byte> byteBuffer = stackalloc byte[4096];
 
             uint slot = 0;
-            foreach (VertexLayoutDescription layoutDesc in VertexLayouts!)
+            foreach (VertexLayoutDescription layoutDesc in VertexLayouts)
             {
                 for (int i = 0; i < layoutDesc.Elements.Length; i++)
                 {
@@ -163,6 +167,97 @@ namespace Veldrid.OpenGL
 #endif
 
             ProcessLinkedProgram(byteBuffer);
+
+            _vao = CreateVertexArrayObject();
+        }
+
+        private uint CreateVertexArrayObject()
+        {
+            // Save the previous bound vertex array
+            int restoreVertexArray = 0;
+            glGetIntegerv(GetPName.VertexArrayBinding, &restoreVertexArray);
+
+            uint vao;
+            glGenVertexArrays(1, &vao);
+            CheckLastError();
+
+            glBindVertexArray(vao);
+            CheckLastError();
+
+            uint totalSlotsBound = 0;
+            VertexLayoutDescription[] layouts = VertexLayouts;
+
+            bool separateBinding = _gd.Extensions.ARB_vertex_attrib_binding;
+            
+            for (int i = 0; i < layouts.Length; i++)
+            {
+                VertexLayoutDescription input = layouts[i];
+
+                uint offset = 0;
+
+                for (uint slot = 0; slot < input.Elements.Length; slot++)
+                {
+                    uint actualSlot = totalSlotsBound + slot;
+
+                    glEnableVertexAttribArray(actualSlot);
+                    CheckLastError();
+
+                    if (separateBinding)
+                    {
+                        ref readonly VertexElementDescription element = ref input.Elements[slot];
+
+                        int elementCount = FormatHelpers.GetElementCount(element.Format);
+                        VertexAttribPointerType type = OpenGLFormats.VdToGLVertexAttribPointerType(
+                            element.Format,
+                            out bool normalized,
+                            out bool isInteger);
+
+                        uint actualOffset = element.Offset != 0 ? element.Offset : offset;
+
+                        if (isInteger && !normalized)
+                        {
+                            glVertexAttribIFormat(
+                                actualSlot,
+                                elementCount,
+                                type,
+                                actualOffset);
+                        }
+                        else
+                        {
+                            glVertexAttribFormat(
+                                actualSlot,
+                                elementCount,
+                                type,
+                                normalized,
+                                actualOffset);
+                        }
+                        CheckLastError();
+
+                        glVertexAttribBinding(actualSlot, (uint)i);
+                        CheckLastError();
+
+                        offset += FormatSizeHelpers.GetSizeInBytes(element.Format);
+                    }
+                    else
+                    {
+                        glVertexAttribDivisor(actualSlot, input.InstanceStepRate);
+                        CheckLastError();
+                    }
+                }
+
+                if (separateBinding)
+                {
+                    glVertexBindingDivisor((uint)i, input.InstanceStepRate);
+                    CheckLastError();
+                }
+
+                totalSlotsBound += (uint)input.Elements.Length;
+            }
+
+            glBindVertexArray((uint)restoreVertexArray);
+            CheckLastError();
+
+            return vao;
         }
 
         private int GetAttribLocation(ReadOnlySpan<char> elementName, ref Span<byte> byteBuffer)
@@ -485,29 +580,25 @@ namespace Veldrid.OpenGL
         public bool GetUniformBindingForSlot(uint set, uint slot, out OpenGLUniformBinding binding)
         {
             Debug.Assert(_setInfos != null, "EnsureResourcesCreated must be called before accessing resource set information.");
-            SetBindingsInfo setInfo = _setInfos[set];
-            return setInfo.GetUniformBindingForSlot(slot, out binding);
+            return _setInfos[set].GetUniformBindingForSlot(slot, out binding);
         }
 
         public bool GetTextureBindingInfo(uint set, uint slot, out OpenGLTextureBindingSlotInfo binding)
         {
             Debug.Assert(_setInfos != null, "EnsureResourcesCreated must be called before accessing resource set information.");
-            SetBindingsInfo setInfo = _setInfos[set];
-            return setInfo.GetTextureBindingInfo(slot, out binding);
+            return _setInfos[set].GetTextureBindingInfo(slot, out binding);
         }
 
         public bool GetSamplerBindingInfo(uint set, uint slot, out OpenGLSamplerBindingSlotInfo binding)
         {
             Debug.Assert(_setInfos != null, "EnsureResourcesCreated must be called before accessing resource set information.");
-            SetBindingsInfo setInfo = _setInfos[set];
-            return setInfo.GetSamplerBindingInfo(slot, out binding);
+            return _setInfos[set].GetSamplerBindingInfo(slot, out binding);
         }
 
         public bool GetStorageBufferBindingForSlot(uint set, uint slot, out OpenGLShaderStorageBinding binding)
         {
             Debug.Assert(_setInfos != null, "EnsureResourcesCreated must be called before accessing resource set information.");
-            SetBindingsInfo setInfo = _setInfos[set];
-            return setInfo.GetStorageBufferBindingForSlot(slot, out binding);
+            return _setInfos[set].GetStorageBufferBindingForSlot(slot, out binding);
         }
 
         public override void Dispose()
@@ -524,13 +615,18 @@ namespace Veldrid.OpenGL
             if (!_disposed)
             {
                 _disposed = true;
+
                 glDeleteProgram(_program);
+                CheckLastError();
+
+                uint vao = _vao;
+                glDeleteVertexArrays(1, &vao);
                 CheckLastError();
             }
         }
     }
 
-    internal struct SetBindingsInfo
+    internal readonly struct SetBindingsInfo
     {
         private readonly Dictionary<uint, OpenGLUniformBinding> _uniformBindings;
         private readonly Dictionary<uint, OpenGLTextureBindingSlotInfo> _textureBindings;

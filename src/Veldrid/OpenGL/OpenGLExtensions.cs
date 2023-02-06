@@ -27,7 +27,7 @@ namespace Veldrid.OpenGL
 
             ARB_DirectStateAccess = GLVersion(4, 5) || IsExtensionSupported("GL_ARB_direct_state_access");
 
-            ARB_MultiBind = IsExtensionSupported("GL_ARB_multi_bind");
+            ARB_MultiBind = GLVersion(4, 4) || IsExtensionSupported("GL_ARB_multi_bind");
 
             ARB_TextureView = GLVersion(4, 3) || IsExtensionSupported("GL_ARB_texture_view") // OpenGL 4.3
                 || IsExtensionSupported("GL_OES_texture_view");
@@ -87,6 +87,9 @@ namespace Veldrid.OpenGL
 
             ARB_program_interface_query = GLVersion(4, 3) || GLESVersion(3, 1)
                 || IsExtensionSupported("GL_ARB_program_interface_query");
+
+            ARB_vertex_attrib_binding = GLVersion(4, 3) || GLESVersion(3, 1)
+                || IsExtensionSupported("GL_ARB_vertex_attrib_binding");
         }
 
         public readonly bool ARB_DirectStateAccess;
@@ -102,6 +105,7 @@ namespace Veldrid.OpenGL
         public readonly bool ARB_uniform_buffer_object;
         public readonly bool ARB_buffer_storage;
         public readonly bool ARB_program_interface_query;
+        public readonly bool ARB_vertex_attrib_binding;
 
         // Differs between GL / GLES
         public readonly bool TextureStorage;

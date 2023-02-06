@@ -22,13 +22,13 @@ namespace Veldrid.OpenGL
         private OpenGLPipeline? _graphicsPipeline;
         private BoundResourceSetInfo[] _graphicsResourceSets = Array.Empty<BoundResourceSetInfo>();
         private bool[] _newGraphicsResourceSets = Array.Empty<bool>();
-        private OpenGLBuffer[] _vertexBuffers = Array.Empty<OpenGLBuffer>();
-        private uint[] _vbOffsets = Array.Empty<uint>();
-        private uint[] _vertexAttribDivisors = Array.Empty<uint>();
-        private uint _vertexAttributesBound;
+        private uint[] _vertexBuffers = Array.Empty<uint>();
+        private nuint[] _vbOffsets = Array.Empty<nuint>();
+        private bool[] _newVertexBuffers = Array.Empty<bool>();
         private DrawElementsType _drawElementsType;
         private uint _ibOffset;
         private PrimitiveType _primitiveType;
+        private OpenGLBuffer? _indexBuffer;
 
         private OpenGLPipeline? _computePipeline;
         private BoundResourceSetInfo[] _computeResourceSets = Array.Empty<BoundResourceSetInfo>();
@@ -36,6 +36,7 @@ namespace Veldrid.OpenGL
 
         private bool _graphicsPipelineActive;
         private bool _vertexLayoutFlushed;
+        private bool _indexBufferBound;
 
         public OpenGLCommandExecutor(OpenGLGraphicsDevice gd, OpenGLPlatformInfo platformInfo)
         {
@@ -144,6 +145,7 @@ namespace Veldrid.OpenGL
         public void DrawIndexed(uint indexCount, uint instanceCount, uint indexStart, int vertexOffset, uint instanceStart)
         {
             PreDrawCommand();
+            PreDrawIndexedCommand();
 
             uint indexSize = _drawElementsType == DrawElementsType.UnsignedShort ? 2u : 4u;
             void* indices = (void*)((indexStart * indexSize) + _ibOffset);
@@ -219,6 +221,7 @@ namespace Veldrid.OpenGL
         public void DrawIndexedIndirect(DeviceBuffer indirectBuffer, uint offset, uint drawCount, uint stride)
         {
             PreDrawCommand();
+            PreDrawIndexedCommand();
 
             OpenGLBuffer glBuffer = Util.AssertSubtype<DeviceBuffer, OpenGLBuffer>(indirectBuffer);
             glBindBuffer(BufferTarget.DrawIndirectBuffer, glBuffer.Buffer);
@@ -250,11 +253,29 @@ namespace Veldrid.OpenGL
             }
 
             FlushResourceSets(graphics: true);
+
             if (!_vertexLayoutFlushed)
             {
                 FlushVertexLayouts();
                 _vertexLayoutFlushed = true;
             }
+        }
+
+        private void PreDrawIndexedCommand()
+        {
+            if (!_indexBufferBound)
+            {
+                BindIndexBuffer();
+                _indexBufferBound = true;
+            }
+        }
+
+        private void BindIndexBuffer()
+        {
+            Debug.Assert(_indexBuffer != null);
+
+            glBindBuffer(BufferTarget.ElementArrayBuffer, _indexBuffer.Buffer);
+            CheckLastError();
         }
 
         private void FlushResourceSets(bool graphics)
@@ -280,75 +301,82 @@ namespace Veldrid.OpenGL
 
         private void FlushVertexLayouts()
         {
+            ReadOnlySpan<uint> strides = _graphicsPipeline!.VertexStrides;
+            ReadOnlySpan<nuint> offsets = _vbOffsets;
+            ReadOnlySpan<uint> buffers = _vertexBuffers;
+            bool[] newVertexBuffers = _newVertexBuffers;
+
             uint totalSlotsBound = 0;
-            VertexLayoutDescription[] layouts = _graphicsPipeline!.VertexLayouts!;
-            int[] strides = _graphicsPipeline.VertexStrides!;
+            VertexLayoutDescription[] layouts = _graphicsPipeline.VertexLayouts;
+            bool separateBinding = _gd.Extensions.ARB_vertex_attrib_binding;
 
             for (int i = 0; i < layouts.Length; i++)
             {
                 VertexLayoutDescription input = layouts[i];
-                OpenGLBuffer vb = _vertexBuffers[i];
-                glBindBuffer(BufferTarget.ArrayBuffer, vb.Buffer);
-                uint offset = 0;
-                uint vbOffset = _vbOffsets[i];
-                for (uint slot = 0; slot < input.Elements.Length; slot++)
+
+                if (newVertexBuffers[i])
                 {
-                    ref VertexElementDescription element = ref input.Elements[slot]; // Large structure -- use by reference.
-                    uint actualSlot = totalSlotsBound + slot;
-                    if (actualSlot >= _vertexAttributesBound)
+                    if (separateBinding)
                     {
-                        glEnableVertexAttribArray(actualSlot);
+                        glBindVertexBuffer((uint)i, buffers[i], (nint)offsets[i], strides[i]);
                         CheckLastError();
-                    }
-                    VertexAttribPointerType type = OpenGLFormats.VdToGLVertexAttribPointerType(
-                        element.Format,
-                        out bool normalized,
-                        out bool isInteger);
-
-                    uint actualOffset = element.Offset != 0 ? element.Offset : offset;
-                    actualOffset += vbOffset;
-
-                    if (isInteger && !normalized)
-                    {
-                        glVertexAttribIPointer(
-                            actualSlot,
-                            FormatHelpers.GetElementCount(element.Format),
-                            type,
-                            (uint)strides[i],
-                            (void*)actualOffset);
                     }
                     else
                     {
-                        glVertexAttribPointer(
-                            actualSlot,
-                            FormatHelpers.GetElementCount(element.Format),
-                            type,
-                            normalized,
-                            (uint)strides[i],
-                            (void*)actualOffset);
+                        BindVertexAttribPointers(input.Elements, totalSlotsBound, buffers[i], offsets[i], strides[i]);
                     }
-                    CheckLastError();
-
-                    uint stepRate = input.InstanceStepRate;
-                    if (_vertexAttribDivisors[actualSlot] != stepRate)
-                    {
-                        glVertexAttribDivisor(actualSlot, stepRate);
-                        _vertexAttribDivisors[actualSlot] = stepRate;
-                    }
-
-                    offset += FormatSizeHelpers.GetSizeInBytes(element.Format);
+                    newVertexBuffers[i] = false;
                 }
 
                 totalSlotsBound += (uint)input.Elements.Length;
             }
+        }
 
-            for (uint extraSlot = totalSlotsBound; extraSlot < _vertexAttributesBound; extraSlot++)
+        private static void BindVertexAttribPointers(
+            VertexElementDescription[] elements, uint totalSlotsBound, uint vbBuffer, nuint vbOffset, uint stride)
+        {
+            glBindBuffer(BufferTarget.ArrayBuffer, vbBuffer);
+            CheckLastError();
+
+            uint offset = 0;
+
+            for (uint slot = 0; slot < elements.Length; slot++)
             {
-                glDisableVertexAttribArray(extraSlot);
-                CheckLastError();
-            }
+                ref readonly VertexElementDescription element = ref elements[slot];
+                uint actualSlot = totalSlotsBound + slot;
 
-            _vertexAttributesBound = totalSlotsBound;
+                int elementCount = FormatHelpers.GetElementCount(element.Format);
+                VertexAttribPointerType type = OpenGLFormats.VdToGLVertexAttribPointerType(
+                    element.Format,
+                    out bool normalized,
+                    out bool isInteger);
+
+                nuint actualOffset = element.Offset != 0 ? element.Offset : offset;
+                actualOffset += vbOffset;
+
+                if (isInteger && !normalized)
+                {
+                    glVertexAttribIPointer(
+                        actualSlot,
+                        elementCount,
+                        type,
+                        stride,
+                        (void*)actualOffset);
+                }
+                else
+                {
+                    glVertexAttribPointer(
+                        actualSlot,
+                        elementCount,
+                        type,
+                        normalized,
+                        stride,
+                        (void*)actualOffset);
+                }
+                CheckLastError();
+
+                offset += FormatSizeHelpers.GetSizeInBytes(element.Format);
+            }
         }
 
         internal void Dispatch(uint groupCountX, uint groupCountY, uint groupCountZ)
@@ -394,6 +422,10 @@ namespace Veldrid.OpenGL
 
         public void End()
         {
+            // TODO: unbind buffers/resources?
+
+            glBindVertexArray(0);
+            CheckLastError();
         }
 
         public void SetFramebuffer(Framebuffer fb)
@@ -453,13 +485,18 @@ namespace Veldrid.OpenGL
             glIB.EnsureResourcesCreated();
 
             if (_gd.IsDebug)
+            {
                 _gd.ThrowIfMapped(glIB, 0);
-
-            glBindBuffer(BufferTarget.ElementArrayBuffer, glIB.Buffer);
-            CheckLastError();
+            }
 
             _drawElementsType = OpenGLFormats.VdToGLDrawElementsType(format);
-            _ibOffset = offset;
+
+            if (_indexBuffer != glIB || _ibOffset != offset)
+            {
+                _indexBuffer = glIB;
+                _ibOffset = offset;
+                _indexBufferBound = false;
+            }
         }
 
         public void SetPipeline(Pipeline pipeline)
@@ -469,12 +506,14 @@ namespace Veldrid.OpenGL
                 _graphicsPipeline = Util.AssertSubtype<Pipeline, OpenGLPipeline>(pipeline);
                 ActivateGraphicsPipeline();
                 _vertexLayoutFlushed = false;
+                _indexBufferBound = false;
             }
             else if (pipeline.IsComputePipeline && _computePipeline != pipeline)
             {
                 _computePipeline = Util.AssertSubtype<Pipeline, OpenGLPipeline>(pipeline);
                 ActivateComputePipeline();
                 _vertexLayoutFlushed = false;
+                _indexBufferBound = false;
             }
         }
 
@@ -703,16 +742,17 @@ namespace Veldrid.OpenGL
             glUseProgram(_graphicsPipeline.Program);
             CheckLastError();
 
-            int vertexStridesCount = _graphicsPipeline.VertexStrides!.Length;
-            Util.EnsureArrayMinimumSize(ref _vertexBuffers, (uint)vertexStridesCount);
-            Util.EnsureArrayMinimumSize(ref _vbOffsets, (uint)vertexStridesCount);
-
-            uint totalVertexElements = 0;
-            for (int i = 0; i < _graphicsPipeline.VertexLayouts!.Length; i++)
+            // Force vertex buffers to be re-bound.
+            for (int i = 0; i < _newVertexBuffers.Length; i++)
             {
-                totalVertexElements += (uint)_graphicsPipeline.VertexLayouts[i].Elements.Length;
+                _newVertexBuffers[i] = true;
             }
-            Util.EnsureArrayMinimumSize(ref _vertexAttribDivisors, totalVertexElements);
+
+            int vertexStridesCount = _graphicsPipeline.VertexStrides.Length;
+            Util.EnsureArrayMinimumSize(ref _vertexBuffers, (uint)vertexStridesCount);
+
+            glBindVertexArray(_graphicsPipeline.Vao);
+            CheckLastError();
         }
 
         public void GenerateMipmaps(Texture texture)
@@ -1121,13 +1161,22 @@ namespace Veldrid.OpenGL
             glVB.EnsureResourcesCreated();
 
             if (_gd.IsDebug)
+            {
                 _gd.ThrowIfMapped(glVB, 0);
+            }
 
             Util.EnsureArrayMinimumSize(ref _vertexBuffers, index + 1);
             Util.EnsureArrayMinimumSize(ref _vbOffsets, index + 1);
-            _vertexLayoutFlushed = false;
-            _vertexBuffers[index] = glVB;
-            _vbOffsets[index] = offset;
+            Util.EnsureArrayMinimumSize(ref _newVertexBuffers, index + 1);
+
+            uint buffer = glVB.Buffer;
+            if (_vertexBuffers[index] != buffer || _vbOffsets[index] != offset)
+            {
+                _vertexBuffers[index] = buffer;
+                _vbOffsets[index] = offset;
+                _newVertexBuffers[index] = true;
+                _vertexLayoutFlushed = false;
+            }
         }
 
         public void SetViewport(uint index, ref Viewport viewport)

@@ -251,6 +251,12 @@ namespace Veldrid.OpenGLBinding
         public static void glBindBuffer(BufferTarget target, uint buffer) => p_glBindBuffer(target, buffer);
 
         [UnmanagedFunctionPointer(CallConv)]
+        private delegate void glBindVertexBuffer_t(uint bindingIndex, uint buffer, nint offset, uint stride);
+        private static glBindVertexBuffer_t p_glBindVertexBuffer;
+        public static void glBindVertexBuffer(uint bindingIndex, uint buffer, nint offset, uint stride) =>
+            p_glBindVertexBuffer(bindingIndex, buffer, offset, stride);
+
+        [UnmanagedFunctionPointer(CallConv)]
         private delegate void glViewportIndexedf_t(uint index, float x, float y, float w, float h);
         private static glViewportIndexedf_t p_glViewportIndexedf;
         public static void glViewportIndexed(uint index, float x, float y, float w, float h)
@@ -595,6 +601,11 @@ namespace Veldrid.OpenGLBinding
         public static void glDeleteProgram(uint program) => p_glDeleteProgram(program);
 
         [UnmanagedFunctionPointer(CallConv)]
+        private delegate void glDeleteVertexArrays_t(uint n, uint* arrays);
+        private static glDeleteVertexArrays_t p_glDeleteVertexArrays;
+        public static void glDeleteVertexArrays(uint n, uint* arrays) => p_glDeleteVertexArrays(n, arrays);
+
+        [UnmanagedFunctionPointer(CallConv)]
         private delegate void glUniform1i_t(int location, int v0);
         private static glUniform1i_t p_glUniform1i;
         public static void glUniform1i(int location, int v0) => p_glUniform1i(location, v0);
@@ -791,6 +802,45 @@ namespace Veldrid.OpenGLBinding
         private static glVertexAttribDivisor_t p_glVertexAttribDivisor;
         public static void glVertexAttribDivisor(uint index, uint divisor) => p_glVertexAttribDivisor(index, divisor);
 
+        [UnmanagedFunctionPointer(CallConv)]
+        private delegate void glVertexBindingDivisor_t(uint bindingindex, uint divisor);
+        private static glVertexBindingDivisor_t p_glVertexBindingDivisor;
+        public static void glVertexBindingDivisor(uint bindingindex, uint divisor) => p_glVertexBindingDivisor(bindingindex, divisor);
+
+        [UnmanagedFunctionPointer(CallConv)]
+        private delegate void glVertexAttribBinding_t(uint attribindex, uint bindingindex);
+        private static glVertexAttribBinding_t p_glVertexAttribBinding;
+        public static void glVertexAttribBinding(uint attribindex, uint bindingindex) =>
+            p_glVertexAttribBinding(attribindex, bindingindex);
+
+        [UnmanagedFunctionPointer(CallConv)]
+        private delegate void glVertexAttribFormat_t(
+            uint attribindex,
+            int size,
+            VertexAttribPointerType type,
+            GLboolean normalized,
+            uint relativeoffset);
+        private static glVertexAttribFormat_t p_glVertexAttribFormat;
+        public static void glVertexAttribFormat(
+            uint attribindex,
+            int size,
+            VertexAttribPointerType type,
+            GLboolean normalized,
+            uint relativeoffset) => p_glVertexAttribFormat(attribindex, size, type, normalized, relativeoffset);
+
+        [UnmanagedFunctionPointer(CallConv)]
+        private delegate void glVertexAttribIFormat_t(
+            uint attribindex,
+            int size,
+            VertexAttribPointerType type,
+            uint relativeoffset);
+        private static glVertexAttribIFormat_t p_glVertexAttribIFormat;
+        public static void glVertexAttribIFormat(
+            uint attribindex,
+            int size,
+            VertexAttribPointerType type,
+            uint relativeoffset) => p_glVertexAttribIFormat(attribindex, size, type, relativeoffset);
+        
         [UnmanagedFunctionPointer(CallConv)]
         private delegate void glFrontFace_t(FrontFaceDirection mode);
         private static glFrontFace_t p_glFrontFace;
@@ -1809,6 +1859,7 @@ namespace Veldrid.OpenGLBinding
             LoadFunction("glDeleteTextures", out p_glDeleteTextures);
             LoadFunction("glCheckFramebufferStatus", out p_glCheckFramebufferStatus);
             LoadFunction("glBindBuffer", out p_glBindBuffer);
+            LoadFunction("glBindVertexBuffer", out p_glBindVertexBuffer);
             LoadFunction("glDepthRangeIndexed", out p_glDepthRangeIndexed);
             LoadFunction("glBufferSubData", out p_glBufferSubData);
             LoadFunction("glNamedBufferSubData", out p_glNamedBufferSubData);
@@ -1854,6 +1905,7 @@ namespace Veldrid.OpenGLBinding
             LoadFunction("glGetProgramResourceName", out p_glGetProgramResourceName);
             LoadFunction("glUniformBlockBinding", out p_glUniformBlockBinding);
             LoadFunction("glDeleteProgram", out p_glDeleteProgram);
+            LoadFunction("glDeleteVertexArrays", out p_glDeleteVertexArrays);
             LoadFunction("glUniform1i", out p_glUniform1i);
             LoadFunction("glGetUniformBlockIndex", out p_glGetUniformBlockIndex);
             LoadFunction("glGetUniformLocation", out p_glGetUniformLocation);
@@ -1878,6 +1930,10 @@ namespace Veldrid.OpenGLBinding
             LoadFunction("glVertexAttribPointer", out p_glVertexAttribPointer);
             LoadFunction("glVertexAttribIPointer", out p_glVertexAttribIPointer);
             LoadFunction("glVertexAttribDivisor", out p_glVertexAttribDivisor);
+            LoadFunction("glVertexBindingDivisor", out p_glVertexBindingDivisor);
+            LoadFunction("glVertexAttribBinding", out p_glVertexAttribBinding);
+            LoadFunction("glVertexAttribFormat", out p_glVertexAttribFormat);
+            LoadFunction("glVertexAttribIFormat", out p_glVertexAttribIFormat);
             LoadFunction("glFrontFace", out p_glFrontFace);
             LoadFunction("glGetIntegerv", out p_glGetIntegerv);
             LoadFunction("glBindTextureUnit", out p_glBindTextureUnit);
@@ -1907,7 +1963,7 @@ namespace Veldrid.OpenGLBinding
             LoadFunction("glTextureStorage3DMultisample", out p_glTextureStorage3DMultisample);
             LoadFunction("glTexStorage2DMultisample", out p_glTexStorage2DMultisample);
             LoadFunction("glTexStorage3DMultisample", out p_glTexStorage3DMultisample);
-            
+
             LoadFunction("glMapBuffer", out p_glMapBuffer);
             LoadFunction("glMapNamedBuffer", out p_glMapNamedBuffer);
             LoadFunction("glUnmapBuffer", out p_glUnmapBuffer);
@@ -1962,7 +2018,7 @@ namespace Veldrid.OpenGLBinding
                 }
 
                 LoadFunction("glTextureView", out p_glTextureView);
-                if(p_glTextureView == null)
+                if (p_glTextureView == null)
                 {
                     LoadFunction("glTextureViewOES", out p_glTextureView);
                 }

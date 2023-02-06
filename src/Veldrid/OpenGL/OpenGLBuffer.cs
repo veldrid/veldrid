@@ -40,13 +40,20 @@ namespace Veldrid.OpenGL
             {
                 CreateGLResources(IntPtr.Zero);
             }
+
             if (_nameChanged)
             {
-                _nameChanged = false;
-                if (_gd.Extensions.KHR_Debug)
-                {
-                    SetObjectLabel(ObjectLabelIdentifier.Buffer, _buffer, _name);
-                }
+                UpdateObjectLabel();
+            }
+        }
+
+        private void UpdateObjectLabel()
+        {
+            _nameChanged = false;
+
+            if (_gd.Extensions.KHR_Debug)
+            {
+                SetObjectLabel(ObjectLabelIdentifier.Buffer, _buffer, _name);
             }
         }
 

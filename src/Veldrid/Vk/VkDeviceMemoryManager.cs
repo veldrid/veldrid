@@ -309,9 +309,8 @@ namespace Veldrid.Vulkan
                 ulong alignedBlockSize = 0;
                 uint alignedOffsetRemainder = 0;
 
-                int i = 0;
                 int selectedIndex = -1;
-                for (; i < freeBlocks.Length; i++)
+                for (int i = 0; i < freeBlocks.Length; i++)
                 {
                     ref VkMemoryBlock block = ref freeBlocks[i];
                     alignedBlockSize = block.Size;
@@ -336,11 +335,23 @@ namespace Veldrid.Vulkan
                 if (selectedIndex != -1)
                 {
                     VkMemoryBlock block = freeBlocks[selectedIndex];
-                    block.Size = alignedBlockSize;
                     if (alignedOffsetRemainder != 0)
                     {
-                        block.Offset += alignment - alignedOffsetRemainder;
+                        uint offset = alignment - alignedOffsetRemainder;
+
+                        VkMemoryBlock splitBlock = new(
+                            block.DeviceMemory,
+                            block.Offset,
+                            offset,
+                            _memoryTypeIndex,
+                            block.BaseMappedPointer,
+                            false);
+                        _freeBlocks.Insert(selectedIndex, splitBlock);
+                        selectedIndex++;
+
+                        block.Offset += offset;
                     }
+                    block.Size = alignedBlockSize;
 
                     if (alignedBlockSize != size)
                     {
@@ -352,12 +363,12 @@ namespace Veldrid.Vulkan
                             block.BaseMappedPointer,
                             false);
 
-                        freeBlocks[selectedIndex] = splitBlock;
+                        _freeBlocks[selectedIndex] = splitBlock;
                         block.Size = size;
                     }
                     else
                     {
-                        _freeBlocks.RemoveAt(i);
+                        _freeBlocks.RemoveAt(selectedIndex);
                     }
 
 #if DEBUG

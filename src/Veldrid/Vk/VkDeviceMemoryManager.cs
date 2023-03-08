@@ -72,6 +72,8 @@ namespace Veldrid.Vulkan
                 ? ChunkAllocator.PersistentMappedChunkSize
                 : ChunkAllocator.UnmappedChunkSize;
 
+            size = ((size + _chunkGranularity - 1) / _chunkGranularity) * _chunkGranularity;
+
             if (dedicated || size >= minDedicatedAllocationSize)
             {
                 if (dedicatedImage == VkImage.NULL && dedicatedBuffer == VulkanBuffer.NULL)
@@ -120,8 +122,6 @@ namespace Veldrid.Vulkan
             }
             else
             {
-                size = ((size + _chunkGranularity - 1) / _chunkGranularity) * _chunkGranularity;
-
                 ChunkAllocatorSet allocator = GetAllocator(memoryTypeIndex, persistentMapped);
                 bool result = allocator.Allocate((uint)size, (uint)alignment, out VkMemoryBlock ret);
                 if (!result)

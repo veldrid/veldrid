@@ -1,4 +1,8 @@
-﻿using System;
+﻿#if DEBUG
+#define ALLOC_TRACK
+#endif
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -258,6 +262,10 @@ namespace Veldrid.Vulkan
             private readonly void* _mappedPtr;
             private readonly ulong _totalMemorySize;
 
+#if ALLOC_TRACK
+            private SortedList<uint, ulong> _allocatedBlocks = new();
+#endif
+
             public readonly VkDeviceMemory Memory;
 
             public ChunkAllocator(VkDevice device, uint memoryTypeIndex, bool persistentMapped)
@@ -371,16 +379,16 @@ namespace Veldrid.Vulkan
                         _freeBlocks.RemoveAt(selectedIndex);
                     }
 
-#if DEBUG
-                    CheckAllocatedBlock(block);
+#if ALLOC_TRACK
+                    CheckAllocatedBlock(block.Offset, block.Size);
 #endif
                     resultBlock = block;
                     return true;
                 }
 
-#if DEBUG
+#if ALLOC_TRACK
                 bool hasMergedBlocks = MergeContiguousBlocks();
-                Debug.Assert(!hasMergedBlocks, "Free method was not effective at merging blocks.");
+                TrackAssert(!hasMergedBlocks, "Free method was not effective at merging blocks.");
 #endif
 
                 resultBlock = default;
@@ -467,13 +475,13 @@ namespace Veldrid.Vulkan
                     }
                 }
 
-#if DEBUG
-                RemoveAllocatedBlock(block);
+#if ALLOC_TRACK
+                RemoveAllocatedBlock(block.Offset);
 #endif
             }
 
 
-#if DEBUG
+#if ALLOC_TRACK
             private bool MergeContiguousBlocks()
             {
                 List<VkMemoryBlock> freeBlocks = _freeBlocks;
@@ -510,24 +518,33 @@ namespace Veldrid.Vulkan
                 return hasMerged;
             }
 
-            private HashSet<VkMemoryBlock> _allocatedBlocks = new();
-
-            private void CheckAllocatedBlock(VkMemoryBlock block)
+            private void CheckAllocatedBlock(uint offset, ulong size)
             {
-                foreach (VkMemoryBlock oldBlock in _allocatedBlocks)
+                _allocatedBlocks.Add(offset, size); // Throws on same key added twice.
+
+                int index = _allocatedBlocks.IndexOfKey(offset);
+
+                if (index > 0)
                 {
-                    Debug.Assert(!BlocksOverlap(block, oldBlock), "Allocated blocks have overlapped.");
+                    uint leftOffset = _allocatedBlocks.Keys[index - 1];
+                    ulong leftSize = _allocatedBlocks.Values[index - 1];
+                    TrackAssert(!BlocksOverlap(offset, size, leftOffset, leftSize), "Allocated segments have overlapped.");
                 }
 
-                Debug.Assert(_allocatedBlocks.Add(block), "Same block added twice.");
+                if (index < _allocatedBlocks.Count - 1)
+                {
+                    uint rightOffset = _allocatedBlocks.Keys[index + 1];
+                    ulong rightSize = _allocatedBlocks.Values[index + 1];
+                    TrackAssert(!BlocksOverlap(offset, size, rightOffset, rightSize), "Allocated segments have overlapped.");
+                }
             }
 
-            private static bool BlocksOverlap(VkMemoryBlock first, VkMemoryBlock second)
+            private static bool BlocksOverlap(uint firstOffset, ulong firstSize, uint secondOffset, ulong secondSize)
             {
-                ulong firstStart = first.Offset;
-                ulong firstEnd = first.Offset + first.Size;
-                ulong secondStart = second.Offset;
-                ulong secondEnd = second.Offset + second.Size;
+                ulong firstStart = firstOffset;
+                ulong firstEnd = firstOffset + firstSize;
+                ulong secondStart = secondOffset;
+                ulong secondEnd = secondOffset + secondSize;
 
                 return (firstStart <= secondStart && firstEnd > secondStart
                     || firstStart >= secondStart && firstEnd <= secondEnd
@@ -535,9 +552,22 @@ namespace Veldrid.Vulkan
                     || firstStart <= secondStart && firstEnd >= secondEnd);
             }
 
-            private void RemoveAllocatedBlock(VkMemoryBlock block)
+            private void RemoveAllocatedBlock(uint offset)
             {
-                Debug.Assert(_allocatedBlocks.Remove(block), "Unable to remove a supposedly allocated block.");
+                TrackAssert(_allocatedBlocks.Remove(offset), "Unable to remove a supposedly allocated block.");
+            }
+
+            private static void TrackAssert(bool condition, string message)
+            {
+                if (!condition)
+                {
+                    ThrowTrackException(message);
+                }
+            }
+
+            private static void ThrowTrackException(string message)
+            {
+                throw new InvalidOperationException(message);
             }
 #endif
 

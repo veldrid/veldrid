@@ -76,20 +76,26 @@ namespace Veldrid.Vulkan
                 ? ChunkAllocator.PersistentMappedChunkSize
                 : ChunkAllocator.UnmappedChunkSize;
 
-            size = ((size + _chunkGranularity - 1) / _chunkGranularity) * _chunkGranularity;
+            ulong alignedSize = ((size + _chunkGranularity - 1) / _chunkGranularity) * _chunkGranularity;
 
-            if (dedicated || size >= minDedicatedAllocationSize)
+            if (dedicated || alignedSize >= minDedicatedAllocationSize)
             {
+                ulong dedicatedSize;
                 if (dedicatedImage == VkImage.NULL && dedicatedBuffer == VulkanBuffer.NULL)
                 {
                     // Round up to the nearest multiple of bufferImageGranularity.
-                    size = ((size + _bufferImageGranularity - 1) / _bufferImageGranularity) * _bufferImageGranularity;
+                    dedicatedSize = ((alignedSize + _bufferImageGranularity - 1) / _bufferImageGranularity) * _bufferImageGranularity;
+                }
+                else
+                {
+                    // VkMemoryRequirements.size must be met.
+                    dedicatedSize = size;
                 }
 
                 VkMemoryAllocateInfo allocateInfo = new()
                 {
                     sType = VkStructureType.VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
-                    allocationSize = size,
+                    allocationSize = dedicatedSize,
                     memoryTypeIndex = memoryTypeIndex
                 };
 
@@ -115,19 +121,19 @@ namespace Veldrid.Vulkan
                 void* mappedPtr = null;
                 if (persistentMapped)
                 {
-                    VkResult mapResult = vkMapMemory(_device, memory, 0, size, 0, &mappedPtr);
+                    VkResult mapResult = vkMapMemory(_device, memory, 0, dedicatedSize, 0, &mappedPtr);
                     if (mapResult != VkResult.VK_SUCCESS)
                     {
                         throw new VeldridException("Unable to map newly-allocated Vulkan memory.");
                     }
                 }
 
-                return new VkMemoryBlock(memory, 0, size, memoryTypeBits, mappedPtr, true);
+                return new VkMemoryBlock(memory, 0, dedicatedSize, memoryTypeBits, mappedPtr, true);
             }
             else
             {
                 ChunkAllocatorSet allocator = GetAllocator(memoryTypeIndex, persistentMapped);
-                bool result = allocator.Allocate((uint)size, (uint)alignment, out VkMemoryBlock ret);
+                bool result = allocator.Allocate((uint)alignedSize, (uint)alignment, out VkMemoryBlock ret);
                 if (!result)
                 {
                     throw new VeldridException("Unable to allocate sufficient Vulkan memory.");

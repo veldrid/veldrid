@@ -1082,12 +1082,26 @@ namespace Veldrid.OpenGL
             byte* message,
             void* userParam)
         {
+#if DEBUG
+            if (type == DebugType.DebugTypeError)
+            {
+                if (Debugger.IsAttached)
+                {
+                    Debugger.Break();
+                }
+            }
+#endif
             if (!_openglInfo.InvokeDebugProc(source, type, id, severity, length, message, userParam))
             {
                 if (severity != DebugSeverity.DebugSeverityNotification)
                 {
                     string messageString = Marshal.PtrToStringAnsi((IntPtr)message, (int)length);
-                    Debug.WriteLine($"GL {source}, {type}, {severity}, {id}: {messageString}");
+                    string fullMessage = $"GL {source}, {type}, {severity}, {id}: {messageString}";
+                    if (type == DebugType.DebugTypeError)
+                    {
+                        throw new VeldridException("An OpenGL error was encountered: " + fullMessage);
+                    }
+                    Debug.WriteLine(fullMessage);
                 }
             }
         }

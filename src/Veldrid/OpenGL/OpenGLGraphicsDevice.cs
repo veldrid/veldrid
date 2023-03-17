@@ -664,7 +664,7 @@ namespace Veldrid.OpenGL
             contextAttribs[3] = EGL_NONE;
             contextAttribs[4] = EGL_NONE;
 
-            TryCreateContext:
+        TryCreateContext:
             if (debug)
             {
                 contextAttribs[2] = EGL_CONTEXT_OPENGL_DEBUG;
@@ -730,6 +730,16 @@ namespace Veldrid.OpenGL
                 if (eglDestroyContext(display, ctx) == 0)
                 {
                     throw new VeldridException($"Failed to destroy EGLContext {ctx}: {eglGetError()}");
+                }
+
+                if (eglDestroySurface(display, eglWindowSurface) == 0)
+                {
+                    throw new VeldridException($"Failed to destroy EGLSurface {eglWindowSurface}: {eglGetError()}");
+                }
+
+                if (eglTerminate(display) == 0)
+                {
+                    throw new VeldridException($"Failed to terminate EGLDisplay {display}: {eglGetError()}");
                 }
             }
 

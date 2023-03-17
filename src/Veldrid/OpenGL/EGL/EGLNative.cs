@@ -32,6 +32,10 @@ namespace Veldrid.OpenGL.EGL
         [DllImport(LibName)]
         public static extern int eglDestroyContext(IntPtr display, IntPtr context);
         [DllImport(LibName)]
+        public static extern int eglDestroySurface(IntPtr display, IntPtr surface);
+        [DllImport(LibName)]
+        public static extern int eglTerminate(IntPtr display);
+        [DllImport(LibName)]
         public static extern int eglMakeCurrent(IntPtr display, IntPtr draw, IntPtr read, IntPtr context);
         [DllImport(LibName)]
         public static extern int eglChooseConfig(IntPtr display, int* attrib_list, IntPtr* configs, int config_size, int* num_config);

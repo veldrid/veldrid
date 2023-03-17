@@ -1110,8 +1110,12 @@ namespace Veldrid.OpenGL
         {
             base.Dispose(disposing);
 
-            FlushAndFinish();
-            _executionThread.Terminate();
+            ExecutionThread? thread = Interlocked.Exchange(ref _executionThread!, null);
+            if (thread != null)
+            {
+                thread.FlushAndFinish();
+                thread.Terminate();
+            }
         }
 
         public override bool GetOpenGLInfo(out BackendInfoOpenGL info)

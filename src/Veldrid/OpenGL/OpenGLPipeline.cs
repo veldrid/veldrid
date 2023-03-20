@@ -188,7 +188,7 @@ namespace Veldrid.OpenGL
             VertexLayoutDescription[] layouts = VertexLayouts;
 
             bool separateBinding = _gd.Extensions.ARB_vertex_attrib_binding;
-            
+
             for (int i = 0; i < layouts.Length; i++)
             {
                 VertexLayoutDescription input = layouts[i];
@@ -344,7 +344,7 @@ namespace Veldrid.OpenGL
                         || resource.Kind == ResourceKind.StructuredBufferReadWrite)
                     {
                         uint storageBlockBinding;
-                        if (_gd.Extensions.ARB_program_interface_query)
+                        if (_gd.Extensions.ARB_program_interface_query && _gd.BackendType == GraphicsBackend.OpenGL)
                         {
                             storageBlockBinding = GetProgramResourceIndex(
                                 resource.Name, ProgramInterface.ShaderStorageBlock, ref byteBuffer);
@@ -414,18 +414,18 @@ namespace Veldrid.OpenGL
         {
             Util.GetNullTerminatedUtf8(resourceName, ref byteBuffer);
 
-            uint binding;
+            uint index;
             fixed (byte* byteBufferPtr = byteBuffer)
             {
-                binding = glGetProgramResourceIndex(_program, resourceType, byteBufferPtr);
+                index = glGetProgramResourceIndex(_program, resourceType, byteBufferPtr);
             }
             CheckLastError();
 
-            if (binding == GL_INVALID_INDEX && _gd.IsDebug)
+            if (index == GL_INVALID_INDEX && _gd.IsDebug)
             {
                 ReportInvalidResourceName(resourceName, resourceType, ref byteBuffer);
             }
-            return binding;
+            return index;
         }
 
         [Conditional("GL_VALIDATE_SHADER_RESOURCE_NAMES")]

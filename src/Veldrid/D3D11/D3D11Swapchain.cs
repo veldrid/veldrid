@@ -88,7 +88,7 @@ namespace Veldrid.D3D11
                         (int)description.Width, (int)description.Height, _colorFormat),
                     OutputWindow = win32Source.Hwnd,
                     SampleDescription = new SampleDescription(1, 0),
-                    SwapEffect = SwapEffect.Discard,
+                    SwapEffect = SwapEffect.FlipDiscard,
                     BufferUsage = Usage.RenderTargetOutput
                 };
 

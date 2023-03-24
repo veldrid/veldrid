@@ -55,14 +55,18 @@ namespace Veldrid.D3D11
 
         public override bool SyncToVerticalBlank
         {
-            get => _vsync; set
+            get => _vsync;
+            set
             {
                 _vsync = value;
                 _syncInterval = D3D11Util.GetSyncInterval(value);
             }
         }
 
+        public bool TearingAllowed => (_flags & SwapChainFlags.AllowTearing) > 0;
+
         private readonly Format _colorFormat;
+        private readonly SwapChainFlags _flags;
 
         public IDXGISwapChain DxgiSwapChain => _dxgiSwapChain;
 
@@ -78,6 +82,12 @@ namespace Veldrid.D3D11
                 ? Format.B8G8R8A8_UNorm_SRgb
                 : Format.B8G8R8A8_UNorm;
 
+            using (IDXGIFactory5 dxgiFactory5 = _gd.Adapter.GetParent<IDXGIFactory5>())
+            {
+                if (dxgiFactory5?.PresentAllowTearing == true)
+                    _flags |= SwapChainFlags.AllowTearing;
+            }
+
             if (description.Source is Win32SwapchainSource win32Source)
             {
                 SwapChainDescription dxgiSCDesc = new SwapChainDescription
@@ -89,7 +99,8 @@ namespace Veldrid.D3D11
                     OutputWindow = win32Source.Hwnd,
                     SampleDescription = new SampleDescription(1, 0),
                     SwapEffect = SwapEffect.Discard,
-                    BufferUsage = Usage.RenderTargetOutput
+                    BufferUsage = Usage.RenderTargetOutput,
+                    Flags = _flags
                 };
 
                 using (IDXGIFactory dxgiFactory = _gd.Adapter.GetParent<IDXGIFactory>())
@@ -113,6 +124,7 @@ namespace Veldrid.D3D11
                     SampleDescription = new SampleDescription(1, 0),
                     SwapEffect = SwapEffect.FlipSequential,
                     BufferUsage = Usage.RenderTargetOutput,
+                    Flags = _flags
                 };
 
                 // Get the Vortice.DXGI factory automatically created when initializing the Direct3D device.
@@ -174,7 +186,7 @@ namespace Veldrid.D3D11
             uint actualHeight = (uint)(height * _pixelScale);
             if (resizeBuffers)
             {
-                _dxgiSwapChain.ResizeBuffers(2, (int)actualWidth, (int)actualHeight, _colorFormat, SwapChainFlags.None).CheckError();
+                _dxgiSwapChain.ResizeBuffers(2, (int)actualWidth, (int)actualHeight, _colorFormat, _flags).CheckError();
             }
 
             // Get the backbuffer from the swapchain

@@ -93,6 +93,11 @@ namespace Veldrid
         }
 
         /// <summary>
+        /// Gets or sets whether the graphics device should allow frames to be displayed as fast as possible even if tearing occurs.
+        /// </summary>
+        public virtual bool AllowTearing { get; set; }
+
+        /// <summary>
         /// The required alignment, in bytes, for uniform buffer offsets. <see cref="DeviceBufferRange.Offset"/> must be a
         /// multiple of this value. When binding a <see cref="ResourceSet"/> to a <see cref="CommandList"/> with an overload
         /// accepting dynamic offsets, each offset must be a multiple of this value.

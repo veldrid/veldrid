@@ -235,7 +235,17 @@ namespace Veldrid.D3D11
             lock (_immediateContextLock)
             {
                 D3D11Swapchain d3d11SC = Util.AssertSubtype<Swapchain, D3D11Swapchain>(swapchain);
-                d3d11SC.DxgiSwapChain.Present(d3d11SC.SyncInterval, PresentFlags.None);
+
+                int syncInterval = d3d11SC.SyncInterval;
+                PresentFlags flags = PresentFlags.None;
+
+                if (_mainSwapchain.TearingAllowed && AllowTearing)
+                {
+                    syncInterval = 0;
+                    flags |= PresentFlags.AllowTearing;
+                }
+
+                d3d11SC.DxgiSwapChain.Present(syncInterval, flags);
             }
         }
 

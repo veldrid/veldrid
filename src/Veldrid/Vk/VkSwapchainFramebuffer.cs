@@ -16,7 +16,7 @@ namespace Veldrid.Vk
         private uint _currentImageIndex;
 
         private VkFramebuffer[] _scFramebuffers;
-        private VkImage[] _scImages;
+        private VkImage[] _scImages = {};
         private VkFormat _scImageFormat;
         private VkExtent2D _scExtent;
         private FramebufferAttachment[][] _scColorTextures;
@@ -90,7 +90,7 @@ namespace Veldrid.Vk
             uint scImageCount = 0;
             VkResult result = vkGetSwapchainImagesKHR(_gd.Device, deviceSwapchain, ref scImageCount, null);
             CheckResult(result);
-            if (_scImages == null)
+            if (_scImages.Length < scImageCount)
             {
                 _scImages = new VkImage[(int)scImageCount];
             }

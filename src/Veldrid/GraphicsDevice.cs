@@ -94,6 +94,7 @@ namespace Veldrid
 
         /// <summary>
         /// Gets or sets whether the graphics device should allow frames to be displayed as fast as possible even if tearing occurs.
+        /// This will only have an effect if <see cref="SyncToVerticalBlank"/> is false.
         /// </summary>
         public virtual bool AllowTearing { get; set; }
 

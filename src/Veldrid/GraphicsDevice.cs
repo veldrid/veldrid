@@ -274,6 +274,15 @@ namespace Veldrid
         private protected abstract void WaitForIdleCore();
 
         /// <summary>
+        /// A blocking method that returns when the GPU signals that the next frame is ready to be rendered.
+        /// In contrast to <see cref="Swapchain.SyncToVerticalBlank"/>, this allows the next frame to be rendered as soon
+        /// as the next GPU buffer becomes available without incurring the extra frame of latency of <see cref="Swapchain.SyncToVerticalBlank"/>.
+        /// </summary>
+        public void WaitForNextFrameReady() => WaitForNextFrameReadyCore();
+
+        private protected abstract void WaitForNextFrameReadyCore();
+
+        /// <summary>
         /// Gets the maximum sample count supported by the given <see cref="PixelFormat"/>.
         /// </summary>
         /// <param name="format">The format to query.</param>

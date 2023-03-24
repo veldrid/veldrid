@@ -1087,6 +1087,10 @@ namespace Veldrid.Vk
             CheckSubmittedFences();
         }
 
+        private protected override void WaitForNextFrameReadyCore()
+        {
+        }
+
         public override TextureSampleCount GetSampleCountLimit(PixelFormat format, bool depthFormat)
         {
             VkImageUsageFlags usageFlags = VkImageUsageFlags.Sampled;

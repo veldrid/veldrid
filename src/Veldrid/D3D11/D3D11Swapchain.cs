@@ -4,6 +4,8 @@ using Vortice.DXGI;
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.Threading;
+using Microsoft.Win32.SafeHandles;
 using SharpGen.Runtime;
 
 namespace Veldrid.D3D11
@@ -11,14 +13,17 @@ namespace Veldrid.D3D11
     internal class D3D11Swapchain : Swapchain
     {
         private readonly D3D11GraphicsDevice _gd;
+        private readonly SwapchainDescription _description;
         private readonly PixelFormat? _depthFormat;
-        private readonly IDXGISwapChain _dxgiSwapChain;
+        private IDXGISwapChain _dxgiSwapChain;
         private bool _vsync;
         private int _syncInterval;
         private D3D11Framebuffer _framebuffer;
         private D3D11Texture _depthTexture;
         private float _pixelScale = 1f;
+        private SwapChainFlags _flags;
         private bool _disposed;
+        private FrameLatencyWaitHandle _frameLatencyWaitHandle;
 
         private readonly object _referencedCLsLock = new object();
         private HashSet<D3D11CommandList> _referencedCLs = new HashSet<D3D11CommandList>();
@@ -63,10 +68,42 @@ namespace Veldrid.D3D11
             }
         }
 
-        public bool TearingAllowed => (_flags & SwapChainFlags.AllowTearing) > 0;
+        public PresentFlags PresentFlags
+        {
+            get
+            {
+                if (AllowTearing && _canTear && !SyncToVerticalBlank)
+                    return PresentFlags.AllowTearing;
 
+                return PresentFlags.None;
+            }
+        }
+
+        private bool _allowTearing;
+
+        public bool AllowTearing
+        {
+            get => _allowTearing;
+            set
+            {
+                if (_allowTearing == value)
+                    return;
+
+                _allowTearing = value;
+
+                if (!_canTear)
+                    return;
+
+                recreateSwapchain();
+            }
+        }
+
+        private uint _width;
+        private uint _height;
+
+        private readonly bool _canTear;
+        private readonly bool _canCreateFrameLatencyWaitableObject;
         private readonly Format _colorFormat;
-        private readonly SwapChainFlags _flags;
 
         public IDXGISwapChain DxgiSwapChain => _dxgiSwapChain;
 
@@ -75,6 +112,7 @@ namespace Veldrid.D3D11
         public D3D11Swapchain(D3D11GraphicsDevice gd, ref SwapchainDescription description)
         {
             _gd = gd;
+            _description = description;
             _depthFormat = description.DepthFormat;
             SyncToVerticalBlank = description.SyncToVerticalBlank;
 
@@ -83,19 +121,46 @@ namespace Veldrid.D3D11
                 : Format.B8G8R8A8_UNorm;
 
             using (IDXGIFactory5 dxgiFactory5 = _gd.Adapter.GetParent<IDXGIFactory5>())
-            {
-                if (dxgiFactory5?.PresentAllowTearing == true)
-                    _flags |= SwapChainFlags.AllowTearing;
-            }
+                _canTear = dxgiFactory5?.PresentAllowTearing == true;
 
-            if (description.Source is Win32SwapchainSource win32Source)
+            using (IDXGIFactory3 dxgiFactory3 = _gd.Adapter.GetParent<IDXGIFactory3>())
+                _canCreateFrameLatencyWaitableObject = dxgiFactory3 != null;
+
+            _width = description.Width;
+            _height = description.Height;
+
+            recreateSwapchain();
+        }
+
+        private void recreateSwapchain()
+        {
+            _dxgiSwapChain?.Dispose();
+            _dxgiSwapChain = null;
+
+            _framebuffer?.Dispose();
+            _framebuffer = null;
+
+            _depthTexture?.Dispose();
+            _depthTexture = null;
+
+            _frameLatencyWaitHandle?.Dispose();
+            _frameLatencyWaitHandle = null;
+
+            _flags = SwapChainFlags.None;
+
+            if (AllowTearing && _canTear)
+                _flags |= SwapChainFlags.AllowTearing;
+            else if (_canCreateFrameLatencyWaitableObject)
+                _flags |= SwapChainFlags.FrameLatencyWaitableObject;
+
+            if (_description.Source is Win32SwapchainSource win32Source)
             {
                 SwapChainDescription dxgiSCDesc = new SwapChainDescription
                 {
                     BufferCount = 2,
                     Windowed = true,
                     BufferDescription = new ModeDescription(
-                        (int)description.Width, (int)description.Height, _colorFormat),
+                        (int)_description.Width, (int)_description.Height, _colorFormat),
                     OutputWindow = win32Source.Hwnd,
                     SampleDescription = new SampleDescription(1, 0),
                     SwapEffect = SwapEffect.Discard,
@@ -109,7 +174,7 @@ namespace Veldrid.D3D11
                     dxgiFactory.MakeWindowAssociation(win32Source.Hwnd, WindowAssociationFlags.IgnoreAltEnter);
                 }
             }
-            else if (description.Source is UwpSwapchainSource uwpSource)
+            else if (_description.Source is UwpSwapchainSource uwpSource)
             {
                 _pixelScale = uwpSource.LogicalDpi / 96.0f;
 
@@ -119,8 +184,8 @@ namespace Veldrid.D3D11
                     AlphaMode = AlphaMode.Ignore,
                     BufferCount = 2,
                     Format = _colorFormat,
-                    Height = (int)(description.Height * _pixelScale),
-                    Width = (int)(description.Width * _pixelScale),
+                    Height = (int)(_description.Height * _pixelScale),
+                    Width = (int)(_description.Width * _pixelScale),
                     SampleDescription = new SampleDescription(1, 0),
                     SwapEffect = SwapEffect.FlipSequential,
                     BufferUsage = Usage.RenderTargetOutput,
@@ -154,11 +219,26 @@ namespace Veldrid.D3D11
                 }
             }
 
-            Resize(description.Width, description.Height);
+            if ((_flags & SwapChainFlags.FrameLatencyWaitableObject) > 0)
+            {
+                using (IDXGISwapChain2 swapChain2 = _dxgiSwapChain.QueryInterfaceOrNull<IDXGISwapChain2>())
+                {
+                    if (swapChain2 != null)
+                    {
+                        swapChain2.MaximumFrameLatency = 1;
+                        _frameLatencyWaitHandle = new FrameLatencyWaitHandle(swapChain2.FrameLatencyWaitableObject);
+                    }
+                }
+            }
+
+            Resize(_width, _height);
         }
 
         public override void Resize(uint width, uint height)
         {
+            _width = width;
+            _height = height;
+
             lock (_referencedCLsLock)
             {
                 foreach (D3D11CommandList cl in _referencedCLs)
@@ -215,6 +295,11 @@ namespace Veldrid.D3D11
             }
         }
 
+        public void WaitForNextFrameReady()
+        {
+            _frameLatencyWaitHandle?.WaitOne(1000);
+        }
+
         public void AddCommandListReference(D3D11CommandList cl)
         {
             lock (_referencedCLsLock)
@@ -242,6 +327,14 @@ namespace Veldrid.D3D11
                 _dxgiSwapChain.Dispose();
 
                 _disposed = true;
+            }
+        }
+
+        private class FrameLatencyWaitHandle : WaitHandle
+        {
+            public FrameLatencyWaitHandle(IntPtr ptr)
+            {
+                SafeWaitHandle = new SafeWaitHandle(ptr, true);
             }
         }
     }

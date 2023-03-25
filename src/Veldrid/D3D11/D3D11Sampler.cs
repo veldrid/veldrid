@@ -22,7 +22,7 @@ namespace Veldrid.D3D11
                 MinLOD = description.MinimumLod,
                 MaxLOD = description.MaximumLod,
                 MaxAnisotropy = (int)description.MaximumAnisotropy,
-                ComparisonFunction = comparision,
+                ComparisonFunc = comparision,
                 MipLODBias = description.LodBias,
                 BorderColor = ToRawColor4(description.BorderColor)
             };

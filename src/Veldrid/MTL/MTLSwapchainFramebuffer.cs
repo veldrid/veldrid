@@ -92,6 +92,7 @@ namespace Veldrid.MTL
                 var depthAttachment = ret.depthAttachment;
                 depthAttachment.texture = _depthTexture.DeviceTexture;
                 depthAttachment.loadAction = MTLLoadAction.Load;
+                depthAttachment.storeAction = MTLStoreAction.Store;
             }
 
             return ret;

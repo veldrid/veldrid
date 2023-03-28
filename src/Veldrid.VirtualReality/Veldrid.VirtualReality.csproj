@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>8.0</LangVersion>
   </PropertyGroup>
@@ -11,14 +11,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Veldrid.SPIRV" Version="$(VeldridSpirvVersion)" />
+    <PackageReference Include="Veldrid.SPIRV" Version="1.0.15" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(UseStableVersions)' == 'true'" >
+  <ItemGroup Condition="'$(UseStableVersions)' == 'true'">
     <PackageReference Include="Veldrid" Version="4.5.0" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(UseStableVersions)' != 'true'" >
+  <ItemGroup Condition="'$(UseStableVersions)' != 'true'">
     <ProjectReference Include="..\Veldrid\Veldrid.csproj" />
   </ItemGroup>
 

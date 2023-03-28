@@ -12,16 +12,16 @@ namespace Veldrid.VirtualReality.Oculus
         private const string LibName32 = "LibOVRRT32_1.dll";
         private const string LibName64 = "LibOVRRT64_1.dll";
 
-        private static readonly NativeLibrary s_libovrrt = LoadLibAndFunctions();
+        private static readonly NativeLibraryLoader.NativeLibrary s_libovrrt = LoadLibAndFunctions();
 
         internal static bool LibOvrLoadedSuccessfully() => s_libovrrt != null;
 
-        private static NativeLibrary LoadLibAndFunctions()
+        private static NativeLibraryLoader.NativeLibrary LoadLibAndFunctions()
         {
             string libName = Environment.Is64BitProcess ? LibName64 : LibName32;
             try
             {
-                NativeLibrary lib = new NativeLibrary(libName);
+                NativeLibraryLoader.NativeLibrary lib = new NativeLibraryLoader.NativeLibrary(libName);
 
                 p_ovr_Initialize = lib.LoadFunction<ovr_Initialize_t>("ovr_Initialize");
                 p_ovr_Shutdown = lib.LoadFunction<ovr_Shutdown_t>("ovr_Shutdown");

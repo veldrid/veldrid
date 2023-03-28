@@ -7,8 +7,8 @@ namespace Veldrid.Sdl2
 {
     public static unsafe partial class Sdl2Native
     {
-        private static readonly NativeLibrary s_sdl2Lib = LoadSdl2();
-        private static NativeLibrary LoadSdl2()
+        private static readonly NativeLibraryLoader.NativeLibrary s_sdl2Lib = LoadSdl2();
+        private static NativeLibraryLoader.NativeLibrary LoadSdl2()
         {
             string[] names;
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -37,7 +37,7 @@ namespace Veldrid.Sdl2
                 names = new[] { "SDL2.dll" };
             }
 
-            NativeLibrary lib = new NativeLibrary(names);
+            NativeLibraryLoader.NativeLibrary lib = new NativeLibraryLoader.NativeLibrary(names);
             return lib;
         }
 

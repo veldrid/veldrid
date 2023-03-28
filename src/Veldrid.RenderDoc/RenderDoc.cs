@@ -14,9 +14,9 @@ namespace Veldrid
     public unsafe class RenderDoc
     {
         private readonly RENDERDOC_API_1_4_0 _api;
-        private readonly NativeLibrary _nativeLib;
+        private readonly NativeLibraryLoader.NativeLibrary _nativeLib;
 
-        private unsafe RenderDoc(NativeLibrary lib)
+        private unsafe RenderDoc(NativeLibraryLoader.NativeLibrary lib)
         {
             _nativeLib = lib;
             pRENDERDOC_GetAPI getApiFunc = _nativeLib.LoadFunction<pRENDERDOC_GetAPI>("RENDERDOC_GetAPI");
@@ -359,7 +359,7 @@ namespace Veldrid
         {
             try
             {
-                NativeLibrary lib = new NativeLibrary(renderDocLibPaths);
+                NativeLibraryLoader.NativeLibrary lib = new NativeLibraryLoader.NativeLibrary(renderDocLibPaths);
                 renderDoc = new RenderDoc(lib);
                 return true;
             }

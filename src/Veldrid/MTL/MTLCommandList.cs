@@ -43,6 +43,11 @@ namespace Veldrid.MTL
         private bool[] _vertexBuffersActive;
         private bool _disposed;
 
+        private readonly List<MTLBuffer> _availableStagingBuffers = new List<MTLBuffer>();
+        private readonly Dictionary<MTLCommandBuffer, List<MTLBuffer>> _submittedStagingBuffers = new Dictionary<MTLCommandBuffer, List<MTLBuffer>>();
+        private readonly object _submittedCommandsLock = new object();
+        private MTLFence _completionFence;
+
         public MTLCommandBuffer CommandBuffer => _cb;
 
         public MTLCommandList(ref CommandListDescription description, MTLGraphicsDevice gd)
@@ -329,14 +334,13 @@ namespace Veldrid.MTL
                 || (sizeInBytes % 4 != 0 && bufferOffsetInBytes != 0 && sizeInBytes != buffer.SizeInBytes);
 
             MTLBuffer dstMTLBuffer = Util.AssertSubtype<DeviceBuffer, MTLBuffer>(buffer);
-            // TODO: Cache these, and rely on the command buffer's completion callback to add them back to a shared pool.
-            MTLBuffer copySrc = Util.AssertSubtype<DeviceBuffer, MTLBuffer>(
-                _gd.ResourceFactory.CreateBuffer(new BufferDescription(sizeInBytes, BufferUsage.Staging)));
-            _gd.UpdateBuffer(copySrc, 0, source, sizeInBytes);
+            MTLBuffer staging = GetFreeStagingBuffer(sizeInBytes);
+
+            _gd.UpdateBuffer(staging, 0, source, sizeInBytes);
 
             if (useComputeCopy)
             {
-                CopyBufferCore(copySrc, 0, buffer, bufferOffsetInBytes, sizeInBytes);
+                CopyBufferCore(staging, 0, buffer, bufferOffsetInBytes, sizeInBytes);
             }
             else
             {
@@ -344,12 +348,61 @@ namespace Veldrid.MTL
                 uint sizeRoundFactor = (4 - (sizeInBytes % 4)) % 4;
                 EnsureBlitEncoder();
                 _bce.copy(
-                    copySrc.DeviceBuffer, UIntPtr.Zero,
+                    staging.DeviceBuffer, UIntPtr.Zero,
                     dstMTLBuffer.DeviceBuffer, (UIntPtr)bufferOffsetInBytes,
                     (UIntPtr)(sizeInBytes + sizeRoundFactor));
             }
 
-            copySrc.Dispose();
+            lock (_submittedCommandsLock)
+            {
+                if (!_submittedStagingBuffers.TryGetValue(_cb, out List<MTLBuffer> bufferList))
+                {
+                    _submittedStagingBuffers[_cb] = bufferList = new List<MTLBuffer>();
+                }
+
+                bufferList.Add(staging);
+            }
+        }
+
+        private MTLBuffer GetFreeStagingBuffer(uint sizeInBytes)
+        {
+            lock (_submittedCommandsLock)
+            {
+                foreach (MTLBuffer buffer in _availableStagingBuffers)
+                {
+                    if (buffer.SizeInBytes >= sizeInBytes)
+                    {
+                        _availableStagingBuffers.Remove(buffer);
+                        return buffer;
+                    }
+                }
+            }
+
+            DeviceBuffer staging = _gd.ResourceFactory.CreateBuffer(
+                new BufferDescription(sizeInBytes, BufferUsage.Staging));
+
+            return Util.AssertSubtype<DeviceBuffer, MTLBuffer>(staging);
+        }
+
+        public void SetCompletionFence(MTLFence fence)
+        {
+            Debug.Assert(_completionFence == null);
+            _completionFence = fence;
+        }
+
+        public void OnCompleted(MTLCommandBuffer cb)
+        {
+            _completionFence?.Set();
+            _completionFence = null;
+
+            lock (_submittedCommandsLock)
+            {
+                if (_submittedStagingBuffers.TryGetValue(cb, out List<MTLBuffer> bufferList))
+                {
+                    _availableStagingBuffers.AddRange(bufferList);
+                    _submittedStagingBuffers.Remove(cb);
+                }
+            }
         }
 
         protected override void CopyBufferCore(
@@ -1153,6 +1206,25 @@ namespace Veldrid.MTL
             {
                 _disposed = true;
                 EnsureNoRenderPass();
+
+                lock (_submittedStagingBuffers)
+                {
+                    foreach (MTLBuffer buffer in _availableStagingBuffers)
+                    {
+                        buffer.Dispose();
+                    }
+
+                    foreach (KeyValuePair<MTLCommandBuffer, List<MTLBuffer>> kvp in _submittedStagingBuffers)
+                    {
+                        foreach (MTLBuffer buffer in kvp.Value)
+                        {
+                            buffer.Dispose();
+                        }
+                    }
+
+                    _submittedStagingBuffers.Clear();
+                }
+
                 if (_cb.NativePtr != IntPtr.Zero)
                 {
                     ObjectiveCRuntime.release(_cb.NativePtr);

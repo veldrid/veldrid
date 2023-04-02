@@ -134,6 +134,7 @@ namespace Veldrid.D3D11
 
         private void recreateSwapchain()
         {
+            _dxgiSwapChain?.Release();
             _dxgiSwapChain?.Dispose();
             _dxgiSwapChain = null;
 

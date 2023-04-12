@@ -70,6 +70,8 @@ namespace Veldrid.MTL
                 RecreateDepthTexture((uint)size.width, (uint)size.height);
         }
 
+        public bool EnsureDrawableAvailable() => _parentSwapchain.EnsureDrawableAvailable();
+
         public override void Dispose()
         {
             _depthTexture?.Dispose();

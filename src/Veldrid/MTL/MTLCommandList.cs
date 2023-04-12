@@ -942,9 +942,7 @@ namespace Veldrid.MTL
 
         private bool BeginCurrentRenderPass()
         {
-            MTLSwapchain mtlSC = Util.AssertSubtype<Swapchain, MTLSwapchain>(_gd.MainSwapchain);
-
-            if (!mtlSC.EnsureDrawableAvailable())
+            if (_mtlFramebuffer is MTLSwapchainFramebuffer swapchainFramebuffer && !swapchainFramebuffer.EnsureDrawableAvailable())
                 return false;
 
             MTLRenderPassDescriptor rpDesc = _mtlFramebuffer.CreateRenderPassDescriptor();

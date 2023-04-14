@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using Veldrid.MetalBindings;
 
 namespace Veldrid.MTL
@@ -32,6 +33,7 @@ namespace Veldrid.MTL
         public override bool IsDisposed => _disposed;
 
         private static readonly Dictionary<RenderPipelineStateLookup, MTLRenderPipelineState> render_pipeline_states = new Dictionary<RenderPipelineStateLookup, MTLRenderPipelineState>();
+        private static readonly Dictionary<ComputePipelineStateLookup, MTLComputePipelineState> compute_pipeline_states = new Dictionary<ComputePipelineStateLookup, MTLComputePipelineState>();
         private static readonly Dictionary<DepthStencilStateDescription, MTLDepthStencilState> depth_stencil_states = new Dictionary<DepthStencilStateDescription, MTLDepthStencilState>();
 
         public MTLPipeline(ref GraphicsPipelineDescription description, MTLGraphicsDevice gd)
@@ -226,7 +228,6 @@ namespace Veldrid.MTL
             DepthClipMode = description.DepthStencilState.DepthTestEnabled ? MTLDepthClipMode.Clip : MTLDepthClipMode.Clamp;
         }
 
-        // todo: update this to cache states as well.
         public MTLPipeline(ref ComputePipelineDescription description, MTLGraphicsDevice gd)
             : base(ref description)
         {
@@ -243,55 +244,61 @@ namespace Veldrid.MTL
                 description.ThreadGroupSizeY,
                 description.ThreadGroupSizeZ);
 
-            MTLComputePipelineDescriptor mtlDesc = MTLUtil.AllocInit<MTLComputePipelineDescriptor>(
-                nameof(MTLComputePipelineDescriptor));
-            MTLShader mtlShader = Util.AssertSubtype<Shader, MTLShader>(description.ComputeShader);
-            MTLFunction specializedFunction;
+            var stateLookup = new ComputePipelineStateLookup { ComputeShader = description.ComputeShader, ResourceLayouts = description.ResourceLayouts, Specializations = description.Specializations };
 
-            if (mtlShader.HasFunctionConstants)
+            if (!compute_pipeline_states.TryGetValue(stateLookup, out var computePipelineState))
             {
-                // Need to create specialized MTLFunction.
-                MTLFunctionConstantValues constantValues = CreateConstantValues(description.Specializations);
-                specializedFunction = mtlShader.Library.newFunctionWithNameConstantValues(mtlShader.EntryPoint, constantValues);
-                AddSpecializedFunction(specializedFunction);
-                ObjectiveCRuntime.release(constantValues.NativePtr);
+                MTLComputePipelineDescriptor mtlDesc = MTLUtil.AllocInit<MTLComputePipelineDescriptor>(
+                    nameof(MTLComputePipelineDescriptor));
+                MTLShader mtlShader = Util.AssertSubtype<Shader, MTLShader>(description.ComputeShader);
+                MTLFunction specializedFunction;
 
-                Debug.Assert(specializedFunction.NativePtr != IntPtr.Zero, "Failed to create specialized MTLFunction");
-            }
-            else
-            {
-                specializedFunction = mtlShader.Function;
-            }
-
-            mtlDesc.computeFunction = specializedFunction;
-            MTLPipelineBufferDescriptorArray buffers = mtlDesc.buffers;
-            uint bufferIndex = 0;
-
-            foreach (MTLResourceLayout layout in ResourceLayouts)
-            {
-                foreach (ResourceLayoutElementDescription rle in layout.Description.Elements)
+                if (mtlShader.HasFunctionConstants)
                 {
-                    ResourceKind kind = rle.Kind;
+                    // Need to create specialized MTLFunction.
+                    MTLFunctionConstantValues constantValues = CreateConstantValues(description.Specializations);
+                    specializedFunction = mtlShader.Library.newFunctionWithNameConstantValues(mtlShader.EntryPoint, constantValues);
+                    AddSpecializedFunction(specializedFunction);
+                    ObjectiveCRuntime.release(constantValues.NativePtr);
 
-                    if (kind == ResourceKind.UniformBuffer
-                        || kind == ResourceKind.StructuredBufferReadOnly)
+                    Debug.Assert(specializedFunction.NativePtr != IntPtr.Zero, "Failed to create specialized MTLFunction");
+                }
+                else
+                {
+                    specializedFunction = mtlShader.Function;
+                }
+
+                mtlDesc.computeFunction = specializedFunction;
+                MTLPipelineBufferDescriptorArray buffers = mtlDesc.buffers;
+                uint bufferIndex = 0;
+
+                foreach (MTLResourceLayout layout in ResourceLayouts)
+                {
+                    foreach (ResourceLayoutElementDescription rle in layout.Description.Elements)
                     {
-                        MTLPipelineBufferDescriptor bufferDesc = buffers[bufferIndex];
-                        bufferDesc.mutability = MTLMutability.Immutable;
-                        bufferIndex += 1;
-                    }
-                    else if (kind == ResourceKind.StructuredBufferReadWrite)
-                    {
-                        MTLPipelineBufferDescriptor bufferDesc = buffers[bufferIndex];
-                        bufferDesc.mutability = MTLMutability.Mutable;
-                        bufferIndex += 1;
+                        ResourceKind kind = rle.Kind;
+
+                        if (kind == ResourceKind.UniformBuffer
+                            || kind == ResourceKind.StructuredBufferReadOnly)
+                        {
+                            MTLPipelineBufferDescriptor bufferDesc = buffers[bufferIndex];
+                            bufferDesc.mutability = MTLMutability.Immutable;
+                            bufferIndex += 1;
+                        }
+                        else if (kind == ResourceKind.StructuredBufferReadWrite)
+                        {
+                            MTLPipelineBufferDescriptor bufferDesc = buffers[bufferIndex];
+                            bufferDesc.mutability = MTLMutability.Mutable;
+                            bufferIndex += 1;
+                        }
                     }
                 }
+
+                computePipelineState = gd.Device.newComputePipelineStateWithDescriptor(mtlDesc);
+                ObjectiveCRuntime.release(mtlDesc.NativePtr);
             }
 
-            ComputePipelineState = gd.Device.newComputePipelineStateWithDescriptor(mtlDesc);
-
-            ObjectiveCRuntime.release(mtlDesc.NativePtr);
+            ComputePipelineState = computePipelineState;
         }
 
         private unsafe MTLFunctionConstantValues CreateConstantValues(SpecializationConstant[] specializations)
@@ -364,6 +371,24 @@ namespace Veldrid.MTL
             public override bool Equals(object obj) => obj is RenderPipelineStateLookup other && Equals(other);
 
             public override int GetHashCode() => HashCode.Combine(Shaders, Outputs, BlendState);
+        }
+
+        private struct ComputePipelineStateLookup : IEquatable<ComputePipelineStateLookup>
+        {
+            public Shader ComputeShader;
+            public ResourceLayout[] ResourceLayouts;
+            public SpecializationConstant[] Specializations;
+
+            public bool Equals(ComputePipelineStateLookup other)
+            {
+                return ComputeShader == other.ComputeShader &&
+                       Util.ArrayEquals(ResourceLayouts, other.ResourceLayouts) &&
+                       Util.ArrayEqualsEquatable(Specializations, other.Specializations);
+            }
+
+            public override bool Equals(object obj) => obj is ComputePipelineStateLookup other && Equals(other);
+
+            public override int GetHashCode() => HashCode.Combine(ComputeShader, HashHelper.Array(ResourceLayouts), HashHelper.Array(Specializations));
         }
     }
 }

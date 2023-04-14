@@ -293,7 +293,7 @@ namespace Veldrid.MTL
 
         private protected override void SetPipelineCore(Pipeline pipeline)
         {
-            if (pipeline.IsComputePipeline)
+            if (pipeline.IsComputePipeline && _computePipeline != pipeline)
             {
                 _computePipeline = Util.AssertSubtype<Pipeline, MTLPipeline>(pipeline);
                 _computeResourceSetCount = (uint)_computePipeline.ResourceLayouts.Length;
@@ -301,7 +301,7 @@ namespace Veldrid.MTL
                 Util.EnsureArrayMinimumSize(ref _computeResourceSetsActive, _computeResourceSetCount);
                 Util.ClearArray(_computeResourceSetsActive);
             }
-            else
+            else if (!pipeline.IsComputePipeline && _graphicsPipeline != pipeline)
             {
                 _graphicsPipeline = Util.AssertSubtype<Pipeline, MTLPipeline>(pipeline);
                 _graphicsResourceSetCount = (uint)_graphicsPipeline.ResourceLayouts.Length;

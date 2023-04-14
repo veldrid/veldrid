@@ -31,6 +31,7 @@ namespace Veldrid.MTL
         public RgbaFloat BlendColor { get; }
         public override bool IsDisposed => _disposed;
 
+        private static readonly Dictionary<RenderPipelineStateLookup, MTLRenderPipelineState> render_pipeline_states = new Dictionary<RenderPipelineStateLookup, MTLRenderPipelineState>();
         public MTLPipeline(ref GraphicsPipelineDescription description, MTLGraphicsDevice gd)
             : base(ref description)
         {
@@ -49,117 +50,129 @@ namespace Veldrid.MTL
             FillMode = MTLFormats.VdToMTLFillMode(description.RasterizerState.FillMode);
             ScissorTestEnabled = description.RasterizerState.ScissorTestEnabled;
 
-            MTLRenderPipelineDescriptor mtlDesc = MTLRenderPipelineDescriptor.New();
-            foreach (Shader shader in description.ShaderSet.Shaders)
+            var stateLookup = new RenderPipelineStateLookup { Shaders = description.ShaderSet, BlendState = description.BlendState, Outputs = description.Outputs };
+
+            if (!render_pipeline_states.TryGetValue(stateLookup, out var renderPipelineState))
             {
-                MTLShader mtlShader = Util.AssertSubtype<Shader, MTLShader>(shader);
-                MTLFunction specializedFunction;
+                MTLRenderPipelineDescriptor mtlDesc = MTLRenderPipelineDescriptor.New();
 
-                if (mtlShader.HasFunctionConstants)
+                foreach (Shader shader in description.ShaderSet.Shaders)
                 {
-                    // Need to create specialized MTLFunction.
-                    MTLFunctionConstantValues constantValues = CreateConstantValues(description.ShaderSet.Specializations);
-                    specializedFunction = mtlShader.Library.newFunctionWithNameConstantValues(mtlShader.EntryPoint, constantValues);
-                    AddSpecializedFunction(specializedFunction);
-                    ObjectiveCRuntime.release(constantValues.NativePtr);
+                    MTLShader mtlShader = Util.AssertSubtype<Shader, MTLShader>(shader);
+                    MTLFunction specializedFunction;
 
-                    Debug.Assert(specializedFunction.NativePtr != IntPtr.Zero, "Failed to create specialized MTLFunction");
+                    if (mtlShader.HasFunctionConstants)
+                    {
+                        // Need to create specialized MTLFunction.
+                        MTLFunctionConstantValues constantValues = CreateConstantValues(description.ShaderSet.Specializations);
+                        specializedFunction = mtlShader.Library.newFunctionWithNameConstantValues(mtlShader.EntryPoint, constantValues);
+                        AddSpecializedFunction(specializedFunction);
+                        ObjectiveCRuntime.release(constantValues.NativePtr);
+
+                        Debug.Assert(specializedFunction.NativePtr != IntPtr.Zero, "Failed to create specialized MTLFunction");
+                    }
+                    else
+                    {
+                        specializedFunction = mtlShader.Function;
+                    }
+
+                    if (shader.Stage == ShaderStages.Vertex)
+                    {
+                        mtlDesc.vertexFunction = specializedFunction;
+                    }
+                    else if (shader.Stage == ShaderStages.Fragment)
+                    {
+                        mtlDesc.fragmentFunction = specializedFunction;
+                    }
                 }
-                else
-                {
-                    specializedFunction = mtlShader.Function;
-                }
 
-                if (shader.Stage == ShaderStages.Vertex)
-                {
-                    mtlDesc.vertexFunction = specializedFunction;
-                }
-                else if (shader.Stage == ShaderStages.Fragment)
-                {
-                    mtlDesc.fragmentFunction = specializedFunction;
-                }
-            }
+                // Vertex layouts
+                VertexLayoutDescription[] vdVertexLayouts = description.ShaderSet.VertexLayouts;
+                MTLVertexDescriptor vertexDescriptor = mtlDesc.vertexDescriptor;
 
-            // Vertex layouts
-            VertexLayoutDescription[] vdVertexLayouts = description.ShaderSet.VertexLayouts;
-            MTLVertexDescriptor vertexDescriptor = mtlDesc.vertexDescriptor;
-
-            for (uint i = 0; i < vdVertexLayouts.Length; i++)
-            {
-                uint layoutIndex = ResourceBindingModel == ResourceBindingModel.Improved
-                    ? NonVertexBufferCount + i
-                    : i;
-                MTLVertexBufferLayoutDescriptor mtlLayout = vertexDescriptor.layouts[layoutIndex];
-                mtlLayout.stride = (UIntPtr)vdVertexLayouts[i].Stride;
-                uint stepRate = vdVertexLayouts[i].InstanceStepRate;
-                mtlLayout.stepFunction = stepRate == 0 ? MTLVertexStepFunction.PerVertex : MTLVertexStepFunction.PerInstance;
-                mtlLayout.stepRate = (UIntPtr)Math.Max(1, stepRate);
-            }
-
-            uint element = 0;
-            for (uint i = 0; i < vdVertexLayouts.Length; i++)
-            {
-                uint offset = 0;
-                VertexLayoutDescription vdDesc = vdVertexLayouts[i];
-                for (uint j = 0; j < vdDesc.Elements.Length; j++)
+                for (uint i = 0; i < vdVertexLayouts.Length; i++)
                 {
-                    VertexElementDescription elementDesc = vdDesc.Elements[j];
-                    MTLVertexAttributeDescriptor mtlAttribute = vertexDescriptor.attributes[element];
-                    mtlAttribute.bufferIndex = (UIntPtr)(ResourceBindingModel == ResourceBindingModel.Improved
+                    uint layoutIndex = ResourceBindingModel == ResourceBindingModel.Improved
                         ? NonVertexBufferCount + i
-                        : i);
-                    mtlAttribute.format = MTLFormats.VdToMTLVertexFormat(elementDesc.Format);
-                    mtlAttribute.offset = elementDesc.Offset != 0 ? (UIntPtr)elementDesc.Offset : (UIntPtr)offset;
-                    offset += FormatSizeHelpers.GetSizeInBytes(elementDesc.Format);
-                    element += 1;
+                        : i;
+                    MTLVertexBufferLayoutDescriptor mtlLayout = vertexDescriptor.layouts[layoutIndex];
+                    mtlLayout.stride = (UIntPtr)vdVertexLayouts[i].Stride;
+                    uint stepRate = vdVertexLayouts[i].InstanceStepRate;
+                    mtlLayout.stepFunction = stepRate == 0 ? MTLVertexStepFunction.PerVertex : MTLVertexStepFunction.PerInstance;
+                    mtlLayout.stepRate = (UIntPtr)Math.Max(1, stepRate);
                 }
-            }
 
-            VertexBufferCount = (uint)vdVertexLayouts.Length;
+                uint element = 0;
 
-            // Outputs
-            OutputDescription outputs = description.Outputs;
-            BlendStateDescription blendStateDesc = description.BlendState;
-            BlendColor = blendStateDesc.BlendFactor;
-
-            if (outputs.SampleCount != TextureSampleCount.Count1)
-            {
-                mtlDesc.sampleCount = (UIntPtr)FormatHelpers.GetSampleCountUInt32(outputs.SampleCount);
-            }
-
-            if (outputs.DepthAttachment != null)
-            {
-                PixelFormat depthFormat = outputs.DepthAttachment.Value.Format;
-                MTLPixelFormat mtlDepthFormat = MTLFormats.VdToMTLPixelFormat(depthFormat, true);
-                mtlDesc.depthAttachmentPixelFormat = mtlDepthFormat;
-                if ((FormatHelpers.IsStencilFormat(depthFormat)))
+                for (uint i = 0; i < vdVertexLayouts.Length; i++)
                 {
-                    HasStencil = true;
-                    mtlDesc.stencilAttachmentPixelFormat = mtlDepthFormat;
+                    uint offset = 0;
+                    VertexLayoutDescription vdDesc = vdVertexLayouts[i];
+
+                    for (uint j = 0; j < vdDesc.Elements.Length; j++)
+                    {
+                        VertexElementDescription elementDesc = vdDesc.Elements[j];
+                        MTLVertexAttributeDescriptor mtlAttribute = vertexDescriptor.attributes[element];
+                        mtlAttribute.bufferIndex = (UIntPtr)(ResourceBindingModel == ResourceBindingModel.Improved
+                            ? NonVertexBufferCount + i
+                            : i);
+                        mtlAttribute.format = MTLFormats.VdToMTLVertexFormat(elementDesc.Format);
+                        mtlAttribute.offset = elementDesc.Offset != 0 ? (UIntPtr)elementDesc.Offset : (UIntPtr)offset;
+                        offset += FormatSizeHelpers.GetSizeInBytes(elementDesc.Format);
+                        element += 1;
+                    }
                 }
+
+                VertexBufferCount = (uint)vdVertexLayouts.Length;
+
+                // Outputs
+                OutputDescription outputs = description.Outputs;
+                BlendStateDescription blendStateDesc = description.BlendState;
+                BlendColor = blendStateDesc.BlendFactor;
+
+                if (outputs.SampleCount != TextureSampleCount.Count1)
+                {
+                    mtlDesc.sampleCount = (UIntPtr)FormatHelpers.GetSampleCountUInt32(outputs.SampleCount);
+                }
+
+                if (outputs.DepthAttachment != null)
+                {
+                    PixelFormat depthFormat = outputs.DepthAttachment.Value.Format;
+                    MTLPixelFormat mtlDepthFormat = MTLFormats.VdToMTLPixelFormat(depthFormat, true);
+                    mtlDesc.depthAttachmentPixelFormat = mtlDepthFormat;
+
+                    if ((FormatHelpers.IsStencilFormat(depthFormat)))
+                    {
+                        HasStencil = true;
+                        mtlDesc.stencilAttachmentPixelFormat = mtlDepthFormat;
+                    }
+                }
+
+                for (uint i = 0; i < outputs.ColorAttachments.Length; i++)
+                {
+                    BlendAttachmentDescription attachmentBlendDesc = blendStateDesc.AttachmentStates[i];
+                    MTLRenderPipelineColorAttachmentDescriptor colorDesc = mtlDesc.colorAttachments[i];
+                    colorDesc.pixelFormat = MTLFormats.VdToMTLPixelFormat(outputs.ColorAttachments[i].Format, false);
+                    colorDesc.blendingEnabled = attachmentBlendDesc.BlendEnabled;
+                    colorDesc.writeMask = MTLFormats.VdToMTLColorWriteMask(attachmentBlendDesc.ColorWriteMask.GetOrDefault());
+                    colorDesc.alphaBlendOperation = MTLFormats.VdToMTLBlendOp(attachmentBlendDesc.AlphaFunction);
+                    colorDesc.sourceAlphaBlendFactor = MTLFormats.VdToMTLBlendFactor(attachmentBlendDesc.SourceAlphaFactor);
+                    colorDesc.destinationAlphaBlendFactor = MTLFormats.VdToMTLBlendFactor(attachmentBlendDesc.DestinationAlphaFactor);
+
+                    colorDesc.rgbBlendOperation = MTLFormats.VdToMTLBlendOp(attachmentBlendDesc.ColorFunction);
+                    colorDesc.sourceRGBBlendFactor = MTLFormats.VdToMTLBlendFactor(attachmentBlendDesc.SourceColorFactor);
+                    colorDesc.destinationRGBBlendFactor = MTLFormats.VdToMTLBlendFactor(attachmentBlendDesc.DestinationColorFactor);
+                }
+
+                mtlDesc.alphaToCoverageEnabled = blendStateDesc.AlphaToCoverageEnabled;
+
+                renderPipelineState = gd.Device.newRenderPipelineStateWithDescriptor(mtlDesc);
+                ObjectiveCRuntime.release(mtlDesc.NativePtr);
             }
-            for (uint i = 0; i < outputs.ColorAttachments.Length; i++)
-            {
-                BlendAttachmentDescription attachmentBlendDesc = blendStateDesc.AttachmentStates[i];
-                MTLRenderPipelineColorAttachmentDescriptor colorDesc = mtlDesc.colorAttachments[i];
-                colorDesc.pixelFormat = MTLFormats.VdToMTLPixelFormat(outputs.ColorAttachments[i].Format, false);
-                colorDesc.blendingEnabled = attachmentBlendDesc.BlendEnabled;
-                colorDesc.writeMask = MTLFormats.VdToMTLColorWriteMask(attachmentBlendDesc.ColorWriteMask.GetOrDefault());
-                colorDesc.alphaBlendOperation = MTLFormats.VdToMTLBlendOp(attachmentBlendDesc.AlphaFunction);
-                colorDesc.sourceAlphaBlendFactor = MTLFormats.VdToMTLBlendFactor(attachmentBlendDesc.SourceAlphaFactor);
-                colorDesc.destinationAlphaBlendFactor = MTLFormats.VdToMTLBlendFactor(attachmentBlendDesc.DestinationAlphaFactor);
 
-                colorDesc.rgbBlendOperation = MTLFormats.VdToMTLBlendOp(attachmentBlendDesc.ColorFunction);
-                colorDesc.sourceRGBBlendFactor = MTLFormats.VdToMTLBlendFactor(attachmentBlendDesc.SourceColorFactor);
-                colorDesc.destinationRGBBlendFactor = MTLFormats.VdToMTLBlendFactor(attachmentBlendDesc.DestinationColorFactor);
-            }
+            RenderPipelineState = renderPipelineState;
 
-            mtlDesc.alphaToCoverageEnabled = blendStateDesc.AlphaToCoverageEnabled;
-
-            RenderPipelineState = gd.Device.newRenderPipelineStateWithDescriptor(mtlDesc);
-            ObjectiveCRuntime.release(mtlDesc.NativePtr);
-
-            if (outputs.DepthAttachment != null)
+            if (description.Outputs.DepthAttachment != null)
             {
                 MTLDepthStencilDescriptor depthDescriptor = MTLUtil.AllocInit<MTLDepthStencilDescriptor>(
                     nameof(MTLDepthStencilDescriptor));
@@ -312,6 +325,24 @@ namespace Veldrid.MTL
 
                 _disposed = true;
             }
+        }
+
+        private struct RenderPipelineStateLookup : IEquatable<RenderPipelineStateLookup>
+        {
+            public ShaderSetDescription Shaders;
+            public OutputDescription Outputs;
+            public BlendStateDescription BlendState;
+
+            public bool Equals(RenderPipelineStateLookup other)
+            {
+                return Shaders.Equals(other.Shaders) &&
+                       Outputs.Equals(other.Outputs) &&
+                       BlendState.Equals(other.BlendState);
+            }
+
+            public override bool Equals(object obj) => obj is RenderPipelineStateLookup other && Equals(other);
+
+            public override int GetHashCode() => HashCode.Combine(Shaders, Outputs, BlendState);
         }
     }
 }

@@ -845,13 +845,23 @@ namespace Veldrid.MTL
             }
         }
 
+        private readonly Dictionary<UIntPtr, DeviceBufferRange> _boundVertexBuffers = new Dictionary<UIntPtr, DeviceBufferRange>();
+        private readonly Dictionary<UIntPtr, DeviceBufferRange> _boundFragmentBuffers = new Dictionary<UIntPtr, DeviceBufferRange>();
+        private readonly Dictionary<UIntPtr, DeviceBufferRange> _boundComputeBuffers = new Dictionary<UIntPtr, DeviceBufferRange>();
+
         private void BindBuffer(DeviceBufferRange range, uint set, uint slot, ShaderStages stages)
         {
             MTLBuffer mtlBuffer = Util.AssertSubtype<DeviceBuffer, MTLBuffer>(range.Buffer);
             uint baseBuffer = GetBufferBase(set, stages != ShaderStages.Compute);
             if (stages == ShaderStages.Compute)
             {
-                _cce.setBuffer(mtlBuffer.DeviceBuffer, (UIntPtr)range.Offset, (UIntPtr)(slot + baseBuffer));
+                UIntPtr index = (UIntPtr)(slot + baseBuffer);
+
+                if (!_boundComputeBuffers.TryGetValue(index, out var boundBuffer) || !range.Equals(boundBuffer))
+                {
+                    _cce.setBuffer(mtlBuffer.DeviceBuffer, (UIntPtr)range.Offset, (UIntPtr)(slot + baseBuffer));
+                    _boundComputeBuffers[index] = range;
+                }
             }
             else
             {
@@ -860,46 +870,76 @@ namespace Veldrid.MTL
                     UIntPtr index = (UIntPtr)(_graphicsPipeline.ResourceBindingModel == ResourceBindingModel.Improved
                         ? slot + baseBuffer
                         : slot + _vertexBufferCount + baseBuffer);
-                    _rce.setVertexBuffer(mtlBuffer.DeviceBuffer, (UIntPtr)range.Offset, index);
+
+                    if (!_boundVertexBuffers.TryGetValue(index, out var boundBuffer) || !range.Equals(boundBuffer))
+                    {
+                        _rce.setVertexBuffer(mtlBuffer.DeviceBuffer, (UIntPtr)range.Offset, index);
+                        _boundVertexBuffers[index] = range;
+                    }
                 }
+
                 if ((stages & ShaderStages.Fragment) == ShaderStages.Fragment)
                 {
-                    _rce.setFragmentBuffer(mtlBuffer.DeviceBuffer, (UIntPtr)range.Offset, (UIntPtr)(slot + baseBuffer));
+                    UIntPtr index = (UIntPtr)(slot + baseBuffer);
+
+                    if (!_boundFragmentBuffers.TryGetValue(index, out var boundBuffer) || !range.Equals(boundBuffer))
+                    {
+                        _rce.setFragmentBuffer(mtlBuffer.DeviceBuffer, (UIntPtr)range.Offset, (UIntPtr)(slot + baseBuffer));
+                        _boundFragmentBuffers[index] = range;
+                    }
                 }
             }
         }
+
+        private readonly Dictionary<UIntPtr, MetalBindings.MTLTexture> _boundVertexTextures = new Dictionary<UIntPtr, MetalBindings.MTLTexture>();
+        private readonly Dictionary<UIntPtr, MetalBindings.MTLTexture> _boundFragmentTextures = new Dictionary<UIntPtr, MetalBindings.MTLTexture>();
+        private readonly Dictionary<UIntPtr, MetalBindings.MTLTexture> _boundComputeTextures = new Dictionary<UIntPtr, MetalBindings.MTLTexture>();
 
         private void BindTexture(MTLTextureView mtlTexView, uint set, uint slot, ShaderStages stages)
         {
             uint baseTexture = GetTextureBase(set, stages != ShaderStages.Compute);
-            if (stages == ShaderStages.Compute)
+            UIntPtr index = (UIntPtr)(slot + baseTexture);
+
+            if (stages == ShaderStages.Compute && (!_boundComputeTextures.TryGetValue(index, out var computeTexture) || computeTexture.NativePtr != mtlTexView.TargetDeviceTexture.NativePtr))
             {
-                _cce.setTexture(mtlTexView.TargetDeviceTexture, (UIntPtr)(slot + baseTexture));
+                _cce.setTexture(mtlTexView.TargetDeviceTexture, index);
+                _boundComputeTextures[index] = mtlTexView.TargetDeviceTexture;
             }
-            if ((stages & ShaderStages.Vertex) == ShaderStages.Vertex)
+            if ((stages & ShaderStages.Vertex) == ShaderStages.Vertex && (!_boundVertexTextures.TryGetValue(index, out var vertexTexture) || vertexTexture.NativePtr != mtlTexView.TargetDeviceTexture.NativePtr))
             {
-                _rce.setVertexTexture(mtlTexView.TargetDeviceTexture, (UIntPtr)(slot + baseTexture));
+                _rce.setVertexTexture(mtlTexView.TargetDeviceTexture, index);
+                _boundVertexTextures[index] = mtlTexView.TargetDeviceTexture;
             }
-            if ((stages & ShaderStages.Fragment) == ShaderStages.Fragment)
+            if ((stages & ShaderStages.Fragment) == ShaderStages.Fragment && (!_boundFragmentTextures.TryGetValue(index, out var fragmentTexture) || fragmentTexture.NativePtr != mtlTexView.TargetDeviceTexture.NativePtr))
             {
-                _rce.setFragmentTexture(mtlTexView.TargetDeviceTexture, (UIntPtr)(slot + baseTexture));
+                _rce.setFragmentTexture(mtlTexView.TargetDeviceTexture, index);
+                _boundFragmentTextures[index] = mtlTexView.TargetDeviceTexture;
             }
         }
+
+        private readonly Dictionary<UIntPtr, MTLSamplerState> _boundVertexSamplers = new Dictionary<UIntPtr, MTLSamplerState>();
+        private readonly Dictionary<UIntPtr, MTLSamplerState> _boundFragmentSamplers = new Dictionary<UIntPtr, MTLSamplerState>();
+        private readonly Dictionary<UIntPtr, MTLSamplerState> _boundComputeSamplers = new Dictionary<UIntPtr, MTLSamplerState>();
 
         private void BindSampler(MTLSampler mtlSampler, uint set, uint slot, ShaderStages stages)
         {
             uint baseSampler = GetSamplerBase(set, stages != ShaderStages.Compute);
-            if (stages == ShaderStages.Compute)
+            UIntPtr index = (UIntPtr)(slot + baseSampler);
+
+            if (stages == ShaderStages.Compute && (!_boundComputeSamplers.TryGetValue(index, out var computeSampler) || computeSampler.NativePtr != mtlSampler.DeviceSampler.NativePtr))
             {
-                _cce.setSamplerState(mtlSampler.DeviceSampler, (UIntPtr)(slot + baseSampler));
+                _cce.setSamplerState(mtlSampler.DeviceSampler, index);
+                _boundComputeSamplers[index] = mtlSampler.DeviceSampler;
             }
-            if ((stages & ShaderStages.Vertex) == ShaderStages.Vertex)
+            if ((stages & ShaderStages.Vertex) == ShaderStages.Vertex && (!_boundVertexSamplers.TryGetValue(index, out var vertexSampler) || vertexSampler.NativePtr != mtlSampler.DeviceSampler.NativePtr))
             {
-                _rce.setVertexSamplerState(mtlSampler.DeviceSampler, (UIntPtr)(slot + baseSampler));
+                _rce.setVertexSamplerState(mtlSampler.DeviceSampler, index);
+                _boundVertexSamplers[index] = mtlSampler.DeviceSampler;
             }
-            if ((stages & ShaderStages.Fragment) == ShaderStages.Fragment)
+            if ((stages & ShaderStages.Fragment) == ShaderStages.Fragment && (!_boundFragmentSamplers.TryGetValue(index, out var fragmentSampler) || fragmentSampler.NativePtr != mtlSampler.DeviceSampler.NativePtr))
             {
-                _rce.setFragmentSamplerState(mtlSampler.DeviceSampler, (UIntPtr)(slot + baseSampler));
+                _rce.setFragmentSamplerState(mtlSampler.DeviceSampler, index);
+                _boundFragmentSamplers[index] = mtlSampler.DeviceSampler;
             }
         }
 
@@ -1019,6 +1059,12 @@ namespace Veldrid.MTL
             _rce = default(MTLRenderCommandEncoder);
 
             _lastGraphicsPipeline = null;
+            _boundVertexBuffers.Clear();
+            _boundVertexTextures.Clear();
+            _boundVertexSamplers.Clear();
+            _boundFragmentBuffers.Clear();
+            _boundFragmentTextures.Clear();
+            _boundFragmentSamplers.Clear();
             Util.ClearArray(_graphicsResourceSetsActive);
 
             _viewportsChanged = true;
@@ -1081,7 +1127,12 @@ namespace Veldrid.MTL
                 _cce.endEncoding();
                 ObjectiveCRuntime.release(_cce.NativePtr);
                 _cce = default(MTLComputeCommandEncoder);
+
+                _boundComputeBuffers.Clear();
+                _boundComputeTextures.Clear();
+                _boundComputeSamplers.Clear();
                 _lastComputePipeline = null;
+
                 Util.ClearArray(_computeResourceSetsActive);
             }
 

@@ -69,7 +69,7 @@ namespace Veldrid.MTL
             _colorTexture = new MTLTexture(drawable, size, _colorFormat);
             _colorTargets = new[] { new FramebufferAttachment(_colorTexture, 0) };
 
-            if (_depthFormat.HasValue)
+            if (_depthFormat.HasValue && (size.width != _depthTexture?.Width || size.height != _depthTexture?.Height))
                 RecreateDepthTexture((uint)size.width, (uint)size.height);
         }
 

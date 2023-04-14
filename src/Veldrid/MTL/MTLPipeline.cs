@@ -32,17 +32,21 @@ namespace Veldrid.MTL
         public override bool IsDisposed => _disposed;
 
         private static readonly Dictionary<RenderPipelineStateLookup, MTLRenderPipelineState> render_pipeline_states = new Dictionary<RenderPipelineStateLookup, MTLRenderPipelineState>();
+        private static readonly Dictionary<DepthStencilStateDescription, MTLDepthStencilState> depth_stencil_states = new Dictionary<DepthStencilStateDescription, MTLDepthStencilState>();
+
         public MTLPipeline(ref GraphicsPipelineDescription description, MTLGraphicsDevice gd)
             : base(ref description)
         {
             PrimitiveType = MTLFormats.VdToMTLPrimitiveTopology(description.PrimitiveTopology);
             ResourceLayouts = new MTLResourceLayout[description.ResourceLayouts.Length];
             NonVertexBufferCount = 0;
+
             for (int i = 0; i < ResourceLayouts.Length; i++)
             {
                 ResourceLayouts[i] = Util.AssertSubtype<ResourceLayout, MTLResourceLayout>(description.ResourceLayouts[i]);
                 NonVertexBufferCount += ResourceLayouts[i].BufferCount;
             }
+
             ResourceBindingModel = description.ResourceBindingModel ?? gd.ResourceBindingModel;
 
             CullMode = MTLFormats.VdToMTLCullMode(description.RasterizerState.CullMode);
@@ -174,53 +178,61 @@ namespace Veldrid.MTL
 
             if (description.Outputs.DepthAttachment != null)
             {
-                MTLDepthStencilDescriptor depthDescriptor = MTLUtil.AllocInit<MTLDepthStencilDescriptor>(
-                    nameof(MTLDepthStencilDescriptor));
-                depthDescriptor.depthCompareFunction = MTLFormats.VdToMTLCompareFunction(
-                    description.DepthStencilState.DepthComparison);
-                depthDescriptor.depthWriteEnabled = description.DepthStencilState.DepthWriteEnabled;
-
-                bool stencilEnabled = description.DepthStencilState.StencilTestEnabled;
-                if (stencilEnabled)
+                if (!depth_stencil_states.TryGetValue(description.DepthStencilState, out var depthStencilState))
                 {
-                    StencilReference = description.DepthStencilState.StencilReference;
+                    MTLDepthStencilDescriptor depthDescriptor = MTLUtil.AllocInit<MTLDepthStencilDescriptor>(
+                        nameof(MTLDepthStencilDescriptor));
+                    depthDescriptor.depthCompareFunction = MTLFormats.VdToMTLCompareFunction(
+                        description.DepthStencilState.DepthComparison);
+                    depthDescriptor.depthWriteEnabled = description.DepthStencilState.DepthWriteEnabled;
 
-                    StencilBehaviorDescription vdFrontDesc = description.DepthStencilState.StencilFront;
-                    MTLStencilDescriptor front = MTLUtil.AllocInit<MTLStencilDescriptor>(nameof(MTLStencilDescriptor));
-                    front.readMask = stencilEnabled ? description.DepthStencilState.StencilReadMask : 0u;
-                    front.writeMask = stencilEnabled ? description.DepthStencilState.StencilWriteMask : 0u;
-                    front.depthFailureOperation = MTLFormats.VdToMTLStencilOperation(vdFrontDesc.DepthFail);
-                    front.stencilFailureOperation = MTLFormats.VdToMTLStencilOperation(vdFrontDesc.Fail);
-                    front.depthStencilPassOperation = MTLFormats.VdToMTLStencilOperation(vdFrontDesc.Pass);
-                    front.stencilCompareFunction = MTLFormats.VdToMTLCompareFunction(vdFrontDesc.Comparison);
-                    depthDescriptor.frontFaceStencil = front;
+                    bool stencilEnabled = description.DepthStencilState.StencilTestEnabled;
 
-                    StencilBehaviorDescription vdBackDesc = description.DepthStencilState.StencilBack;
-                    MTLStencilDescriptor back = MTLUtil.AllocInit<MTLStencilDescriptor>(nameof(MTLStencilDescriptor));
-                    back.readMask = stencilEnabled ? description.DepthStencilState.StencilReadMask : 0u;
-                    back.writeMask = stencilEnabled ? description.DepthStencilState.StencilWriteMask : 0u;
-                    back.depthFailureOperation = MTLFormats.VdToMTLStencilOperation(vdBackDesc.DepthFail);
-                    back.stencilFailureOperation = MTLFormats.VdToMTLStencilOperation(vdBackDesc.Fail);
-                    back.depthStencilPassOperation = MTLFormats.VdToMTLStencilOperation(vdBackDesc.Pass);
-                    back.stencilCompareFunction = MTLFormats.VdToMTLCompareFunction(vdBackDesc.Comparison);
-                    depthDescriptor.backFaceStencil = back;
+                    if (stencilEnabled)
+                    {
+                        StencilReference = description.DepthStencilState.StencilReference;
 
-                    ObjectiveCRuntime.release(front.NativePtr);
-                    ObjectiveCRuntime.release(back.NativePtr);
+                        StencilBehaviorDescription vdFrontDesc = description.DepthStencilState.StencilFront;
+                        MTLStencilDescriptor front = MTLUtil.AllocInit<MTLStencilDescriptor>(nameof(MTLStencilDescriptor));
+                        front.readMask = stencilEnabled ? description.DepthStencilState.StencilReadMask : 0u;
+                        front.writeMask = stencilEnabled ? description.DepthStencilState.StencilWriteMask : 0u;
+                        front.depthFailureOperation = MTLFormats.VdToMTLStencilOperation(vdFrontDesc.DepthFail);
+                        front.stencilFailureOperation = MTLFormats.VdToMTLStencilOperation(vdFrontDesc.Fail);
+                        front.depthStencilPassOperation = MTLFormats.VdToMTLStencilOperation(vdFrontDesc.Pass);
+                        front.stencilCompareFunction = MTLFormats.VdToMTLCompareFunction(vdFrontDesc.Comparison);
+                        depthDescriptor.frontFaceStencil = front;
+
+                        StencilBehaviorDescription vdBackDesc = description.DepthStencilState.StencilBack;
+                        MTLStencilDescriptor back = MTLUtil.AllocInit<MTLStencilDescriptor>(nameof(MTLStencilDescriptor));
+                        back.readMask = stencilEnabled ? description.DepthStencilState.StencilReadMask : 0u;
+                        back.writeMask = stencilEnabled ? description.DepthStencilState.StencilWriteMask : 0u;
+                        back.depthFailureOperation = MTLFormats.VdToMTLStencilOperation(vdBackDesc.DepthFail);
+                        back.stencilFailureOperation = MTLFormats.VdToMTLStencilOperation(vdBackDesc.Fail);
+                        back.depthStencilPassOperation = MTLFormats.VdToMTLStencilOperation(vdBackDesc.Pass);
+                        back.stencilCompareFunction = MTLFormats.VdToMTLCompareFunction(vdBackDesc.Comparison);
+                        depthDescriptor.backFaceStencil = back;
+
+                        ObjectiveCRuntime.release(front.NativePtr);
+                        ObjectiveCRuntime.release(back.NativePtr);
+                    }
+
+                    depthStencilState = gd.Device.newDepthStencilStateWithDescriptor(depthDescriptor);
+                    ObjectiveCRuntime.release(depthDescriptor.NativePtr);
                 }
 
-                DepthStencilState = gd.Device.newDepthStencilStateWithDescriptor(depthDescriptor);
-                ObjectiveCRuntime.release(depthDescriptor.NativePtr);
+                DepthStencilState = depthStencilState;
             }
 
             DepthClipMode = description.DepthStencilState.DepthTestEnabled ? MTLDepthClipMode.Clip : MTLDepthClipMode.Clamp;
         }
 
+        // todo: update this to cache states as well.
         public MTLPipeline(ref ComputePipelineDescription description, MTLGraphicsDevice gd)
             : base(ref description)
         {
             IsComputePipeline = true;
             ResourceLayouts = new MTLResourceLayout[description.ResourceLayouts.Length];
+
             for (int i = 0; i < ResourceLayouts.Length; i++)
             {
                 ResourceLayouts[i] = Util.AssertSubtype<ResourceLayout, MTLResourceLayout>(description.ResourceLayouts[i]);
@@ -235,6 +247,7 @@ namespace Veldrid.MTL
                 nameof(MTLComputePipelineDescriptor));
             MTLShader mtlShader = Util.AssertSubtype<Shader, MTLShader>(description.ComputeShader);
             MTLFunction specializedFunction;
+
             if (mtlShader.HasFunctionConstants)
             {
                 // Need to create specialized MTLFunction.
@@ -253,11 +266,13 @@ namespace Veldrid.MTL
             mtlDesc.computeFunction = specializedFunction;
             MTLPipelineBufferDescriptorArray buffers = mtlDesc.buffers;
             uint bufferIndex = 0;
+
             foreach (MTLResourceLayout layout in ResourceLayouts)
             {
                 foreach (ResourceLayoutElementDescription rle in layout.Description.Elements)
                 {
                     ResourceKind kind = rle.Kind;
+
                     if (kind == ResourceKind.UniformBuffer
                         || kind == ResourceKind.StructuredBufferReadOnly)
                     {
@@ -282,6 +297,7 @@ namespace Veldrid.MTL
         private unsafe MTLFunctionConstantValues CreateConstantValues(SpecializationConstant[] specializations)
         {
             MTLFunctionConstantValues ret = MTLFunctionConstantValues.New();
+
             if (specializations != null)
             {
                 foreach (SpecializationConstant sc in specializations)
@@ -296,7 +312,11 @@ namespace Veldrid.MTL
 
         private void AddSpecializedFunction(MTLFunction function)
         {
-            if (_specializedFunctions == null) { _specializedFunctions = new List<MTLFunction>(); }
+            if (_specializedFunctions == null)
+            {
+                _specializedFunctions = new List<MTLFunction>();
+            }
+
             _specializedFunctions.Add(function);
         }
 
@@ -320,6 +340,7 @@ namespace Veldrid.MTL
                     {
                         ObjectiveCRuntime.release(function.NativePtr);
                     }
+
                     _specializedFunctions.Clear();
                 }
 

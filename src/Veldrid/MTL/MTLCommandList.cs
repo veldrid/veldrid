@@ -24,8 +24,8 @@ namespace Veldrid.MTL
         private MTLIndexType _indexType;
         private MTLPipeline _lastGraphicsPipeline;
         private new MTLPipeline _graphicsPipeline;
+        private MTLPipeline _lastComputePipeline;
         private new MTLPipeline _computePipeline;
-        private bool _computePipelineChanged;
         private MTLViewport[] _viewports = Array.Empty<MTLViewport>();
         private bool _viewportsChanged;
         private MTLScissorRect[] _scissorRects = Array.Empty<MTLScissorRect>();
@@ -263,10 +263,11 @@ namespace Veldrid.MTL
         private void PreComputeCommand()
         {
             EnsureComputeEncoder();
-            if (_computePipelineChanged)
-            {
+
+            if (_computePipeline.ComputePipelineState.NativePtr != _lastComputePipeline?.ComputePipelineState.NativePtr)
                 _cce.setComputePipelineState(_computePipeline.ComputePipelineState);
-            }
+
+            _lastComputePipeline = _computePipeline;
 
             for (uint i = 0; i < _computeResourceSetCount; i++)
             {
@@ -299,7 +300,6 @@ namespace Veldrid.MTL
                 Util.EnsureArrayMinimumSize(ref _computeResourceSets, _computeResourceSetCount);
                 Util.EnsureArrayMinimumSize(ref _computeResourceSetsActive, _computeResourceSetCount);
                 Util.ClearArray(_computeResourceSetsActive);
-                _computePipelineChanged = true;
             }
             else
             {
@@ -1081,7 +1081,7 @@ namespace Veldrid.MTL
                 _cce.endEncoding();
                 ObjectiveCRuntime.release(_cce.NativePtr);
                 _cce = default(MTLComputeCommandEncoder);
-                _computePipelineChanged = true;
+                _lastComputePipeline = null;
                 Util.ClearArray(_computeResourceSetsActive);
             }
 

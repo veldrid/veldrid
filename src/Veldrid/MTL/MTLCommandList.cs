@@ -28,8 +28,8 @@ namespace Veldrid.MTL
         private new MTLPipeline _computePipeline;
         private MTLViewport[] _viewports = Array.Empty<MTLViewport>();
         private bool _viewportsChanged;
+        private MTLScissorRect[] _activeScissorRects = Array.Empty<MTLScissorRect>();
         private MTLScissorRect[] _scissorRects = Array.Empty<MTLScissorRect>();
-        private bool _scissorRectsChanged;
         private uint _graphicsResourceSetCount;
         private BoundResourceSetInfo[] _graphicsResourceSets;
         private bool[] _graphicsResourceSetsActive;
@@ -164,11 +164,9 @@ namespace Veldrid.MTL
                     FlushViewports();
                     _viewportsChanged = false;
                 }
-                if (_scissorRectsChanged && _graphicsPipeline.ScissorTestEnabled)
-                {
+
+                if (_graphicsPipeline.ScissorTestEnabled)
                     FlushScissorRects();
-                    _scissorRectsChanged = false;
-                }
 
                 Debug.Assert(_graphicsPipeline != null);
 
@@ -250,14 +248,26 @@ namespace Veldrid.MTL
         {
             if (_gd.MetalFeatures.IsSupported(MTLFeatureSet.macOS_GPUFamily1_v3))
             {
-                fixed (MTLScissorRect* scissorRectsPtr = &_scissorRects[0])
+                bool scissorRectsChanged = false;
+
+                for (int i = 0; i < _scissorRects.Length; i++)
                 {
-                    _rce.setScissorRects(scissorRectsPtr, (UIntPtr)_viewportCount);
+                    scissorRectsChanged |= !_scissorRects[i].Equals(_activeScissorRects[i]);
+                    _activeScissorRects[i] = _scissorRects[i];
+                }
+
+                if (scissorRectsChanged)
+                {
+                    fixed (MTLScissorRect* scissorRectsPtr = _scissorRects)
+                        _rce.setScissorRects(scissorRectsPtr, (UIntPtr)_viewportCount);
                 }
             }
             else
             {
-                _rce.setScissorRect(_scissorRects[0]);
+                if (!_scissorRects[0].Equals(_activeScissorRects[0]))
+                    _rce.setScissorRect(_scissorRects[0]);
+
+                _activeScissorRects[0] = _scissorRects[0];
             }
         }
 
@@ -322,7 +332,6 @@ namespace Veldrid.MTL
 
         public override void SetScissorRect(uint index, uint x, uint y, uint width, uint height)
         {
-            _scissorRectsChanged = true;
             _scissorRects[index] = new MTLScissorRect(x, y, width, height);
         }
 
@@ -716,6 +725,8 @@ namespace Veldrid.MTL
             Util.ClearArray(_viewports);
             Util.EnsureArrayMinimumSize(ref _scissorRects, _viewportCount);
             Util.ClearArray(_scissorRects);
+            Util.EnsureArrayMinimumSize(ref _activeScissorRects, _viewportCount);
+            Util.ClearArray(_activeScissorRects);
             Util.EnsureArrayMinimumSize(ref _clearColors, (uint)fb.ColorTargets.Count);
             Util.ClearArray(_clearColors);
             _currentFramebufferEverActive = false;
@@ -1069,8 +1080,9 @@ namespace Veldrid.MTL
             Util.ClearArray(_graphicsResourceSetsActive);
             Util.ClearArray(_vertexBuffersActive);
 
+            Util.ClearArray(_activeScissorRects);
+
             _viewportsChanged = true;
-            _scissorRectsChanged = true;
         }
 
         private void EnsureBlitEncoder()

@@ -1209,6 +1209,17 @@ namespace Veldrid
         }
 
         /// <summary>
+        /// Creates a new <see cref="GraphicsDevice"/> using Metal.
+        /// </summary>
+        /// <param name="options">Describes several common properties of the GraphicsDevice.</param>
+        /// <param name="metalOptions">The Metal-specific options used to create the device.</param>
+        /// <returns>A new <see cref="GraphicsDevice"/> using the Metal API.</returns>
+        public static GraphicsDevice CreateMetal(GraphicsDeviceOptions options, MetalDeviceOptions metalOptions)
+        {
+            return new MTL.MTLGraphicsDevice(options, null, metalOptions);
+        }
+
+        /// <summary>
         /// Creates a new <see cref="GraphicsDevice"/> using Metal, with a main Swapchain.
         /// </summary>
         /// <param name="options">Describes several common properties of the GraphicsDevice.</param>
@@ -1217,6 +1228,18 @@ namespace Veldrid
         public static GraphicsDevice CreateMetal(GraphicsDeviceOptions options, SwapchainDescription swapchainDescription)
         {
             return new MTL.MTLGraphicsDevice(options, swapchainDescription);
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="GraphicsDevice"/> using Metal, with a main Swapchain.
+        /// </summary>
+        /// <param name="options">Describes several common properties of the GraphicsDevice.</param>
+        /// <param name="metalOptions">The Metal-specific options used to create the device.</param>
+        /// <param name="swapchainDescription">A description of the main Swapchain to create.</param>
+        /// <returns>A new <see cref="GraphicsDevice"/> using the Metal API.</returns>
+        public static GraphicsDevice CreateMetal(GraphicsDeviceOptions options, SwapchainDescription swapchainDescription, MetalDeviceOptions metalOptions)
+        {
+            return new MTL.MTLGraphicsDevice(options, swapchainDescription, metalOptions);
         }
 
         /// <summary>
@@ -1236,6 +1259,26 @@ namespace Veldrid
                 options.SwapchainSrgbFormat);
 
             return new MTL.MTLGraphicsDevice(options, swapchainDesc);
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="GraphicsDevice"/> using Metal, with a main Swapchain.
+        /// </summary>
+        /// <param name="options">Describes several common properties of the GraphicsDevice.</param>
+        /// <param name="nsWindow">A pointer to an NSWindow object, which will be used to create the Metal device's swapchain.
+        /// </param>
+        /// <param name="metalOptions">The Metal-specific options used to create the device.</param>
+        /// <returns>A new <see cref="GraphicsDevice"/> using the Metal API.</returns>
+        public static GraphicsDevice CreateMetal(GraphicsDeviceOptions options, IntPtr nsWindow, MetalDeviceOptions metalOptions)
+        {
+            SwapchainDescription swapchainDesc = new SwapchainDescription(
+                new NSWindowSwapchainSource(nsWindow),
+                0, 0,
+                options.SwapchainDepthFormat,
+                options.SyncToVerticalBlank,
+                options.SwapchainSrgbFormat);
+
+            return new MTL.MTLGraphicsDevice(options, swapchainDesc, metalOptions);
         }
 #endif
     }

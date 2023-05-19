@@ -31,6 +31,13 @@ namespace Veldrid.Sdl2
         public bool LimitPollRate { get; set; }
         public float PollIntervalInMs { get; set; }
 
+        public IntPtr SdlWindow 
+        { 
+            get
+            {
+                return _window;
+            }
+        }
         // Current input states
         private int _currentMouseX;
         private int _currentMouseY;

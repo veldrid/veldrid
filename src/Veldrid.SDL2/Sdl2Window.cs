@@ -28,8 +28,8 @@ namespace Veldrid.Sdl2
         private readonly bool _threadedProcessing;
 
         private bool _shouldClose;
-        public bool LimitPollRate { get; set; }
-        public float PollIntervalInMs { get; set; }
+        public bool LimitPollRate { get; set; } = false;
+        public float PollIntervalInMs { get; set; } = 200.0f;
 
         // Current input states
         private int _currentMouseX;
@@ -44,6 +44,9 @@ namespace Veldrid.Sdl2
         private bool _newWindowTitleReceived;
         private bool _firstMouseEvent = true;
         private Func<bool> _closeRequestedHandler;
+
+        private double previousPollTimeMs = 0;
+        private Stopwatch sw = new Stopwatch();
 
         public Sdl2Window(string title, int x, int y, int width, int height, SDL_WindowFlags flags, bool threadedProcessing)
         {
@@ -63,7 +66,7 @@ namespace Veldrid.Sdl2
                         WindowFlags = flags,
                         ResetEvent = mre
                     };
-
+                    //WindowOwnerRoutine(wp);
                     Task.Factory.StartNew(WindowOwnerRoutine, wp, TaskCreationOptions.LongRunning);
                     mre.WaitOne();
                 }
@@ -98,7 +101,7 @@ namespace Veldrid.Sdl2
             else
             {
                 _window = SDL_CreateWindowFrom(windowHandle);
-                if(_window == IntPtr.Zero)
+                if (_window == IntPtr.Zero)
                 {
                     return;
                 }
@@ -321,37 +324,42 @@ namespace Veldrid.Sdl2
             return true;
         }
 
-        private async void WindowOwnerRoutine(object state)
+        private void WindowOwnerRoutine(object state)
         {
-            WindowParams wp = (WindowParams)state;
+            WindowOwnerRoutine((WindowParams)state);
+        }
+        private void WindowOwnerRoutine(WindowParams windowparameters)
+        {
+            WindowParams wp = windowparameters;
             _window = wp.Create();
             WindowID = SDL_GetWindowID(_window);
             Sdl2WindowRegistry.RegisterWindow(this);
             PostWindowCreated(wp.WindowFlags);
             wp.ResetEvent.Set();
-
-            double previousPollTimeMs = 0;
-            Stopwatch sw = new Stopwatch();
             sw.Start();
 
             while (_exists)
             {
-                if (_shouldClose && CloseCore())
-                {
-                    return;
-                }
+                WindowTick();
+            }
+        }
+        public void WindowTick()
+        {
+            if (_shouldClose && CloseCore())
+            {
+                return;
+            }
 
-                double currentTick = sw.ElapsedTicks;
-                double currentTimeMs = sw.ElapsedTicks * (1000.0 / Stopwatch.Frequency);
-                if (LimitPollRate && currentTimeMs - previousPollTimeMs < PollIntervalInMs)
-                {
-                    Thread.Sleep(0);
-                }
-                else
-                {
-                    previousPollTimeMs = currentTimeMs;
-                    ProcessEvents(null);
-                }
+            double currentTick = sw.ElapsedTicks;
+            double currentTimeMs = sw.ElapsedTicks * (1000.0 / Stopwatch.Frequency);
+            if (LimitPollRate && currentTimeMs - previousPollTimeMs < PollIntervalInMs)
+            {
+                Thread.Sleep(100);
+            }
+            else
+            {
+                previousPollTimeMs = currentTimeMs;
+                ProcessEvents(null);
             }
         }
 
@@ -395,7 +403,6 @@ namespace Veldrid.Sdl2
         private void ProcessEvents(SDLEventHandler eventHandler)
         {
             //CheckNewWindowTitle();
-
             Sdl2Events.ProcessEvents();
             for (int i = 0; i < _events.Count; i++)
             {

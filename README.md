@@ -2,6 +2,8 @@
 
 Veldrid is a cross-platform, graphics API-agnostic rendering and compute library for .NET. It provides a powerful, unified interface to a system's GPU and includes more advanced features than any other .NET library. Unlike other platform- or vendor-specific technologies, Veldrid can be used to create high-performance 3D applications that are truly portable.
 
+___As of February 2023, I'm no longer able to publicly share updates to Veldrid and related libraries. If you're an active user or have contributed improvements in the past, feel free to reach out or join the [Discord server](https://discord.gg/s5EvvWJ) for more information about the status of Veldrid.___
+
 Supported backends:
 
 * Direct3D 11

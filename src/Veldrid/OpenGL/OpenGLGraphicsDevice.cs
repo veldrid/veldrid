@@ -615,7 +615,7 @@ namespace Veldrid.OpenGL
             IntPtr aNativeWindow,
             SwapchainDescription swapchainDescription)
         {
-            IntPtr display = eglGetDisplay(0);
+            IntPtr display = eglGetDisplay((IntPtr)0);
             if (display == IntPtr.Zero)
             {
                 throw new VeldridException($"Failed to get the default Android EGLDisplay: {eglGetError()}");

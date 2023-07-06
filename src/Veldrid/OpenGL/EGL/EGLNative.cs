@@ -39,7 +39,7 @@ namespace Veldrid.OpenGL.EGL
         [DllImport(LibName)]
         public static extern IntPtr eglGetCurrentDisplay();
         [DllImport(LibName)]
-        public static extern IntPtr eglGetDisplay(int native_display);
+        public static extern IntPtr eglGetDisplay(IntPtr native_display);
         [DllImport(LibName)]
         public static extern IntPtr eglGetCurrentSurface(int readdraw);
         [DllImport(LibName)]

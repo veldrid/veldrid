@@ -26,6 +26,7 @@
 
     <PackageReference Include="Vortice.D3DCompiler" Version="$(VorticeWindowsVersion)" Condition="'$(ExcludeD3D11)' != 'true'" />
     <PackageReference Include="Vortice.Direct3D11" Version="$(VorticeWindowsVersion)" Condition="'$(ExcludeD3D11)' != 'true'" />
+    <PackageReference Include="Vortice.WinUI" Version="$(VorticeWindowsVersion)" Condition="'$(ExcludeD3D11)' != 'true'" />
 
     <ProjectReference Include="..\Veldrid.MetalBindings\Veldrid.MetalBindings.csproj" Condition="'$(ExcludeMetal)' != 'true'" />
 

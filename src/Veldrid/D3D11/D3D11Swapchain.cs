@@ -139,6 +139,14 @@ namespace Veldrid.D3D11
                     {
                         bgPanelNative.SetSwapChain(_dxgiSwapChain);
                     }
+                    else//Support WinUI3 see https://github.com/mellinoe/veldrid/pull/416
+                    {
+                        Vortice.WinUI.ISwapChainPanelNative winuiSwapchainPanelNative = co.QueryInterfaceOrNull<Vortice.WinUI.ISwapChainPanelNative>();
+                        if (winuiSwapchainPanelNative != null)
+                        {
+                            winuiSwapchainPanelNative.SetSwapChain(_dxgiSwapChain);
+                        }
+                    }
                 }
             }
 

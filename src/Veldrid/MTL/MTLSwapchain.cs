@@ -79,8 +79,8 @@ namespace Veldrid.MTL
 
                 _uiView = new UIView(uiViewSource.UIView);
                 CGSize viewSize = _uiView.frame.size;
-                width = (uint)(viewSize.width * nativeScale);
-                height = (uint)(viewSize.height * nativeScale);
+                width = (uint)viewSize.width;
+                height = (uint)viewSize.height;
 
                 if (!CAMetalLayer.TryCast(_uiView.layer, out _metalLayer))
                 {
@@ -134,21 +134,11 @@ namespace Veldrid.MTL
         public override void Resize(uint width, uint height)
         {
             if (_uiView.NativePtr != IntPtr.Zero)
-            {
-                UIScreen mainScreen = UIScreen.mainScreen;
-                CGFloat nativeScale = mainScreen.nativeScale;
-                width = (uint)(width * nativeScale);
-                height = (uint)(height * nativeScale);
-
                 _metalLayer.frame = _uiView.frame;
-            }
 
-            _framebuffer.Resize(width, height);
             _metalLayer.drawableSize = new CGSize(width, height);
-            if (_uiView.NativePtr != IntPtr.Zero)
-            {
-                _metalLayer.frame = _uiView.frame;
-            }
+            _framebuffer.Resize(width, height);
+
             GetNextDrawable();
         }
 

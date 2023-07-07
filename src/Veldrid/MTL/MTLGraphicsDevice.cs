@@ -81,7 +81,7 @@ namespace Veldrid.MTL
                 bufferRangeBinding: true,
                 shaderFloat64: false);
             ResourceBindingModel = options.ResourceBindingModel;
-
+            
             if (MetalFeatures.IsMacOS)
             {
                 _libSystem = new NativeLibrary("libSystem.dylib");

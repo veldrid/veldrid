@@ -6,7 +6,9 @@ namespace Veldrid.MetalBindings
 {
     public static unsafe class ObjectiveCRuntime
     {
-        private const string ObjCLibrary = "/usr/lib/libobjc.A.dylib";
+        //According to Xamarin.iOS source:https://github.com/xamarin/xamarin-macios/blob/main/tests/monotouch-test/ObjCRuntime/Messaging.cs
+        private const string ObjCLibrary = "/usr/lib/libobjc.dylib";
+        //private const string ObjCLibrary = "/usr/lib/libobjc.A.dylib";
 
         [DllImport(ObjCLibrary, EntryPoint = "objc_msgSend")]
         public static extern void objc_msgSend(IntPtr receiver, Selector selector);

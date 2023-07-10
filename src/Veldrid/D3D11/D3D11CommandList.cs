@@ -12,8 +12,8 @@ namespace Veldrid.D3D11
     {
         private readonly D3D11GraphicsDevice _gd;
         private readonly ID3D11DeviceContext _context;
-        private readonly ID3D11DeviceContext1 _context1;
-        private readonly ID3DUserDefinedAnnotation _uda;
+        private readonly ID3D11DeviceContext1? _context1;
+        private readonly ID3DUserDefinedAnnotation? _uda;
         private bool _begun;
         private bool _disposed;
         private ID3D11CommandList? _commandList;
@@ -120,7 +120,7 @@ namespace Veldrid.D3D11
         {
             _numVertexBindings = 0;
             Util.ClearArray(_vertexBindings);
-            _vertexStrides = Array.Empty<int>();
+            _vertexStrides = null;
             Util.ClearArray(_vertexOffsets);
 
             _framebuffer = null;
@@ -700,12 +700,12 @@ namespace Veldrid.D3D11
             _context.RSSetScissorRects(_scissors.AsSpan(0, (int)_viewportCount));
         }
 
-        private unsafe void FlushVertexBindings()
+        private void FlushVertexBindings()
         {
             _context.IASetVertexBuffers(
                 0, (int)_numVertexBindings,
                 _vertexBindings,
-                _vertexStrides,
+                _vertexStrides!,
                 _vertexOffsets);
         }
 
@@ -840,6 +840,20 @@ namespace Veldrid.D3D11
 
         private void BindUniformBuffer(D3D11BufferRange range, int slot, ShaderStages stages)
         {
+            bool fullRange = range.IsFullRange;
+            ID3D11DeviceContext1? context1 = _context1;
+            if (!fullRange && context1 == null)
+            {
+                void Throw()
+                {
+                    throw new VeldridException(
+                        $"The range of the uniform buffer in slot {slot} ({range.Buffer}) does not " +
+                        $"meet the requirements of this device.");
+                }
+                Throw();
+            }
+            Debug.Assert(context1 != null);
+
             if ((stages & ShaderStages.Vertex) == ShaderStages.Vertex)
             {
                 bool bind = false;
@@ -857,7 +871,7 @@ namespace Veldrid.D3D11
                 }
                 if (bind)
                 {
-                    if (range.IsFullRange)
+                    if (fullRange)
                     {
                         _context.VSSetConstantBuffer(slot, range.Buffer.Buffer);
                     }
@@ -868,13 +882,13 @@ namespace Veldrid.D3D11
                         {
                             _context.VSUnsetConstantBuffer(slot);
                         }
-                        _context1.VSSetConstantBuffers1(slot, 1, _cbOut, _firstConstRef, _numConstsRef);
+                        context1.VSSetConstantBuffers1(slot, 1, _cbOut, _firstConstRef, _numConstsRef);
                     }
                 }
             }
             if ((stages & ShaderStages.Geometry) == ShaderStages.Geometry)
             {
-                if (range.IsFullRange)
+                if (fullRange)
                 {
                     _context.GSSetConstantBuffer(slot, range.Buffer.Buffer);
                 }
@@ -885,12 +899,12 @@ namespace Veldrid.D3D11
                     {
                         _context.GSUnsetConstantBuffer(slot);
                     }
-                    _context1.GSSetConstantBuffers1(slot, 1, _cbOut, _firstConstRef, _numConstsRef);
+                    context1.GSSetConstantBuffers1(slot, 1, _cbOut, _firstConstRef, _numConstsRef);
                 }
             }
             if ((stages & ShaderStages.TessellationControl) == ShaderStages.TessellationControl)
             {
-                if (range.IsFullRange)
+                if (fullRange)
                 {
                     _context.HSSetConstantBuffer(slot, range.Buffer.Buffer);
                 }
@@ -901,12 +915,12 @@ namespace Veldrid.D3D11
                     {
                         _context.HSUnsetConstantBuffer(slot);
                     }
-                    _context1.HSSetConstantBuffers1(slot, 1, _cbOut, _firstConstRef, _numConstsRef);
+                    context1.HSSetConstantBuffers1(slot, 1, _cbOut, _firstConstRef, _numConstsRef);
                 }
             }
             if ((stages & ShaderStages.TessellationEvaluation) == ShaderStages.TessellationEvaluation)
             {
-                if (range.IsFullRange)
+                if (fullRange)
                 {
                     _context.DSSetConstantBuffer(slot, range.Buffer.Buffer);
                 }
@@ -917,7 +931,7 @@ namespace Veldrid.D3D11
                     {
                         _context.DSUnsetConstantBuffer(slot);
                     }
-                    _context1.DSSetConstantBuffers1(slot, 1, _cbOut, _firstConstRef, _numConstsRef);
+                    context1.DSSetConstantBuffers1(slot, 1, _cbOut, _firstConstRef, _numConstsRef);
                 }
             }
             if ((stages & ShaderStages.Fragment) == ShaderStages.Fragment)
@@ -937,7 +951,7 @@ namespace Veldrid.D3D11
                 }
                 if (bind)
                 {
-                    if (range.IsFullRange)
+                    if (fullRange)
                     {
                         _context.PSSetConstantBuffer(slot, range.Buffer.Buffer);
                     }
@@ -948,13 +962,13 @@ namespace Veldrid.D3D11
                         {
                             _context.PSUnsetConstantBuffer(slot);
                         }
-                        _context1.PSSetConstantBuffers1(slot, 1, _cbOut, _firstConstRef, _numConstsRef);
+                        context1.PSSetConstantBuffers1(slot, 1, _cbOut, _firstConstRef, _numConstsRef);
                     }
                 }
             }
             if ((stages & ShaderStages.Compute) == ShaderStages.Compute)
             {
-                if (range.IsFullRange)
+                if (fullRange)
                 {
                     _context.CSSetConstantBuffer(slot, range.Buffer.Buffer);
                 }
@@ -965,7 +979,7 @@ namespace Veldrid.D3D11
                     {
                         _context.CSSetConstantBuffer(slot, null!);
                     }
-                    _context1.CSSetConstantBuffers1(slot, 1, _cbOut, _firstConstRef, _numConstsRef);
+                    context1.CSSetConstantBuffers1(slot, 1, _cbOut, _firstConstRef, _numConstsRef);
                 }
             }
         }
@@ -1395,7 +1409,7 @@ namespace Veldrid.D3D11
             public uint ResourceSet;
         }
 
-        private struct D3D11BufferRange : IEquatable<D3D11BufferRange>
+        private readonly struct D3D11BufferRange : IEquatable<D3D11BufferRange>
         {
             public readonly D3D11Buffer Buffer;
             public readonly uint Offset;

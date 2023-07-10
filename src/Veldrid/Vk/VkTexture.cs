@@ -288,8 +288,8 @@ namespace Veldrid.Vulkan
             if (!staging)
             {
                 VkImageAspectFlags aspect = (Usage & TextureUsage.DepthStencil) == TextureUsage.DepthStencil
-                  ? (VkImageAspectFlags.VK_IMAGE_ASPECT_DEPTH_BIT | VkImageAspectFlags.VK_IMAGE_ASPECT_STENCIL_BIT)
-                  : VkImageAspectFlags.VK_IMAGE_ASPECT_COLOR_BIT;
+                    ? (VkImageAspectFlags.VK_IMAGE_ASPECT_DEPTH_BIT | VkImageAspectFlags.VK_IMAGE_ASPECT_STENCIL_BIT)
+                    : VkImageAspectFlags.VK_IMAGE_ASPECT_COLOR_BIT;
                 VkImageSubresource imageSubresource = new()
                 {
                     arrayLayer = arrayLevel,
@@ -339,11 +339,14 @@ namespace Veldrid.Vulkan
                 return;
             }
 
+            Debug.Assert(baseMipLevel + levelCount <= MipLevels);
+            Debug.Assert(baseArrayLayer + layerCount <= ActualArrayLayers);
+
             VkImageLayout oldLayout = GetImageLayout(baseMipLevel, baseArrayLayer);
 #if DEBUG
-            for (uint level = 0; level < levelCount; level++)
+            for (uint layer = 0; layer < layerCount; layer++)
             {
-                for (uint layer = 0; layer < layerCount; layer++)
+                for (uint level = 0; level < levelCount; level++)
                 {
                     if (GetImageLayout(baseMipLevel + level, baseArrayLayer + layer) != oldLayout)
                     {
@@ -373,12 +376,12 @@ namespace Veldrid.Vulkan
                     baseArrayLayer,
                     layerCount,
                     aspectMask,
-                    GetImageLayout(baseMipLevel, baseArrayLayer),
+                    oldLayout,
                     newLayout);
 
-                for (uint level = 0; level < levelCount; level++)
+                for (uint layer = 0; layer < layerCount; layer++)
                 {
-                    for (uint layer = 0; layer < layerCount; layer++)
+                    for (uint level = 0; level < levelCount; level++)
                     {
                         SetImageLayout(baseMipLevel + level, baseArrayLayer + layer, newLayout);
                     }
@@ -399,9 +402,9 @@ namespace Veldrid.Vulkan
                 return;
             }
 
-            for (uint level = baseMipLevel; level < baseMipLevel + levelCount; level++)
+            for (uint layer = baseArrayLayer; layer < baseArrayLayer + layerCount; layer++)
             {
-                for (uint layer = baseArrayLayer; layer < baseArrayLayer + layerCount; layer++)
+                for (uint level = baseMipLevel; level < baseMipLevel + levelCount; level++)
                 {
                     VkImageLayout oldLayout = GetImageLayout(level, layer);
                     if (oldLayout != newLayout)

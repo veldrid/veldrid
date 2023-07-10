@@ -272,9 +272,8 @@ namespace Veldrid.Vulkan
                     clearValue = clearValue
                 };
 
-                uint renderableWidth = _currentFramebuffer.RenderableWidth;
-                uint renderableHeight = _currentFramebuffer.RenderableHeight;
-                if (renderableWidth > 0 && renderableHeight > 0)
+                VkExtent2D renderableExtent = _currentFramebuffer.RenderableExtent;
+                if (renderableExtent.width > 0 && renderableExtent.height > 0)
                 {
                     VkClearRect clearRect = new()
                     {
@@ -283,7 +282,7 @@ namespace Veldrid.Vulkan
                         rect = new VkRect2D()
                         {
                             offset = new VkOffset2D(),
-                            extent = new VkExtent2D() { width = renderableWidth, height = renderableHeight }
+                            extent = renderableExtent
                         }
                     };
                     vkCmdClearAttachments(_cb, 1, &clearAttachment, 1, &clearRect);
@@ -669,11 +668,7 @@ namespace Veldrid.Vulkan
                 renderArea = new VkRect2D()
                 {
                     offset = new VkOffset2D(),
-                    extent = new VkExtent2D()
-                    {
-                        width = _currentFramebuffer.RenderableWidth,
-                        height = _currentFramebuffer.RenderableHeight
-                    }
+                    extent = _currentFramebuffer.RenderableExtent
                 },
                 framebuffer = _currentFramebuffer.CurrentFramebuffer
             };

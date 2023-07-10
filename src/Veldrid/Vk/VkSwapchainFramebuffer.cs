@@ -13,7 +13,7 @@ namespace Veldrid.Vulkan
         private readonly PixelFormat? _depthFormat;
         private uint _currentImageIndex;
 
-        private VkFramebuffer?[] _scFramebuffers = Array.Empty<VkFramebuffer>();
+        private VkFramebuffer[] _scFramebuffers = Array.Empty<VkFramebuffer>();
         private VkImage[] _scImages = Array.Empty<VkImage>();
         private VkFormat _scImageFormat;
         private VkExtent2D _scExtent;
@@ -22,18 +22,15 @@ namespace Veldrid.Vulkan
         private bool _destroyed;
         private string? _name;
 
-        public override TerraFX.Interop.Vulkan.VkFramebuffer CurrentFramebuffer => _scFramebuffers[(int)_currentImageIndex]!.CurrentFramebuffer;
+        public override TerraFX.Interop.Vulkan.VkFramebuffer CurrentFramebuffer => _scFramebuffers[(int)_currentImageIndex].CurrentFramebuffer;
 
-        public override VkRenderPass RenderPassNoClear_Init => _scFramebuffers[0]!.RenderPassNoClear_Init;
-        public override VkRenderPass RenderPassNoClear_Load => _scFramebuffers[0]!.RenderPassNoClear_Load;
-        public override VkRenderPass RenderPassClear => _scFramebuffers[0]!.RenderPassClear;
+        public override VkRenderPass RenderPassNoClear_Init => _scFramebuffers[0].RenderPassNoClear_Init;
+        public override VkRenderPass RenderPassNoClear_Load => _scFramebuffers[0].RenderPassNoClear_Load;
+        public override VkRenderPass RenderPassClear => _scFramebuffers[0].RenderPassClear;
 
-        public override uint RenderableWidth => _scExtent.width;
-        public override uint RenderableHeight => _scExtent.height;
+        public override VkExtent2D RenderableExtent => _scExtent;
 
         public uint ImageIndex => _currentImageIndex;
-
-        public override uint AttachmentCount { get; }
 
         public VkSwapchain Swapchain => _swapchain;
 
@@ -43,17 +40,15 @@ namespace Veldrid.Vulkan
             VkGraphicsDevice gd,
             VkSwapchain swapchain,
             VkSurfaceKHR surface,
-            uint width,
-            uint height,
-            PixelFormat? depthFormat)
+            in SwapchainDescription description)
             : base()
         {
             _gd = gd;
             _swapchain = swapchain;
             _surface = surface;
-            _depthFormat = depthFormat;
+            _depthFormat = description.DepthFormat;
 
-            AttachmentCount = depthFormat.HasValue ? 2u : 1u; // 1 Color + 1 Depth
+            AttachmentCount = _depthFormat.HasValue ? 2u : 1u; // 1 Color + 1 Depth
         }
 
         internal void SetImageIndex(uint index)
@@ -100,7 +95,7 @@ namespace Veldrid.Vulkan
             for (int i = 0; i < _scFramebuffers.Length; i++)
             {
                 _scFramebuffers[i]?.Dispose();
-                _scFramebuffers[i] = null;
+                _scFramebuffers[i] = null!;
             }
         }
 

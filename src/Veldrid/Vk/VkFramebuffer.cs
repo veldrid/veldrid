@@ -27,10 +27,7 @@ namespace Veldrid.Vulkan
         public override VkRenderPass RenderPassNoClear_Load => _renderPassNoClearLoad;
         public override VkRenderPass RenderPassClear => _renderPassClear;
 
-        public override uint RenderableWidth => Width;
-        public override uint RenderableHeight => Height;
-
-        public override uint AttachmentCount { get; }
+        public override VkExtent2D RenderableExtent => new() { width = Width, height = Height };
 
         public override bool IsDisposed => _destroyed;
 

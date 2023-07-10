@@ -20,6 +20,10 @@ namespace Veldrid
 
         internal GraphicsDevice()
         {
+            DeviceName = "";
+            VendorName = "";
+            ResourceFactory = null!;
+            Features = null!;
         }
 
         /// <summary>

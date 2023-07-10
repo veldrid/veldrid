@@ -121,7 +121,7 @@ namespace Veldrid.Vulkan
 
         public override void Dispose()
         {
-            RefCount.Decrement();
+            RefCount.DecrementDispose();
         }
 
         void IResourceRefCountTarget.RefZeroed()

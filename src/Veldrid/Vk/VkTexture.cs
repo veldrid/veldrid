@@ -465,7 +465,7 @@ namespace Veldrid.Vulkan
 
         private protected override void DisposeCore()
         {
-            RefCount.Decrement();
+            RefCount.DecrementDispose();
         }
 
         void IResourceRefCountTarget.RefZeroed()

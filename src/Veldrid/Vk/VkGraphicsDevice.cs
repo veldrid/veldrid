@@ -272,6 +272,7 @@ namespace Veldrid.Vulkan
                 {
                     _availableStagingTextures.Add(stagingTex);
                 }
+
                 if (_submittedStagingBuffers.Remove(completedCB, out VkBuffer? stagingBuffer))
                 {
                     if (stagingBuffer.SizeInBytes <= MaxStagingBufferSize)
@@ -283,6 +284,7 @@ namespace Veldrid.Vulkan
                         stagingBuffer.Dispose();
                     }
                 }
+
                 if (_submittedSharedCommandPools.Remove(completedCB, out SharedCommandPool? sharedPool))
                 {
                     lock (_graphicsCommandPoolLock)

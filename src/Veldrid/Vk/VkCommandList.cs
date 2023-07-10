@@ -1171,12 +1171,12 @@ namespace Veldrid.Vulkan
 
                 VulkanBuffer dstBuffer = dstVkTexture.StagingBuffer;
 
-                VkImageAspectFlags aspect = (srcVkTexture.Usage & TextureUsage.DepthStencil) != 0
+                VkImageAspectFlags srcAspect = (srcVkTexture.Usage & TextureUsage.DepthStencil) != 0
                     ? VkImageAspectFlags.VK_IMAGE_ASPECT_DEPTH_BIT
                     : VkImageAspectFlags.VK_IMAGE_ASPECT_COLOR_BIT;
 
                 Util.GetMipDimensions(dstVkTexture, dstMipLevel, out uint mipWidth, out uint mipHeight);
-                uint blockSize = FormatHelpers.IsCompressedFormat(srcVkTexture.Format) ? 4u : 1u;
+                uint blockSize = FormatHelpers.IsCompressedFormat(dstVkTexture.Format) ? 4u : 1u;
                 uint bufferRowLength = Math.Max(mipWidth, blockSize);
                 uint bufferImageHeight = Math.Max(mipHeight, blockSize);
                 uint compressedDstX = dstX / blockSize;
@@ -1194,7 +1194,7 @@ namespace Veldrid.Vulkan
 
                     VkImageSubresourceLayers srcSubresource = new()
                     {
-                        aspectMask = aspect,
+                        aspectMask = srcAspect,
                         layerCount = 1,
                         mipLevel = srcMipLevel,
                         baseArrayLayer = srcBaseArrayLayer + layer

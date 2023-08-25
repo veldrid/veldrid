@@ -1,9 +1,20 @@
-﻿using Vortice.Direct3D11;
+﻿using SharpGen.Runtime;
+using Vortice.Direct3D11;
+using Vortice.DXGI;
 
 namespace Veldrid.D3D11
 {
     internal static class D3D11Util
     {
+        /// <summary>
+        /// Returns the given parent of a <see cref="IDXGIObject"/>, or null if no such object exists.
+        /// </summary>
+        public static T GetParentOrNull<T>(this IDXGIObject dxgiObject) where T : ComObject
+        {
+            // Importantly, this uses the overload with an out value, which itself returns the object.
+            return dxgiObject.GetParent(out T obj).Success ? obj : null;
+        }
+
         public static int ComputeSubresource(uint mipLevel, uint mipLevelCount, uint arrayLayer)
         {
             return (int)((arrayLayer * mipLevelCount) + mipLevel);

@@ -78,6 +78,13 @@ namespace Veldrid.D3D11
                 ? Format.B8G8R8A8_UNorm_SRgb
                 : Format.B8G8R8A8_UNorm;
 
+            // FlipDiscard is only supported on DXGI 1.4+
+            bool canUseFlipDiscard;
+            using (IDXGIFactory4 dxgiFactory4 = _gd.Adapter.GetParentOrNull<IDXGIFactory4>())
+                canUseFlipDiscard = dxgiFactory4 != null;
+
+            SwapEffect swapEffect = canUseFlipDiscard ? SwapEffect.FlipDiscard : SwapEffect.Discard;
+
             if (description.Source is Win32SwapchainSource win32Source)
             {
                 SwapChainDescription dxgiSCDesc = new SwapChainDescription
@@ -88,7 +95,7 @@ namespace Veldrid.D3D11
                         (int)description.Width, (int)description.Height, _colorFormat),
                     OutputWindow = win32Source.Hwnd,
                     SampleDescription = new SampleDescription(1, 0),
-                    SwapEffect = SwapEffect.FlipDiscard,
+                    SwapEffect = swapEffect,
                     BufferUsage = Usage.RenderTargetOutput
                 };
 

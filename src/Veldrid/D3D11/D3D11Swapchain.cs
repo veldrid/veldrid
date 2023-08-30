@@ -80,7 +80,7 @@ namespace Veldrid.D3D11
 
             // FlipDiscard is only supported on DXGI 1.4+
             bool canUseFlipDiscard;
-            using (IDXGIFactory4 dxgiFactory4 = _gd.Adapter.GetParentOrNull<IDXGIFactory4>())
+            using (IDXGIFactory4 dxgiFactory4 = (_gd.Adapter.GetParent(out IDXGIFactory4 f).Success ? f : null))
                 canUseFlipDiscard = dxgiFactory4 != null;
 
             SwapEffect swapEffect = canUseFlipDiscard ? SwapEffect.FlipDiscard : SwapEffect.Discard;

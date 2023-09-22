@@ -822,6 +822,10 @@ namespace Veldrid.OpenGL
             _executionThread.WaitForIdle();
         }
 
+        private protected override void WaitForNextFrameReadyCore()
+        {
+        }
+
         public override TextureSampleCount GetSampleCountLimit(PixelFormat format, bool depthFormat)
         {
             return _maxColorTextureSamples;

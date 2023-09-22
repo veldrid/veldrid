@@ -230,12 +230,18 @@ namespace Veldrid.D3D11
             }
         }
 
+        public override bool AllowTearing
+        {
+            get => _mainSwapchain.AllowTearing;
+            set => _mainSwapchain.AllowTearing = value;
+        }
+
         private protected override void SwapBuffersCore(Swapchain swapchain)
         {
             lock (_immediateContextLock)
             {
                 D3D11Swapchain d3d11SC = Util.AssertSubtype<Swapchain, D3D11Swapchain>(swapchain);
-                d3d11SC.DxgiSwapChain.Present(d3d11SC.SyncInterval, PresentFlags.None);
+                d3d11SC.DxgiSwapChain.Present(d3d11SC.SyncInterval, d3d11SC.PresentFlags);
             }
         }
 
@@ -694,6 +700,11 @@ namespace Veldrid.D3D11
 
         private protected override void WaitForIdleCore()
         {
+        }
+
+        private protected override void WaitForNextFrameReadyCore()
+        {
+            _mainSwapchain.WaitForNextFrameReady();
         }
 
         public override bool GetD3D11Info(out BackendInfoD3D11 info)

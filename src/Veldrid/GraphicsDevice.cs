@@ -93,6 +93,12 @@ namespace Veldrid
         }
 
         /// <summary>
+        /// Gets or sets whether the graphics device should allow frames to be displayed as fast as possible even if tearing occurs.
+        /// This will only have an effect if <see cref="SyncToVerticalBlank"/> is false.
+        /// </summary>
+        public virtual bool AllowTearing { get; set; }
+
+        /// <summary>
         /// The required alignment, in bytes, for uniform buffer offsets. <see cref="DeviceBufferRange.Offset"/> must be a
         /// multiple of this value. When binding a <see cref="ResourceSet"/> to a <see cref="CommandList"/> with an overload
         /// accepting dynamic offsets, each offset must be a multiple of this value.
@@ -266,6 +272,15 @@ namespace Veldrid
         }
 
         private protected abstract void WaitForIdleCore();
+
+        /// <summary>
+        /// A blocking method that returns when the GPU signals that the next frame is ready to be rendered.
+        /// In contrast to <see cref="Swapchain.SyncToVerticalBlank"/>, this allows the next frame to be rendered as soon
+        /// as the next GPU buffer becomes available without incurring the extra frame of latency of <see cref="Swapchain.SyncToVerticalBlank"/>.
+        /// </summary>
+        public void WaitForNextFrameReady() => WaitForNextFrameReadyCore();
+
+        private protected abstract void WaitForNextFrameReadyCore();
 
         /// <summary>
         /// Gets the maximum sample count supported by the given <see cref="PixelFormat"/>.

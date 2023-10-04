@@ -74,7 +74,7 @@ namespace Veldrid.Vulkan
                 description.Usage,
                 description.SampleCount,
                 new VkImage(nativeTexture),
-                true,
+                false,
                 true);
         }
 

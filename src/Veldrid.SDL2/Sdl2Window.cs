@@ -28,8 +28,11 @@ namespace Veldrid.Sdl2
         private readonly bool _threadedProcessing;
 
         private bool _shouldClose;
+        /// <summary>
+        /// Foe Focus Lost
+        /// </summary>
         public bool LimitPollRate { get; set; } = false;
-        public float PollIntervalInMs { get; set; } = 200.0f;
+        public float PollIntervalInMs { get; set; } = 100f;
 
         // Current input states
         private int _currentMouseX;
@@ -48,6 +51,9 @@ namespace Veldrid.Sdl2
         private double previousPollTimeMs = 0;
         private Stopwatch sw = new Stopwatch();
 
+        public ManualResetEvent ManualReset { get; set; } = new ManualResetEvent(false);
+
+        Thread Current { get; set; }
         public Sdl2Window(string title, int x, int y, int width, int height, SDL_WindowFlags flags, bool threadedProcessing)
         {
             SDL_SetHint("SDL_MOUSE_FOCUS_CLICKTHROUGH", "1");
@@ -335,8 +341,10 @@ namespace Veldrid.Sdl2
             WindowID = SDL_GetWindowID(_window);
             Sdl2WindowRegistry.RegisterWindow(this);
             PostWindowCreated(wp.WindowFlags);
-            wp.ResetEvent.Set();
             sw.Start();
+
+            Current = Thread.CurrentThread;
+            wp.ResetEvent.Set();
 
             while (_exists)
             {
@@ -345,22 +353,31 @@ namespace Veldrid.Sdl2
         }
         public void WindowTick()
         {
+            //ManualReset.WaitOne();
+            if (Current != Thread.CurrentThread)
+            {
+                throw new InvalidOperationException("Miss Thread!");
+            }
             if (_shouldClose && CloseCore())
             {
                 return;
             }
 
-            double currentTick = sw.ElapsedTicks;
-            double currentTimeMs = sw.ElapsedTicks * (1000.0 / Stopwatch.Frequency);
+            double currentTimeMs = sw.Elapsed.TotalMilliseconds;
             if (LimitPollRate && currentTimeMs - previousPollTimeMs < PollIntervalInMs)
             {
-                Thread.Sleep(100);
+                Thread.Sleep(200);
             }
             else
             {
+                //Task.Run(() =>
+                //{
+                //    Debug.WriteLine($"Input {currentTimeMs - previousPollTimeMs}");
+                //});
                 previousPollTimeMs = currentTimeMs;
                 ProcessEvents(null);
             }
+            //ManualReset.Reset();
         }
 
         private void PostWindowCreated(SDL_WindowFlags flags)
@@ -472,6 +489,7 @@ namespace Veldrid.Sdl2
                     break;
                 default:
                     // Ignore
+                    throw new NotImplementedException();
                     break;
             }
         }

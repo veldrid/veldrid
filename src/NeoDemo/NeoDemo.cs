@@ -24,7 +24,7 @@ namespace Veldrid.NeoDemo
         private RenderOrderKeyComparer _renderOrderKeyComparer = new RenderOrderKeyComparer();
         private bool _recreateWindow = true;
 
-        private static double _desiredFrameLengthSeconds = 1.0 / 60.0;
+        private static double _desiredFrameLengthSeconds = 1.0 / 160.0;
         private static bool _limitFrameRate = false;
         private static FrameTimeAverager _fta = new FrameTimeAverager(0.666);
         private CommandList _frameCommands;

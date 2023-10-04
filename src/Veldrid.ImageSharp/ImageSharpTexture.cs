@@ -41,7 +41,10 @@ namespace Veldrid.ImageSharp
         /// </summary>
         public uint MipLevels => (uint)Images.Length;
 
-        public ImageSharpTexture(string path) : this(Image.Load<Rgba32>(path), true) { }
+        public ImageSharpTexture(string path) : this(Image.Load<Rgba32>(path), true)
+        {
+
+        }
         public ImageSharpTexture(string path, bool mipmap) : this(Image.Load<Rgba32>(path), mipmap) { }
         public ImageSharpTexture(string path, bool mipmap, bool srgb) : this(Image.Load<Rgba32>(path), mipmap, srgb) { }
         public ImageSharpTexture(Stream stream) : this(Image.Load<Rgba32>(stream), true) { }
@@ -146,10 +149,19 @@ namespace Veldrid.ImageSharp
             return tex;
         }
 
-        public unsafe void UpdateTexture(GraphicsDevice gd, Texture tex, in byte[] newData, bool MipMaps)
+        public unsafe void UpdateTexture(GraphicsDevice gd, Texture tex, in Image<Rgba32> newData, bool MipMaps)
         {
-            Image<Rgba32> img = null;
-            img = Image.Load<Rgba32>(newData);
+            if (newData == null)
+            {
+                return;
+            }
+
+            if (tex.Width != newData.Width || tex.Height != newData.Height)
+            {
+                throw new Exception("Need Recreate Texture, size not math!");
+            }
+
+            Image<Rgba32> img = newData;
             if (MipMaps == true)
             {
                 Images = MipmapHelper.GenerateMipmaps(img);
@@ -158,6 +170,7 @@ namespace Veldrid.ImageSharp
             {
                 Images = new Image<Rgba32>[] { img };
             }
+
             for (int level = 0; level < MipLevels; level++)
             {
                 Image<Rgba32> image = Images[level];
@@ -178,6 +191,10 @@ namespace Veldrid.ImageSharp
                         0);
                 }
             }
+        }
+        public unsafe void UpdateTexture(GraphicsDevice gd, Texture tex, in byte[] newData, bool MipMaps)
+        {
+            UpdateTexture(gd, tex, Image.Load<Rgba32>(newData), MipMaps);
         }
         public unsafe void UpdateTexture(GraphicsDevice gd, Texture tex, IntPtr newdata, bool MipMaps)
         {

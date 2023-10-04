@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <_Veldrid_SDL2_IsWindows Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' == 'true'">true</_Veldrid_SDL2_IsWindows>
+    <_Veldrid_SDL2_IsMacOS Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' == 'true'">true</_Veldrid_SDL2_IsMacOS>
+
+    <_Veldrid_SDL2_NativeRuntime Condition=" '$(_Veldrid_SDL2_NativeRuntime)' == '' And '$(_Veldrid_SDL2_IsMacOS)' == 'true' And ('$(Prefer32Bit)' == 'false' Or '$(PlatformTarget)' == 'x64')">osx-x64</_Veldrid_SDL2_NativeRuntime>
+    <_Veldrid_SDL2_NativeRuntime Condition=" '$(_Veldrid_SDL2_NativeRuntime)' == '' And '$(_Veldrid_SDL2_IsWindows)' == 'true' And ('$(Prefer32Bit)' == 'false' Or '$(PlatformTarget)' == 'x64')">win-x64</_Veldrid_SDL2_NativeRuntime>
+    <_Veldrid_SDL2_NativeRuntime Condition=" '$(_Veldrid_SDL2_NativeRuntime)' == '' And '$(_Veldrid_SDL2_IsWindows)' == 'true' And ('$(Prefer32Bit)' == 'true' Or '$(PlatformTarget)' == 'x86')">win-x86</_Veldrid_SDL2_NativeRuntime>
+
+    <_Veldrid_SDL2_NativeLibName Condition="'$(_Veldrid_SDL2_NativeRuntime)' == 'win-x86' Or '$(_Veldrid_SDL2_NativeRuntime)' == 'win-x64'">SDL2.dll</_Veldrid_SDL2_NativeLibName>
+    <_Veldrid_SDL2_NativeLibName Condition="'$(_Veldrid_SDL2_NativeRuntime)' == 'osx-x64'">libsdl2.dylib</_Veldrid_SDL2_NativeLibName>
+  </PropertyGroup>
+  <ItemGroup>
+    <Content Condition="'$(_Veldrid_SDL2_NativeRuntime)' != ''" Include="$(MSBuildThisFileDirectory)..\..\runtimes\$(_Veldrid_SDL2_NativeRuntime)\native\$(_Veldrid_SDL2_NativeLibName)">
+      <Link>%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <Visible>False</Visible>
+    </Content>
+  </ItemGroup>
+</Project>

@@ -133,7 +133,9 @@ namespace Veldrid.Vulkan
                     _scImageFormat,
                     TextureUsage.RenderTarget,
                     TextureSampleCount.Count1,
-                    _scImages[i]);
+                    _scImages[i],
+                    true,
+                    true);
                 FramebufferDescription desc = new(_depthTarget?.Target, colorTex);
                 VkFramebuffer fb = new(_gd, desc, true);
                 _scFramebuffers[i] = fb;

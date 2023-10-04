@@ -27,6 +27,7 @@ namespace Veldrid.Vulkan
 
         private VkImageLayout[] _imageLayouts;
         private bool _isSwapchainTexture;
+        private bool _leaveOpen;
         private string? _name;
 
         public ResourceRefCount RefCount { get; }
@@ -233,7 +234,9 @@ namespace Veldrid.Vulkan
             VkFormat vkFormat,
             TextureUsage usage,
             TextureSampleCount sampleCount,
-            VkImage existingImage)
+            VkImage existingImage,
+            bool isSwapchainTexture,
+            bool leaveOpen)
         {
             Debug.Assert(width > 0 && height > 0);
             _gd = gd;
@@ -254,7 +257,8 @@ namespace Veldrid.Vulkan
             VkSampleCount = VkFormats.VdToVkSampleCount(sampleCount);
             _optimalImage = existingImage;
             _imageLayouts = new[] { VkImageLayout.VK_IMAGE_LAYOUT_UNDEFINED };
-            _isSwapchainTexture = true;
+            _isSwapchainTexture = isSwapchainTexture;
+            _leaveOpen = leaveOpen;
 
             ClearIfRenderTarget();
             RefCount = new ResourceRefCount(this);
@@ -470,11 +474,18 @@ namespace Veldrid.Vulkan
 
         void IResourceRefCountTarget.RefZeroed()
         {
-            if (!_destroyed)
+            if (_destroyed)
             {
+                return;
+            }
                 base.Dispose();
 
                 _destroyed = true;
+
+            if (_leaveOpen)
+                {
+                return;
+            }
 
                 bool isStaging = (Usage & TextureUsage.Staging) == TextureUsage.Staging;
                 if (isStaging)
@@ -491,7 +502,6 @@ namespace Veldrid.Vulkan
                     _gd.MemoryManager.Free(_memoryBlock);
                 }
             }
-        }
 
         internal void SetImageLayout(uint mipLevel, uint arrayLayer, VkImageLayout layout)
         {

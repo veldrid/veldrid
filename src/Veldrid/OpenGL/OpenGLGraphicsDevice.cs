@@ -1076,6 +1076,9 @@ namespace Veldrid.OpenGL
             glEnable(EnableCap.DebugOutput);
             CheckLastError();
 
+            glEnable(EnableCap.DebugOutputSynchronous);
+            CheckLastError();
+
             // The debug callback delegate must be persisted, otherwise errors will occur
             // when the OpenGL drivers attempt to call it after it has been collected.
             _debugMessageCallback = callback;

@@ -85,21 +85,24 @@ namespace Veldrid.ImageSharp
             for (uint level = 0; level < MipLevels; level++)
             {
                 Image<Rgba32> image = Images[level];
-                var pixelSpan = image.GetPixelSpan();
-                fixed (void* pin = &MemoryMarshal.GetReference(pixelSpan))
+                if (!image.DangerousTryGetSinglePixelMemory(out Memory<Rgba32> pixels))
+                {
+                    throw new VeldridException("Unable to get image pixelspan.");
+                }
+                fixed (void* pixelPtr = pixels.Span)
                 {
                     MappedResource map = gd.Map(staging, MapMode.Write, level);
                     uint rowWidth = (uint)(image.Width * 4);
                     if (rowWidth == map.RowPitch)
                     {
-                        Unsafe.CopyBlock(map.Data.ToPointer(), pin, (uint)(image.Width * image.Height * 4));
+                        Unsafe.CopyBlock(map.Data.ToPointer(), pixelPtr, (uint)(image.Width * image.Height * 4));
                     }
                     else
                     {
                         for (uint y = 0; y < image.Height; y++)
                         {
                             byte* dstStart = (byte*)map.Data.ToPointer() + y * map.RowPitch;
-                            byte* srcStart = (byte*)pin + y * rowWidth;
+                            byte* srcStart = (byte*)pixelPtr + y * rowWidth;
                             Unsafe.CopyBlock(dstStart, srcStart, rowWidth);
                         }
                     }
@@ -124,96 +127,59 @@ namespace Veldrid.ImageSharp
         private unsafe Texture CreateTextureViaUpdate(GraphicsDevice gd, ResourceFactory factory)
         {
             Texture tex = factory.CreateTexture(TextureDescription.Texture2D(
-                Width, Height, MipLevels, 1, Format, TextureUsage.RenderTarget | TextureUsage.Sampled));
+                Width, Height, MipLevels, 1, Format, TextureUsage.Sampled));
+
             for (int level = 0; level < MipLevels; level++)
             {
                 Image<Rgba32> image = Images[level];
-                Span<Rgba32> pixelSpan = image.GetPixelSpan();
-                fixed (void* pin = &MemoryMarshal.GetReference(pixelSpan))
+
+                if (image.DangerousTryGetSinglePixelMemory(out Memory<Rgba32> pixels))
                 {
-                    gd.UpdateTexture(
-                        tex,
-                        (IntPtr)pin,
-                        (uint)(PixelSizeInBytes * image.Width * image.Height),
-                        0,
-                        0,
-                        0,
-                        (uint)image.Width,
-                        (uint)image.Height,
-                        1,
-                        (uint)level,
-                        0);
+                    fixed (void* pixelPtr = pixels.Span)
+                    {
+                        gd.UpdateTexture(
+                            tex,
+                            (IntPtr)pixelPtr,
+                            (uint)(sizeof(Rgba32) * image.Width * image.Height),
+                            0,
+                            0,
+                            0,
+                            (uint)image.Width,
+                            (uint)image.Height,
+                            1,
+                            (uint)level,
+                            0);
+                    }
+                }
+                else
+                {
+                    image.ProcessPixelRows((pixels) =>
+                    {
+                        for (int y = 0; y < pixels.Height; y++)
+                        {
+                            Span<Rgba32> span = pixels.GetRowSpan(y);
+
+                            fixed (void* pixelPtr = span)
+                            {
+                                gd.UpdateTexture(
+                                    tex,
+                                    (IntPtr)pixelPtr,
+                                    (uint)(sizeof(Rgba32) * image.Width),
+                                    0,
+                                    (uint)y,
+                                    0,
+                                    (uint)pixels.Width,
+                                    height: 1,
+                                    depth: 1,
+                                    (uint)level,
+                                    0);
+                            }
+                        }
+                    });
                 }
             }
 
             return tex;
-        }
-
-        public unsafe void UpdateTexture(GraphicsDevice gd, Texture tex, in Image<Rgba32> newData, bool MipMaps)
-        {
-            if (newData == null)
-            {
-                return;
-            }
-
-            if (tex.Width != newData.Width || tex.Height != newData.Height)
-            {
-                throw new Exception("Need Recreate Texture, size not math!");
-            }
-
-            Image<Rgba32> img = newData;
-            if (MipMaps == true)
-            {
-                Images = MipmapHelper.GenerateMipmaps(img);
-            }
-            else
-            {
-                Images = new Image<Rgba32>[] { img };
-            }
-
-            for (int level = 0; level < MipLevels; level++)
-            {
-                Image<Rgba32> image = Images[level];
-                Span<Rgba32> pixelSpan = image.GetPixelSpan();
-                fixed (void* pin = &MemoryMarshal.GetReference(pixelSpan))
-                {
-                    gd.UpdateTexture(
-                        tex,
-                        (IntPtr)pin,
-                        (uint)(PixelSizeInBytes * image.Width * image.Height),
-                        0,
-                        0,
-                        0,
-                        (uint)image.Width,
-                        (uint)image.Height,
-                        1,
-                        (uint)level,
-                        0);
-                }
-            }
-        }
-        public unsafe void UpdateTexture(GraphicsDevice gd, Texture tex, in byte[] newData, bool MipMaps)
-        {
-            UpdateTexture(gd, tex, Image.Load<Rgba32>(newData), MipMaps);
-        }
-        public unsafe void UpdateTexture(GraphicsDevice gd, Texture tex, IntPtr newdata, bool MipMaps)
-        {
-            for (int level = 0; level < MipLevels; level++)
-            {
-                Image<Rgba32> image = Images[level];
-                gd.UpdateTexture(
-                    tex,
-                    newdata,
-                    (uint)(PixelSizeInBytes * image.Width * image.Height),
-                    0,
-                    0,
-                    0,
-                    (uint)image.Width,
-                    (uint)image.Height,
-                    1,
-                    (uint)level,
-                    0);
-            }
         }
     }
 }

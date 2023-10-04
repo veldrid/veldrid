@@ -1,28 +1,34 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Diagnostics;
-using System.Text;
-
 using static Veldrid.Sdl2.Sdl2Native;
-using System.ComponentModel;
-using Veldrid;
 
 namespace Veldrid.Sdl2
 {
+    public delegate void SDLEventHandler(ref SDL_Event ev);
+
     public unsafe class Sdl2Window
     {
-        private readonly List<SDL_Event> _events = new List<SDL_Event>();
+        public delegate void DropFileAction(DropFileEvent file);
+        public delegate void DropTextAction(DropTextEvent text);
+        public delegate void TextInputAction(TextInputEvent textInput);
+        public delegate void TextEditingAction(TextEditingEvent textEditing);
+
+        private readonly List<SDL_Event> _events = new();
         private IntPtr _window;
-        internal uint WindowID { get; private set; }
+        public uint WindowID { get; private set; }
         private bool _exists;
 
-        private SimpleInputSnapshot _publicSnapshot = new SimpleInputSnapshot();
-        private SimpleInputSnapshot _privateSnapshot = new SimpleInputSnapshot();
-        private SimpleInputSnapshot _privateBackbuffer = new SimpleInputSnapshot();
+        private SimpleInputSnapshot _publicSnapshot = new();
+        private SimpleInputSnapshot _privateSnapshot = new();
+        private SimpleInputSnapshot _privateBackbuffer = new();
 
         // Threaded Sdl2Window flags
         private readonly bool _threadedProcessing;
@@ -37,16 +43,16 @@ namespace Veldrid.Sdl2
         // Current input states
         private int _currentMouseX;
         private int _currentMouseY;
-        private bool[] _currentMouseButtonStates = new bool[13];
+        private MouseButton _currentMouseDown;
         private Vector2 _currentMouseDelta;
 
         // Cached Sdl2Window state (for threaded processing)
-        private BufferedValue<Point> _cachedPosition = new BufferedValue<Point>();
-        private BufferedValue<Point> _cachedSize = new BufferedValue<Point>();
-        private string _cachedWindowTitle;
+        private BufferedValue<Point> _cachedPosition = new();
+        private BufferedValue<Point> _cachedSize = new();
+        private string? _cachedWindowTitle;
         private bool _newWindowTitleReceived;
         private bool _firstMouseEvent = true;
-        private Func<bool> _closeRequestedHandler;
+        private Func<bool>? _closeRequestedHandler;
 
         private double previousPollTimeMs = 0;
         private Stopwatch sw = new Stopwatch();
@@ -60,7 +66,8 @@ namespace Veldrid.Sdl2
             _threadedProcessing = threadedProcessing;
             if (threadedProcessing)
             {
-                using (ManualResetEvent mre = new ManualResetEvent(false))
+                using ManualResetEvent mre = new(false);
+                WindowParams wp = new()
                 {
                     WindowParams wp = new WindowParams()
                     {
@@ -91,7 +98,8 @@ namespace Veldrid.Sdl2
             _threadedProcessing = threadedProcessing;
             if (threadedProcessing)
             {
-                using (ManualResetEvent mre = new ManualResetEvent(false))
+                using ManualResetEvent mre = new(false);
+                WindowParams wp = new()
                 {
                     WindowParams wp = new WindowParams()
                     {
@@ -100,9 +108,8 @@ namespace Veldrid.Sdl2
                         ResetEvent = mre
                     };
 
-                    Task.Factory.StartNew(WindowOwnerRoutine, wp, TaskCreationOptions.LongRunning);
-                    mre.WaitOne();
-                }
+                Task.Factory.StartNew(WindowOwnerRoutine, wp, TaskCreationOptions.LongRunning);
+                mre.WaitOne();
             }
             else
             {
@@ -125,9 +132,9 @@ namespace Veldrid.Sdl2
 
         public IntPtr Handle => GetUnderlyingWindowHandle();
 
-        public string Title { get => _cachedWindowTitle; set => SetWindowTitle(value); }
+        public string? Title { get => _cachedWindowTitle; set => SetWindowTitle(value); }
 
-        private void SetWindowTitle(string value)
+        private void SetWindowTitle(string? value)
         {
             _cachedWindowTitle = value;
             _newWindowTitleReceived = true;
@@ -210,7 +217,7 @@ namespace Veldrid.Sdl2
 
         public Vector2 ScaleFactor => Vector2.One;
 
-        public Rectangle Bounds => new Rectangle(_cachedPosition, GetWindowSize());
+        public Rectangle Bounds => new(_cachedPosition, GetWindowSize());
 
         public bool CursorVisible
         {
@@ -258,24 +265,30 @@ namespace Veldrid.Sdl2
 
         public IntPtr SdlWindowHandle => _window;
 
-        public event Action Resized;
-        public event Action Closing;
-        public event Action Closed;
-        public event Action FocusLost;
-        public event Action FocusGained;
-        public event Action Shown;
-        public event Action Hidden;
-        public event Action MouseEntered;
-        public event Action MouseLeft;
-        public event Action Exposed;
-        public event Action<Point> Moved;
-        public event Action<MouseWheelEventArgs> MouseWheel;
-        public event Action<MouseMoveEventArgs> MouseMove;
-        public event Action<MouseEvent> MouseDown;
-        public event Action<MouseEvent> MouseUp;
-        public event Action<KeyEvent> KeyDown;
-        public event Action<KeyEvent> KeyUp;
-        public event Action<DragDropEvent> DragDrop;
+        public event Action? Resized;
+        public event Action? Closing;
+        public event Action? Closed;
+        public event Action? FocusLost;
+        public event Action? FocusGained;
+        public event Action? Shown;
+        public event Action? Hidden;
+        public event Action? MouseEntered;
+        public event Action? MouseLeft;
+        public event Action? Exposed;
+        public event Action? KeyMapChanged;
+        public event Action<Point>? Moved;
+        public event Action<MouseWheelEvent>? MouseWheel;
+        public event Action<MouseMoveEvent>? MouseMove;
+        public event Action<MouseButtonEvent>? MouseDown;
+        public event Action<MouseButtonEvent>? MouseUp;
+        public event Action<KeyEvent>? KeyDown;
+        public event Action<KeyEvent>? KeyUp;
+        public event TextInputAction? TextInput;
+        public event TextEditingAction? TextEditing;
+        public event Action? DropBegin;
+        public event Action? DropComplete;
+        public event DropFileAction? DropFile;
+        public event DropTextAction? DropText;
 
         public Point ClientToScreen(Point p)
         {
@@ -296,7 +309,7 @@ namespace Veldrid.Sdl2
 
         public Vector2 MouseDelta => _currentMouseDelta;
 
-        public void SetCloseRequestedHandler(Func<bool> handler)
+        public void SetCloseRequestedHandler(Func<bool>? handler)
         {
             _closeRequestedHandler = handler;
         }
@@ -330,7 +343,7 @@ namespace Veldrid.Sdl2
             return true;
         }
 
-        private void WindowOwnerRoutine(object state)
+        private void WindowOwnerRoutine(object? state)
         {
             WindowOwnerRoutine((WindowParams)state);
         }
@@ -417,16 +430,17 @@ namespace Veldrid.Sdl2
             return _publicSnapshot;
         }
 
-        private void ProcessEvents(SDLEventHandler eventHandler)
+        private void ProcessEvents(SDLEventHandler? eventHandler)
         {
             //CheckNewWindowTitle();
             Sdl2Events.ProcessEvents();
-            for (int i = 0; i < _events.Count; i++)
+            Span<SDL_Event> events = CollectionsMarshal.AsSpan(_events);
+            for (int i = 0; i < events.Length; i++)
             {
-                SDL_Event ev = _events[i];
+                ref SDL_Event ev = ref events[i];
                 if (eventHandler == null)
                 {
-                    HandleEvent(&ev);
+                    HandleEvent(ref ev);
                 }
                 else
                 {
@@ -436,14 +450,14 @@ namespace Veldrid.Sdl2
             _events.Clear();
         }
 
-        public void PumpEvents(SDLEventHandler eventHandler)
+        public void PumpEvents(SDLEventHandler? eventHandler)
         {
             ProcessEvents(eventHandler);
         }
 
-        private unsafe void HandleEvent(SDL_Event* ev)
+        private unsafe void HandleEvent(ref SDL_Event ev)
         {
-            switch (ev->type)
+            switch (ev.type)
             {
                 case SDL_EventType.Quit:
                     Close();
@@ -452,39 +466,47 @@ namespace Veldrid.Sdl2
                     Close();
                     break;
                 case SDL_EventType.WindowEvent:
-                    SDL_WindowEvent windowEvent = Unsafe.Read<SDL_WindowEvent>(ev);
+                    SDL_WindowEvent windowEvent = Unsafe.As<SDL_Event, SDL_WindowEvent>(ref ev);
                     HandleWindowEvent(windowEvent);
                     break;
                 case SDL_EventType.KeyDown:
                 case SDL_EventType.KeyUp:
-                    SDL_KeyboardEvent keyboardEvent = Unsafe.Read<SDL_KeyboardEvent>(ev);
+                    SDL_KeyboardEvent keyboardEvent = Unsafe.As<SDL_Event, SDL_KeyboardEvent>(ref ev);
                     HandleKeyboardEvent(keyboardEvent);
                     break;
                 case SDL_EventType.TextEditing:
+                    SDL_TextEditingEvent textEditingEvent = Unsafe.As<SDL_Event, SDL_TextEditingEvent>(ref ev);
+                    HandleTextEditingEvent(textEditingEvent);
                     break;
                 case SDL_EventType.TextInput:
-                    SDL_TextInputEvent textInputEvent = Unsafe.Read<SDL_TextInputEvent>(ev);
+                    SDL_TextInputEvent textInputEvent = Unsafe.As<SDL_Event, SDL_TextInputEvent>(ref ev);
                     HandleTextInputEvent(textInputEvent);
                     break;
                 case SDL_EventType.KeyMapChanged:
+                    KeyMapChanged?.Invoke();
                     break;
                 case SDL_EventType.MouseMotion:
-                    SDL_MouseMotionEvent mouseMotionEvent = Unsafe.Read<SDL_MouseMotionEvent>(ev);
+                    SDL_MouseMotionEvent mouseMotionEvent = Unsafe.As<SDL_Event, SDL_MouseMotionEvent>(ref ev);
                     HandleMouseMotionEvent(mouseMotionEvent);
                     break;
                 case SDL_EventType.MouseButtonDown:
                 case SDL_EventType.MouseButtonUp:
-                    SDL_MouseButtonEvent mouseButtonEvent = Unsafe.Read<SDL_MouseButtonEvent>(ev);
+                    SDL_MouseButtonEvent mouseButtonEvent = Unsafe.As<SDL_Event, SDL_MouseButtonEvent>(ref ev);
                     HandleMouseButtonEvent(mouseButtonEvent);
                     break;
                 case SDL_EventType.MouseWheel:
-                    SDL_MouseWheelEvent mouseWheelEvent = Unsafe.Read<SDL_MouseWheelEvent>(ev);
+                    SDL_MouseWheelEvent mouseWheelEvent = Unsafe.As<SDL_Event, SDL_MouseWheelEvent>(ref ev);
                     HandleMouseWheelEvent(mouseWheelEvent);
                     break;
-                case SDL_EventType.DropFile:
                 case SDL_EventType.DropBegin:
-                case SDL_EventType.DropTest:
-                    SDL_DropEvent dropEvent = Unsafe.Read<SDL_DropEvent>(ev);
+                    DropBegin?.Invoke();
+                    break;
+                case SDL_EventType.DropComplete:
+                    DropComplete?.Invoke();
+                    break;
+                case SDL_EventType.DropFile:
+                case SDL_EventType.DropText:
+                    SDL_DropEvent dropEvent = Unsafe.As<SDL_Event, SDL_DropEvent>(ref ev);
                     HandleDropEvent(dropEvent);
                     break;
                 default:
@@ -496,48 +518,103 @@ namespace Veldrid.Sdl2
 
         private void CheckNewWindowTitle()
         {
-            if (WindowState != WindowState.Minimized && _newWindowTitleReceived)
+            if (_newWindowTitleReceived)
             {
                 _newWindowTitleReceived = false;
                 SDL_SetWindowTitle(_window, _cachedWindowTitle);
             }
         }
 
+        private static int ParseTextEvent(ReadOnlySpan<byte> utf8, Span<Rune> runes)
+        {
+            int byteCount = utf8.IndexOf((byte)0);
+            if (byteCount != -1)
+                utf8 = utf8[..byteCount];
+
+            int runeCount = 0;
+            while (Rune.DecodeFromUtf8(utf8, out Rune rune, out int consumed) == OperationStatus.Done)
+            {
+                runes[runeCount++] = rune;
+                utf8 = utf8[consumed..];
+            }
+
+            return runeCount;
+        }
+
         private void HandleTextInputEvent(SDL_TextInputEvent textInputEvent)
         {
-            uint byteCount = 0;
-            // Loop until the null terminator is found or the max size is reached.
-            while (byteCount < SDL_TextInputEvent.MaxTextSize && textInputEvent.text[byteCount++] != 0)
-            { }
+            ReadOnlySpan<byte> utf8 = new(textInputEvent.text, SDL_TextInputEvent.MaxTextSize);
+            Span<Rune> runes = stackalloc Rune[SDL_TextInputEvent.MaxTextSize];
+            runes = runes[..ParseTextEvent(utf8, runes)];
 
-            if (byteCount > 1)
+            SimpleInputSnapshot snapshot = _privateSnapshot;
+            for (int i = 0; i < runes.Length; i++)
             {
-                // We don't want the null terminator.
-                byteCount -= 1;
-                int charCount = Encoding.UTF8.GetCharCount(textInputEvent.text, (int)byteCount);
-                char* charsPtr = stackalloc char[charCount];
-                Encoding.UTF8.GetChars(textInputEvent.text, (int)byteCount, charsPtr, charCount);
-                for (int i = 0; i < charCount; i++)
-                {
-                    _privateSnapshot.KeyCharPressesList.Add(charsPtr[i]);
-                }
+                snapshot.InputEvents.Add(runes[i]);
             }
+
+            TextInputEvent inputEvent = new(
+                textInputEvent.timestamp,
+                textInputEvent.windowID,
+                runes);
+            TextInput?.Invoke(inputEvent);
+        }
+
+        private void HandleTextEditingEvent(SDL_TextEditingEvent textEditingEvent)
+        {
+            ReadOnlySpan<byte> utf8 = new(textEditingEvent.text, SDL_TextEditingEvent.MaxTextSize);
+            Span<Rune> runes = stackalloc Rune[SDL_TextEditingEvent.MaxTextSize];
+            runes = runes[..ParseTextEvent(utf8, runes)];
+
+            TextEditingEvent editingEvent = new(
+                textEditingEvent.timestamp,
+                textEditingEvent.windowID,
+                runes,
+                textEditingEvent.start,
+                textEditingEvent.length);
+            TextEditing?.Invoke(editingEvent);
         }
 
         private void HandleMouseWheelEvent(SDL_MouseWheelEvent mouseWheelEvent)
         {
-            _privateSnapshot.WheelDelta += mouseWheelEvent.y;
-            MouseWheel?.Invoke(new MouseWheelEventArgs(GetCurrentMouseState(), (float)mouseWheelEvent.y));
+            Vector2 delta = new(mouseWheelEvent.x, mouseWheelEvent.y);
+
+            SimpleInputSnapshot snapshot = _privateSnapshot;
+            snapshot.WheelDelta += delta;
+
+            MouseWheelEvent wheelEvent = new(
+                mouseWheelEvent.timestamp,
+                mouseWheelEvent.windowID,
+                delta);
+            MouseWheel?.Invoke(wheelEvent);
         }
 
         private void HandleDropEvent(SDL_DropEvent dropEvent)
         {
-            string file = Utilities.GetString(dropEvent.file);
-            SDL_free(dropEvent.file);
-
-            if (dropEvent.type == SDL_EventType.DropFile)
+            if (dropEvent.file != null)
             {
-                DragDrop?.Invoke(new DragDropEvent(file));
+                int characters = 0;
+                while (dropEvent.file[characters] != 0)
+                {
+                    characters++;
+                }
+
+                ReadOnlySpan<byte> utf8 = new(dropEvent.file, characters);
+                try
+                {
+                    if (dropEvent.type == SDL_EventType.DropFile)
+                    {
+                        DropFile?.Invoke(new DropFileEvent(utf8, dropEvent.timestamp, dropEvent.windowID));
+                    }
+                    else if (dropEvent.type == SDL_EventType.DropText)
+                    {
+                        DropText?.Invoke(new DropTextEvent(utf8, dropEvent.timestamp, dropEvent.windowID));
+                    }
+                }
+                finally
+                {
+                    SDL_free(dropEvent.file);
+                }
             }
         }
 
@@ -545,10 +622,27 @@ namespace Veldrid.Sdl2
         {
             MouseButton button = MapMouseButton(mouseButtonEvent.button);
             bool down = mouseButtonEvent.state == 1;
-            _currentMouseButtonStates[(int)button] = down;
-            _privateSnapshot.MouseDown[(int)button] = down;
-            MouseEvent mouseEvent = new MouseEvent(button, down);
-            _privateSnapshot.MouseEventsList.Add(mouseEvent);
+
+            SimpleInputSnapshot snapshot = _privateSnapshot;
+            if (down)
+            {
+                _currentMouseDown |= button;
+                snapshot.MouseDown |= button;
+            }
+            else
+            {
+                _currentMouseDown &= ~button;
+                snapshot.MouseDown &= ~button;
+            }
+
+            MouseButtonEvent mouseEvent = new(
+                mouseButtonEvent.timestamp,
+                mouseButtonEvent.windowID,
+                button,
+                down,
+                mouseButtonEvent.clicks);
+            snapshot.MouseEvents.Add(mouseEvent);
+
             if (down)
             {
                 MouseDown?.Invoke(mouseEvent);
@@ -559,29 +653,23 @@ namespace Veldrid.Sdl2
             }
         }
 
-        private MouseButton MapMouseButton(SDL_MouseButton button)
+        private static MouseButton MapMouseButton(SDL_MouseButton button)
         {
-            switch (button)
+            return button switch
             {
-                case SDL_MouseButton.Left:
-                    return MouseButton.Left;
-                case SDL_MouseButton.Middle:
-                    return MouseButton.Middle;
-                case SDL_MouseButton.Right:
-                    return MouseButton.Right;
-                case SDL_MouseButton.X1:
-                    return MouseButton.Button1;
-                case SDL_MouseButton.X2:
-                    return MouseButton.Button2;
-                default:
-                    return MouseButton.Left;
-            }
+                SDL_MouseButton.Left => MouseButton.Left,
+                SDL_MouseButton.Middle => MouseButton.Middle,
+                SDL_MouseButton.Right => MouseButton.Right,
+                SDL_MouseButton.X1 => MouseButton.Button1,
+                SDL_MouseButton.X2 => MouseButton.Button2,
+                _ => MouseButton.Left,
+            };
         }
 
         private void HandleMouseMotionEvent(SDL_MouseMotionEvent mouseMotionEvent)
         {
-            Vector2 mousePos = new Vector2(mouseMotionEvent.x, mouseMotionEvent.y);
-            Vector2 delta = new Vector2(mouseMotionEvent.xrel, mouseMotionEvent.yrel);
+            Vector2 mousePos = new(mouseMotionEvent.x, mouseMotionEvent.y);
+            Vector2 delta = new(mouseMotionEvent.xrel, mouseMotionEvent.yrel);
             _currentMouseX = (int)mousePos.X;
             _currentMouseY = (int)mousePos.Y;
             _privateSnapshot.MousePosition = mousePos;
@@ -589,17 +677,29 @@ namespace Veldrid.Sdl2
             if (!_firstMouseEvent)
             {
                 _currentMouseDelta += delta;
-                MouseMove?.Invoke(new MouseMoveEventArgs(GetCurrentMouseState(), mousePos));
-            }
 
+                MouseMoveEvent motionEvent = new(
+                    mouseMotionEvent.timestamp,
+                    mouseMotionEvent.windowID,
+                    mousePos,
+                    delta);
+                MouseMove?.Invoke(motionEvent);
+            }
             _firstMouseEvent = false;
         }
 
         private void HandleKeyboardEvent(SDL_KeyboardEvent keyboardEvent)
         {
-            SimpleInputSnapshot snapshot = _privateSnapshot;
-            KeyEvent keyEvent = new KeyEvent(MapKey(keyboardEvent.keysym), keyboardEvent.state == 1, MapModifierKeys(keyboardEvent.keysym.mod), keyboardEvent.repeat == 1);
-            snapshot.KeyEventsList.Add(keyEvent);
+            KeyEvent keyEvent = new(
+                keyboardEvent.timestamp,
+                keyboardEvent.windowID,
+                keyboardEvent.state == 1,
+                keyboardEvent.repeat == 1,
+                (Key)keyboardEvent.keysym.scancode,
+                (VKey)keyboardEvent.keysym.sym,
+                (ModifierKeys)keyboardEvent.keysym.mod);
+
+            _privateSnapshot.KeyEvents.Add(keyEvent);
             if (keyboardEvent.state == 1)
             {
                 KeyDown?.Invoke(keyEvent);
@@ -608,274 +708,6 @@ namespace Veldrid.Sdl2
             {
                 KeyUp?.Invoke(keyEvent);
             }
-        }
-
-        private Key MapKey(SDL_Keysym keysym)
-        {
-            switch (keysym.scancode)
-            {
-                case SDL_Scancode.SDL_SCANCODE_A:
-                    return Key.A;
-                case SDL_Scancode.SDL_SCANCODE_B:
-                    return Key.B;
-                case SDL_Scancode.SDL_SCANCODE_C:
-                    return Key.C;
-                case SDL_Scancode.SDL_SCANCODE_D:
-                    return Key.D;
-                case SDL_Scancode.SDL_SCANCODE_E:
-                    return Key.E;
-                case SDL_Scancode.SDL_SCANCODE_F:
-                    return Key.F;
-                case SDL_Scancode.SDL_SCANCODE_G:
-                    return Key.G;
-                case SDL_Scancode.SDL_SCANCODE_H:
-                    return Key.H;
-                case SDL_Scancode.SDL_SCANCODE_I:
-                    return Key.I;
-                case SDL_Scancode.SDL_SCANCODE_J:
-                    return Key.J;
-                case SDL_Scancode.SDL_SCANCODE_K:
-                    return Key.K;
-                case SDL_Scancode.SDL_SCANCODE_L:
-                    return Key.L;
-                case SDL_Scancode.SDL_SCANCODE_M:
-                    return Key.M;
-                case SDL_Scancode.SDL_SCANCODE_N:
-                    return Key.N;
-                case SDL_Scancode.SDL_SCANCODE_O:
-                    return Key.O;
-                case SDL_Scancode.SDL_SCANCODE_P:
-                    return Key.P;
-                case SDL_Scancode.SDL_SCANCODE_Q:
-                    return Key.Q;
-                case SDL_Scancode.SDL_SCANCODE_R:
-                    return Key.R;
-                case SDL_Scancode.SDL_SCANCODE_S:
-                    return Key.S;
-                case SDL_Scancode.SDL_SCANCODE_T:
-                    return Key.T;
-                case SDL_Scancode.SDL_SCANCODE_U:
-                    return Key.U;
-                case SDL_Scancode.SDL_SCANCODE_V:
-                    return Key.V;
-                case SDL_Scancode.SDL_SCANCODE_W:
-                    return Key.W;
-                case SDL_Scancode.SDL_SCANCODE_X:
-                    return Key.X;
-                case SDL_Scancode.SDL_SCANCODE_Y:
-                    return Key.Y;
-                case SDL_Scancode.SDL_SCANCODE_Z:
-                    return Key.Z;
-                case SDL_Scancode.SDL_SCANCODE_1:
-                    return Key.Number1;
-                case SDL_Scancode.SDL_SCANCODE_2:
-                    return Key.Number2;
-                case SDL_Scancode.SDL_SCANCODE_3:
-                    return Key.Number3;
-                case SDL_Scancode.SDL_SCANCODE_4:
-                    return Key.Number4;
-                case SDL_Scancode.SDL_SCANCODE_5:
-                    return Key.Number5;
-                case SDL_Scancode.SDL_SCANCODE_6:
-                    return Key.Number6;
-                case SDL_Scancode.SDL_SCANCODE_7:
-                    return Key.Number7;
-                case SDL_Scancode.SDL_SCANCODE_8:
-                    return Key.Number8;
-                case SDL_Scancode.SDL_SCANCODE_9:
-                    return Key.Number9;
-                case SDL_Scancode.SDL_SCANCODE_0:
-                    return Key.Number0;
-                case SDL_Scancode.SDL_SCANCODE_RETURN:
-                    return Key.Enter;
-                case SDL_Scancode.SDL_SCANCODE_ESCAPE:
-                    return Key.Escape;
-                case SDL_Scancode.SDL_SCANCODE_BACKSPACE:
-                    return Key.BackSpace;
-                case SDL_Scancode.SDL_SCANCODE_TAB:
-                    return Key.Tab;
-                case SDL_Scancode.SDL_SCANCODE_SPACE:
-                    return Key.Space;
-                case SDL_Scancode.SDL_SCANCODE_MINUS:
-                    return Key.Minus;
-                case SDL_Scancode.SDL_SCANCODE_EQUALS:
-                    return Key.Plus;
-                case SDL_Scancode.SDL_SCANCODE_LEFTBRACKET:
-                    return Key.BracketLeft;
-                case SDL_Scancode.SDL_SCANCODE_RIGHTBRACKET:
-                    return Key.BracketRight;
-                case SDL_Scancode.SDL_SCANCODE_BACKSLASH:
-                    return Key.BackSlash;
-                case SDL_Scancode.SDL_SCANCODE_SEMICOLON:
-                    return Key.Semicolon;
-                case SDL_Scancode.SDL_SCANCODE_APOSTROPHE:
-                    return Key.Quote;
-                case SDL_Scancode.SDL_SCANCODE_GRAVE:
-                    return Key.Grave;
-                case SDL_Scancode.SDL_SCANCODE_COMMA:
-                    return Key.Comma;
-                case SDL_Scancode.SDL_SCANCODE_PERIOD:
-                    return Key.Period;
-                case SDL_Scancode.SDL_SCANCODE_SLASH:
-                    return Key.Slash;
-                case SDL_Scancode.SDL_SCANCODE_CAPSLOCK:
-                    return Key.CapsLock;
-                case SDL_Scancode.SDL_SCANCODE_F1:
-                    return Key.F1;
-                case SDL_Scancode.SDL_SCANCODE_F2:
-                    return Key.F2;
-                case SDL_Scancode.SDL_SCANCODE_F3:
-                    return Key.F3;
-                case SDL_Scancode.SDL_SCANCODE_F4:
-                    return Key.F4;
-                case SDL_Scancode.SDL_SCANCODE_F5:
-                    return Key.F5;
-                case SDL_Scancode.SDL_SCANCODE_F6:
-                    return Key.F6;
-                case SDL_Scancode.SDL_SCANCODE_F7:
-                    return Key.F7;
-                case SDL_Scancode.SDL_SCANCODE_F8:
-                    return Key.F8;
-                case SDL_Scancode.SDL_SCANCODE_F9:
-                    return Key.F9;
-                case SDL_Scancode.SDL_SCANCODE_F10:
-                    return Key.F10;
-                case SDL_Scancode.SDL_SCANCODE_F11:
-                    return Key.F11;
-                case SDL_Scancode.SDL_SCANCODE_F12:
-                    return Key.F12;
-                case SDL_Scancode.SDL_SCANCODE_PRINTSCREEN:
-                    return Key.PrintScreen;
-                case SDL_Scancode.SDL_SCANCODE_SCROLLLOCK:
-                    return Key.ScrollLock;
-                case SDL_Scancode.SDL_SCANCODE_PAUSE:
-                    return Key.Pause;
-                case SDL_Scancode.SDL_SCANCODE_INSERT:
-                    return Key.Insert;
-                case SDL_Scancode.SDL_SCANCODE_HOME:
-                    return Key.Home;
-                case SDL_Scancode.SDL_SCANCODE_PAGEUP:
-                    return Key.PageUp;
-                case SDL_Scancode.SDL_SCANCODE_DELETE:
-                    return Key.Delete;
-                case SDL_Scancode.SDL_SCANCODE_END:
-                    return Key.End;
-                case SDL_Scancode.SDL_SCANCODE_PAGEDOWN:
-                    return Key.PageDown;
-                case SDL_Scancode.SDL_SCANCODE_RIGHT:
-                    return Key.Right;
-                case SDL_Scancode.SDL_SCANCODE_LEFT:
-                    return Key.Left;
-                case SDL_Scancode.SDL_SCANCODE_DOWN:
-                    return Key.Down;
-                case SDL_Scancode.SDL_SCANCODE_UP:
-                    return Key.Up;
-                case SDL_Scancode.SDL_SCANCODE_NUMLOCKCLEAR:
-                    return Key.NumLock;
-                case SDL_Scancode.SDL_SCANCODE_KP_DIVIDE:
-                    return Key.KeypadDivide;
-                case SDL_Scancode.SDL_SCANCODE_KP_MULTIPLY:
-                    return Key.KeypadMultiply;
-                case SDL_Scancode.SDL_SCANCODE_KP_MINUS:
-                    return Key.KeypadMinus;
-                case SDL_Scancode.SDL_SCANCODE_KP_PLUS:
-                    return Key.KeypadPlus;
-                case SDL_Scancode.SDL_SCANCODE_KP_ENTER:
-                    return Key.KeypadEnter;
-                case SDL_Scancode.SDL_SCANCODE_KP_1:
-                    return Key.Keypad1;
-                case SDL_Scancode.SDL_SCANCODE_KP_2:
-                    return Key.Keypad2;
-                case SDL_Scancode.SDL_SCANCODE_KP_3:
-                    return Key.Keypad3;
-                case SDL_Scancode.SDL_SCANCODE_KP_4:
-                    return Key.Keypad4;
-                case SDL_Scancode.SDL_SCANCODE_KP_5:
-                    return Key.Keypad5;
-                case SDL_Scancode.SDL_SCANCODE_KP_6:
-                    return Key.Keypad6;
-                case SDL_Scancode.SDL_SCANCODE_KP_7:
-                    return Key.Keypad7;
-                case SDL_Scancode.SDL_SCANCODE_KP_8:
-                    return Key.Keypad8;
-                case SDL_Scancode.SDL_SCANCODE_KP_9:
-                    return Key.Keypad9;
-                case SDL_Scancode.SDL_SCANCODE_KP_0:
-                    return Key.Keypad0;
-                case SDL_Scancode.SDL_SCANCODE_KP_PERIOD:
-                    return Key.KeypadPeriod;
-                case SDL_Scancode.SDL_SCANCODE_NONUSBACKSLASH:
-                    return Key.NonUSBackSlash;
-                case SDL_Scancode.SDL_SCANCODE_KP_EQUALS:
-                    return Key.KeypadPlus;
-                case SDL_Scancode.SDL_SCANCODE_F13:
-                    return Key.F13;
-                case SDL_Scancode.SDL_SCANCODE_F14:
-                    return Key.F14;
-                case SDL_Scancode.SDL_SCANCODE_F15:
-                    return Key.F15;
-                case SDL_Scancode.SDL_SCANCODE_F16:
-                    return Key.F16;
-                case SDL_Scancode.SDL_SCANCODE_F17:
-                    return Key.F17;
-                case SDL_Scancode.SDL_SCANCODE_F18:
-                    return Key.F18;
-                case SDL_Scancode.SDL_SCANCODE_F19:
-                    return Key.F19;
-                case SDL_Scancode.SDL_SCANCODE_F20:
-                    return Key.F20;
-                case SDL_Scancode.SDL_SCANCODE_F21:
-                    return Key.F21;
-                case SDL_Scancode.SDL_SCANCODE_F22:
-                    return Key.F22;
-                case SDL_Scancode.SDL_SCANCODE_F23:
-                    return Key.F23;
-                case SDL_Scancode.SDL_SCANCODE_F24:
-                    return Key.F24;
-                case SDL_Scancode.SDL_SCANCODE_MENU:
-                    return Key.Menu;
-                case SDL_Scancode.SDL_SCANCODE_LCTRL:
-                    return Key.ControlLeft;
-                case SDL_Scancode.SDL_SCANCODE_LSHIFT:
-                    return Key.ShiftLeft;
-                case SDL_Scancode.SDL_SCANCODE_LALT:
-                    return Key.AltLeft;
-                case SDL_Scancode.SDL_SCANCODE_RCTRL:
-                    return Key.ControlRight;
-                case SDL_Scancode.SDL_SCANCODE_RSHIFT:
-                    return Key.ShiftRight;
-                case SDL_Scancode.SDL_SCANCODE_RALT:
-                    return Key.AltRight;
-                case SDL_Scancode.SDL_SCANCODE_LGUI:
-                    return Key.LWin;
-                case SDL_Scancode.SDL_SCANCODE_RGUI:
-                    return Key.RWin;
-                default:
-                    return Key.Unknown;
-            }
-        }
-
-        private ModifierKeys MapModifierKeys(SDL_Keymod mod)
-        {
-            ModifierKeys mods = ModifierKeys.None;
-            if ((mod & (SDL_Keymod.LeftShift | SDL_Keymod.RightShift)) != 0)
-            {
-                mods |= ModifierKeys.Shift;
-            }
-            if ((mod & (SDL_Keymod.LeftAlt | SDL_Keymod.RightAlt)) != 0)
-            {
-                mods |= ModifierKeys.Alt;
-            }
-            if ((mod & (SDL_Keymod.LeftControl | SDL_Keymod.RightControl)) != 0)
-            {
-                mods |= ModifierKeys.Control;
-            }
-            if ((mod & (SDL_Keymod.LeftGui | SDL_Keymod.RightGui)) != 0)
-            {
-                mods |= ModifierKeys.Gui;
-            }
-
-            return mods;
         }
 
         private void HandleWindowEvent(SDL_WindowEvent windowEvent)
@@ -945,15 +777,7 @@ namespace Veldrid.Sdl2
 
         private MouseState GetCurrentMouseState()
         {
-            return new MouseState(
-                _currentMouseX, _currentMouseY,
-                _currentMouseButtonStates[0], _currentMouseButtonStates[1],
-                _currentMouseButtonStates[2], _currentMouseButtonStates[3],
-                _currentMouseButtonStates[4], _currentMouseButtonStates[5],
-                _currentMouseButtonStates[6], _currentMouseButtonStates[7],
-                _currentMouseButtonStates[8], _currentMouseButtonStates[9],
-                _currentMouseButtonStates[10], _currentMouseButtonStates[11],
-                _currentMouseButtonStates[12]);
+            return new MouseState(_currentMouseX, _currentMouseY, _currentMouseDown);
         }
 
         public Point ScreenToClient(Point p)
@@ -1008,51 +832,42 @@ namespace Veldrid.Sdl2
 
         private class SimpleInputSnapshot : InputSnapshot
         {
-            public List<KeyEvent> KeyEventsList { get; private set; } = new List<KeyEvent>();
-            public List<MouseEvent> MouseEventsList { get; private set; } = new List<MouseEvent>();
-            public List<char> KeyCharPressesList { get; private set; } = new List<char>();
-
-            public IReadOnlyList<KeyEvent> KeyEvents => KeyEventsList;
-
-            public IReadOnlyList<MouseEvent> MouseEvents => MouseEventsList;
-
-            public IReadOnlyList<char> KeyCharPresses => KeyCharPressesList;
+            public List<Rune> InputEvents { get; private set; } = new List<Rune>();
+            public List<KeyEvent> KeyEvents { get; private set; } = new List<KeyEvent>();
+            public List<MouseButtonEvent> MouseEvents { get; private set; } = new List<MouseButtonEvent>();
 
             public Vector2 MousePosition { get; set; }
+            public Vector2 WheelDelta { get; set; }
+            public MouseButton MouseDown { get; set; }
 
-            private bool[] _mouseDown = new bool[13];
-            public bool[] MouseDown => _mouseDown;
-            public float WheelDelta { get; set; }
-
-            public bool IsMouseDown(MouseButton button)
-            {
-                return _mouseDown[(int)button];
-            }
+            ReadOnlySpan<Rune> InputSnapshot.InputEvents => CollectionsMarshal.AsSpan(InputEvents);
+            ReadOnlySpan<KeyEvent> InputSnapshot.KeyEvents => CollectionsMarshal.AsSpan(KeyEvents);
+            ReadOnlySpan<MouseButtonEvent> InputSnapshot.MouseEvents => CollectionsMarshal.AsSpan(MouseEvents);
 
             internal void Clear()
             {
-                KeyEventsList.Clear();
-                MouseEventsList.Clear();
-                KeyCharPressesList.Clear();
-                WheelDelta = 0f;
+                InputEvents.Clear();
+                KeyEvents.Clear();
+                MouseEvents.Clear();
+                WheelDelta = Vector2.Zero;
             }
 
             public void CopyTo(SimpleInputSnapshot other)
             {
                 Debug.Assert(this != other);
 
-                other.MouseEventsList.Clear();
-                foreach (var me in MouseEventsList) { other.MouseEventsList.Add(me); }
+                other.InputEvents.Clear();
+                other.InputEvents.AddRange(InputEvents);
 
-                other.KeyEventsList.Clear();
-                foreach (var ke in KeyEventsList) { other.KeyEventsList.Add(ke); }
+                other.MouseEvents.Clear();
+                other.MouseEvents.AddRange(MouseEvents);
 
-                other.KeyCharPressesList.Clear();
-                foreach (var kcp in KeyCharPressesList) { other.KeyCharPressesList.Add(kcp); }
+                other.KeyEvents.Clear();
+                other.KeyEvents.AddRange(KeyEvents);
 
                 other.MousePosition = MousePosition;
                 other.WheelDelta = WheelDelta;
-                _mouseDown.CopyTo(other._mouseDown, 0);
+                other.MouseDown = MouseDown;
             }
         }
 
@@ -1062,12 +877,12 @@ namespace Veldrid.Sdl2
             public int Y { get; set; }
             public int Width { get; set; }
             public int Height { get; set; }
-            public string Title { get; set; }
+            public string? Title { get; set; }
             public SDL_WindowFlags WindowFlags { get; set; }
 
             public IntPtr WindowHandle { get; set; }
 
-            public ManualResetEvent ResetEvent { get; set; }
+            public ManualResetEvent? ResetEvent { get; set; }
 
             public SDL_Window Create()
             {
@@ -1080,106 +895,6 @@ namespace Veldrid.Sdl2
                     return SDL_CreateWindow(Title, X, Y, Width, Height, WindowFlags);
                 }
             }
-        }
-    }
-
-    public struct MouseState
-    {
-        public readonly int X;
-        public readonly int Y;
-
-        private bool _mouseDown0;
-        private bool _mouseDown1;
-        private bool _mouseDown2;
-        private bool _mouseDown3;
-        private bool _mouseDown4;
-        private bool _mouseDown5;
-        private bool _mouseDown6;
-        private bool _mouseDown7;
-        private bool _mouseDown8;
-        private bool _mouseDown9;
-        private bool _mouseDown10;
-        private bool _mouseDown11;
-        private bool _mouseDown12;
-
-        public MouseState(
-            int x, int y,
-            bool mouse0, bool mouse1, bool mouse2, bool mouse3, bool mouse4, bool mouse5, bool mouse6,
-            bool mouse7, bool mouse8, bool mouse9, bool mouse10, bool mouse11, bool mouse12)
-        {
-            X = x;
-            Y = y;
-            _mouseDown0 = mouse0;
-            _mouseDown1 = mouse1;
-            _mouseDown2 = mouse2;
-            _mouseDown3 = mouse3;
-            _mouseDown4 = mouse4;
-            _mouseDown5 = mouse5;
-            _mouseDown6 = mouse6;
-            _mouseDown7 = mouse7;
-            _mouseDown8 = mouse8;
-            _mouseDown9 = mouse9;
-            _mouseDown10 = mouse10;
-            _mouseDown11 = mouse11;
-            _mouseDown12 = mouse12;
-        }
-
-        public bool IsButtonDown(MouseButton button)
-        {
-            uint index = (uint)button;
-            switch (index)
-            {
-                case 0:
-                    return _mouseDown0;
-                case 1:
-                    return _mouseDown1;
-                case 2:
-                    return _mouseDown2;
-                case 3:
-                    return _mouseDown3;
-                case 4:
-                    return _mouseDown4;
-                case 5:
-                    return _mouseDown5;
-                case 6:
-                    return _mouseDown6;
-                case 7:
-                    return _mouseDown7;
-                case 8:
-                    return _mouseDown8;
-                case 9:
-                    return _mouseDown9;
-                case 10:
-                    return _mouseDown10;
-                case 11:
-                    return _mouseDown11;
-                case 12:
-                    return _mouseDown12;
-            }
-
-            throw new ArgumentOutOfRangeException(nameof(button));
-        }
-    }
-
-    public struct MouseWheelEventArgs
-    {
-        public MouseState State { get; }
-        public float WheelDelta { get; }
-        public MouseWheelEventArgs(MouseState mouseState, float wheelDelta)
-        {
-            State = mouseState;
-            WheelDelta = wheelDelta;
-        }
-    }
-
-    public struct MouseMoveEventArgs
-    {
-        public MouseState State { get; }
-        public Vector2 MousePosition { get; }
-        public MouseMoveEventArgs(MouseState mouseState, Vector2 mousePosition)
-        {
-            State = mouseState;
-            MousePosition = mousePosition;
         }
     }
 
@@ -1196,8 +911,8 @@ namespace Veldrid.Sdl2
             }
         }
 
-        private ValueHolder Current = new ValueHolder();
-        private ValueHolder Back = new ValueHolder();
+        private ValueHolder Current = new();
+        private ValueHolder Back = new();
 
         public static implicit operator T(BufferedValue<T> bv) => bv.Value;
 
@@ -1208,6 +923,4 @@ namespace Veldrid.Sdl2
             public T Value;
         }
     }
-
-    public delegate void SDLEventHandler(ref SDL_Event ev);
 }

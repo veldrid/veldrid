@@ -12,28 +12,33 @@ namespace Veldrid
         /// <see cref="ShaderStages.Compute"/>.
         /// </summary>
         public Shader ComputeShader;
+
         /// <summary>
         /// An array of <see cref="ResourceLayout"/>, which controls the layout of shader resoruces in the <see cref="Pipeline"/>.
         /// </summary>
         public ResourceLayout[] ResourceLayouts;
+
         /// <summary>
         /// The X dimension of the thread group size.
         /// </summary>
         public uint ThreadGroupSizeX;
+
         /// <summary>
         /// The Y dimension of the thread group size.
         /// </summary>
         public uint ThreadGroupSizeY;
+
         /// <summary>
         /// The Z dimension of the thread group size.
         /// </summary>
         public uint ThreadGroupSizeZ;
+
         /// <summary>
         /// An array of <see cref="SpecializationConstant"/> used to override specialization constants in the created
         /// <see cref="Pipeline"/>. Each element in this array describes a single ID-value pair, which will be matched with the
         /// constants specified in the <see cref="Shader"/>.
         /// </summary>
-        public SpecializationConstant[] Specializations;
+        public SpecializationConstant[]? Specializations;
 
         /// <summary>
         /// Constructs a new ComputePipelineDescription.

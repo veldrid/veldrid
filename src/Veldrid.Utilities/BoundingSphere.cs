@@ -1,6 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Numerics;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace Veldrid.Utilities
 {
@@ -15,61 +16,92 @@ namespace Veldrid.Utilities
             Radius = radius;
         }
 
-        public override string ToString()
+        public override readonly string ToString()
         {
             return string.Format("Center:{0}, Radius:{1}", Center, Radius);
         }
 
-        public bool Contains(Vector3 point)
+        public readonly bool Contains(Vector3 point)
         {
             return (Center - point).LengthSquared() <= Radius * Radius;
         }
 
-        public static BoundingSphere CreateFromPoints(IList<Vector3> points)
+        public static float GetMaxDistanceSquared(
+            Vector3 center,
+            ReadOnlySpan<byte> pointBytes,
+            int pointStride)
         {
-            Vector3 center = Vector3.Zero;
-            foreach (Vector3 pt in points)
+            nuint stride = (nuint)pointStride;
+            nuint pointCount = (nuint)pointBytes.Length / stride;
+            if (pointCount < 1)
             {
-                center += pt;
+                return 0;
             }
 
-            center /= points.Count;
+            ref byte ptr = ref MemoryMarshal.GetReference(pointBytes);
+            ref byte endPtr = ref Unsafe.Add(ref ptr, pointCount * stride);
 
-            float maxDistanceSquared = 0f;
-            foreach (Vector3 pt in points)
+            float maxDistanceSquared = 0;
+
+            while (Unsafe.IsAddressLessThan(ref ptr, ref endPtr))
             {
-                float distSq = Vector3.DistanceSquared(center, pt);
+                Vector3 point = Unsafe.ReadUnaligned<Vector3>(ref ptr);
+                ptr = ref Unsafe.Add(ref ptr, stride);
+
+                float distSq = Vector3.DistanceSquared(center, point);
                 if (distSq > maxDistanceSquared)
                 {
                     maxDistanceSquared = distSq;
                 }
             }
 
-            return new BoundingSphere(center, (float)Math.Sqrt(maxDistanceSquared));
+            return maxDistanceSquared;
         }
 
-        public static unsafe BoundingSphere CreateFromPoints(Vector3* pointPtr, int numPoints, int stride)
+        public static Vector3 GetCenter(
+            ReadOnlySpan<byte> pointBytes,
+            int pointStride)
         {
+            nuint stride = (nuint)pointStride;
+            nuint pointCount = (nuint)pointBytes.Length / stride;
+            if (pointCount < 1)
+            {
+                return Vector3.Zero;
+            }
+
+            ref byte ptr = ref MemoryMarshal.GetReference(pointBytes);
+            ref byte endPtr = ref Unsafe.Add(ref ptr, pointCount * stride);
+
             Vector3 center = Vector3.Zero;
-            StrideHelper<Vector3> helper = new StrideHelper<Vector3>(pointPtr, numPoints, stride);
-            foreach (Vector3 pos in helper)
+
+            while (Unsafe.IsAddressLessThan(ref ptr, ref endPtr))
             {
-                center += pos;
+                Vector3 point = Unsafe.ReadUnaligned<Vector3>(ref ptr);
+                ptr = ref Unsafe.Add(ref ptr, stride);
+
+                center += point;
             }
 
-            center /= numPoints;
+            center /= pointCount;
+            return center;
+        }
 
-            float maxDistanceSquared = 0f;
-            foreach (Vector3 pos in helper)
-            {
-                float distSq = Vector3.DistanceSquared(center, pos);
-                if (distSq > maxDistanceSquared)
-                {
-                    maxDistanceSquared = distSq;
-                }
-            }
+        public static BoundingSphere CreateFromPoints(
+            Vector3 center,
+            ReadOnlySpan<byte> pointBytes,
+            int pointStride)
+        {
+            float maxDistanceSquared = GetMaxDistanceSquared(center, pointBytes, pointStride);
+            return new BoundingSphere(center, MathF.Sqrt(maxDistanceSquared));
+        }
 
-            return new BoundingSphere(center, (float)Math.Sqrt(maxDistanceSquared));
+        public static BoundingSphere CreateFromPoints(
+            ReadOnlySpan<byte> pointBytes,
+            int pointStride)
+        {
+            Vector3 center = GetCenter(pointBytes, pointStride);
+            float radiusSquared = GetMaxDistanceSquared(center, pointBytes, pointStride);
+            return new BoundingSphere(center, MathF.Sqrt(radiusSquared));
         }
     }
 }

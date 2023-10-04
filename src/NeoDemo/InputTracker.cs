@@ -1,18 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Numerics;
-using System.Text;
 using Veldrid.Sdl2;
 
 namespace Veldrid.NeoDemo
 {
     public static class InputTracker
     {
-        private static HashSet<Key> _currentlyPressedKeys = new HashSet<Key>();
-        private static HashSet<Key> _newKeysThisFrame = new HashSet<Key>();
+        private static HashSet<Key> _currentlyPressedKeys = new();
+        private static HashSet<Key> _newKeysThisFrame = new();
 
-        private static HashSet<MouseButton> _currentlyPressedMouseButtons = new HashSet<MouseButton>();
-        private static HashSet<MouseButton> _newMouseButtonsThisFrame = new HashSet<MouseButton>();
+        private static HashSet<MouseButton> _currentlyPressedMouseButtons = new();
+        private static HashSet<MouseButton> _newMouseButtonsThisFrame = new();
 
         public static Vector2 MousePosition;
         public static Vector2 MouseDelta;
@@ -46,21 +45,25 @@ namespace Veldrid.NeoDemo
 
             MousePosition = snapshot.MousePosition;
             MouseDelta = window.MouseDelta;
-            for (int i = 0; i < snapshot.KeyEvents.Count; i++)
+
+            ReadOnlySpan<KeyEvent> keyEvents = snapshot.KeyEvents;
+            for (int i = 0; i < keyEvents.Length; i++)
             {
-                KeyEvent ke = snapshot.KeyEvents[i];
+                KeyEvent ke = keyEvents[i];
                 if (ke.Down)
                 {
-                    KeyDown(ke.Key);
+                    KeyDown(ke.Physical);
                 }
                 else
                 {
-                    KeyUp(ke.Key);
+                    KeyUp(ke.Physical);
                 }
             }
-            for (int i = 0; i < snapshot.MouseEvents.Count; i++)
+
+            ReadOnlySpan<MouseButtonEvent> mouseEvents = snapshot.MouseEvents;
+            for (int i = 0; i < mouseEvents.Length; i++)
             {
-                MouseEvent me = snapshot.MouseEvents[i];
+                MouseButtonEvent me = mouseEvents[i];
                 if (me.Down)
                 {
                     MouseDown(me.MouseButton);

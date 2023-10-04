@@ -4,24 +4,25 @@ using Veldrid.OpenGLBinding;
 
 namespace Veldrid.OpenGL
 {
-    internal unsafe class OpenGLSampler : Sampler, OpenGLDeferredResource
+    internal sealed unsafe class OpenGLSampler : Sampler, OpenGLDeferredResource
     {
         private readonly OpenGLGraphicsDevice _gd;
         private readonly SamplerDescription _description;
-        private readonly InternalSamplerState _noMipmapState;
-        private readonly InternalSamplerState _mipmapState;
+        private InternalSamplerState _noMipmapState;
+        private InternalSamplerState _mipmapState;
         private bool _disposeRequested;
 
-        private string _name;
+        private string? _name;
         private bool _nameChanged;
-        public override string Name { get => _name; set { _name = value; _nameChanged = true; } }
+
+        public override string? Name { get => _name; set { _name = value; _nameChanged = true; } }
 
         public override bool IsDisposed => _disposeRequested;
 
         public uint NoMipmapSampler => _noMipmapState.Sampler;
         public uint MipmapSampler => _mipmapState.Sampler;
 
-        public OpenGLSampler(OpenGLGraphicsDevice gd, ref SamplerDescription description)
+        public OpenGLSampler(OpenGLGraphicsDevice gd, in SamplerDescription description)
         {
             _gd = gd;
             _description = description;
@@ -43,8 +44,8 @@ namespace Veldrid.OpenGL
                 _nameChanged = false;
                 if (_gd.Extensions.KHR_Debug)
                 {
-                    SetObjectLabel(ObjectLabelIdentifier.Sampler, _noMipmapState.Sampler, string.Format("{0}_WithoutMipmapping", _name));
-                    SetObjectLabel(ObjectLabelIdentifier.Sampler, _mipmapState.Sampler, string.Format("{0}_WithMipmapping", _name));
+                    SetObjectLabel(ObjectLabelIdentifier.Sampler, _noMipmapState.Sampler, $"{_name}_WithoutMipmap");
+                    SetObjectLabel(ObjectLabelIdentifier.Sampler, _mipmapState.Sampler, $"{_name}_WithMipmap");
                 }
             }
         }
@@ -72,7 +73,7 @@ namespace Veldrid.OpenGL
             _noMipmapState.DestroyGLResources();
         }
 
-        private class InternalSamplerState
+        private struct InternalSamplerState
         {
             private uint _sampler;
 
@@ -80,8 +81,10 @@ namespace Veldrid.OpenGL
 
             public void CreateGLResources(SamplerDescription description, bool mipmapped, GraphicsBackend backend)
             {
-                glGenSamplers(1, out _sampler);
+                uint sampler;
+                glGenSamplers(1, &sampler);
                 CheckLastError();
+                _sampler = sampler;
 
                 glSamplerParameteri(_sampler, SamplerParameterName.TextureWrapS, (int)OpenGLFormats.VdToGLTextureWrapMode(description.AddressModeU));
                 CheckLastError();
@@ -138,23 +141,21 @@ namespace Veldrid.OpenGL
 
             public void DestroyGLResources()
             {
-                glDeleteSamplers(1, ref _sampler);
+                uint sampler = _sampler;
+                glDeleteSamplers(1, &sampler);
                 CheckLastError();
+                _sampler = sampler;
             }
 
             private RgbaFloat ToRgbaFloat(SamplerBorderColor borderColor)
             {
-                switch (borderColor)
+                return borderColor switch
                 {
-                    case SamplerBorderColor.TransparentBlack:
-                        return new RgbaFloat(0, 0, 0, 0);
-                    case SamplerBorderColor.OpaqueBlack:
-                        return new RgbaFloat(0, 0, 0, 1);
-                    case SamplerBorderColor.OpaqueWhite:
-                        return new RgbaFloat(1, 1, 1, 1);
-                    default:
-                        throw Illegal.Value<SamplerBorderColor>();
-                }
+                    SamplerBorderColor.TransparentBlack => new RgbaFloat(0, 0, 0, 0),
+                    SamplerBorderColor.OpaqueBlack => new RgbaFloat(0, 0, 0, 1),
+                    SamplerBorderColor.OpaqueWhite => new RgbaFloat(1, 1, 1, 1),
+                    _ => throw Illegal.Value<SamplerBorderColor>(),
+                };
             }
         }
     }

@@ -50,14 +50,14 @@ namespace Veldrid
             return Combine(value1, Combine(value2, Combine(value3, Combine(value4, Combine(value5, Combine(value6, Combine(value7, Combine(value8, Combine(value9, value10)))))))));
         }
 
-        public static int Array<T>(T[] items)
+        public static int Array<T>(T[]? items)
         {
             if (items == null || items.Length == 0)
             {
                 return 0;
             }
 
-            int hash = items[0].GetHashCode();
+            int hash = items[0]?.GetHashCode() ?? 0;
             for (int i = 1; i < items.Length; i++)
             {
                 hash = Combine(hash, items[i]?.GetHashCode() ?? i);

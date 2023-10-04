@@ -92,7 +92,7 @@ namespace Veldrid.MetalBindings
 
         public MTLCommandQueue newCommandQueue() => objc_msgSend<MTLCommandQueue>(NativePtr, sel_newCommandQueue);
 
-        public MTLBuffer newBuffer(void* pointer, UIntPtr length, MTLResourceOptions options)
+        public MTLBuffer newBuffer(void* pointer, nuint length, MTLResourceOptions options)
         {
             IntPtr buffer = IntPtr_objc_msgSend(NativePtr, sel_newBufferWithBytes,
                 pointer,
@@ -101,7 +101,7 @@ namespace Veldrid.MetalBindings
             return new MTLBuffer(buffer);
         }
 
-        public MTLBuffer newBufferWithLengthOptions(UIntPtr length, MTLResourceOptions options)
+        public MTLBuffer newBufferWithLengthOptions(nuint length, MTLResourceOptions options)
         {
             IntPtr buffer = IntPtr_objc_msgSend(NativePtr, sel_newBufferWithLength, length, options);
             return new MTLBuffer(buffer);

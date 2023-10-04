@@ -227,7 +227,7 @@ namespace Veldrid.MetalBindings
         public static extern void objc_msgSend_stret(void* retPtr, IntPtr receiver, Selector selector);
         public static T objc_msgSend_stret<T>(IntPtr receiver, Selector selector) where T : struct
         {
-            T ret = default(T);
+            T ret = default;
             objc_msgSend_stret(Unsafe.AsPointer(ref ret), receiver, selector);
             return ret;
         }

@@ -1,16 +1,16 @@
-﻿using Vulkan;
-using static Vulkan.VulkanNative;
-using static Veldrid.Vk.VulkanUtil;
+﻿using TerraFX.Interop.Vulkan;
+using static TerraFX.Interop.Vulkan.Vulkan;
+using static Veldrid.Vulkan.VulkanUtil;
 
-namespace Veldrid.Vk
+namespace Veldrid.Vulkan
 {
-    internal unsafe class VkResourceLayout : ResourceLayout
+    internal sealed unsafe class VkResourceLayout : ResourceLayout
     {
         private readonly VkGraphicsDevice _gd;
         private readonly VkDescriptorSetLayout _dsl;
         private readonly VkDescriptorType[] _descriptorTypes;
         private bool _disposed;
-        private string _name;
+        private string? _name;
 
         public VkDescriptorSetLayout DescriptorSetLayout => _dsl;
         public VkDescriptorType[] DescriptorTypes => _descriptorTypes;
@@ -19,11 +19,10 @@ namespace Veldrid.Vk
 
         public override bool IsDisposed => _disposed;
 
-        public VkResourceLayout(VkGraphicsDevice gd, ref ResourceLayoutDescription description)
-            : base(ref description)
+        public VkResourceLayout(VkGraphicsDevice gd, in ResourceLayoutDescription description)
+            : base(description)
         {
             _gd = gd;
-            VkDescriptorSetLayoutCreateInfo dslCI = VkDescriptorSetLayoutCreateInfo.New();
             ResourceLayoutElementDescription[] elements = description.Elements;
             _descriptorTypes = new VkDescriptorType[elements.Length];
             VkDescriptorSetLayoutBinding* bindings = stackalloc VkDescriptorSetLayoutBinding[elements.Length];
@@ -52,25 +51,25 @@ namespace Veldrid.Vk
 
                 switch (descriptorType)
                 {
-                    case VkDescriptorType.Sampler:
+                    case VkDescriptorType.VK_DESCRIPTOR_TYPE_SAMPLER:
                         samplerCount += 1;
                         break;
-                    case VkDescriptorType.SampledImage:
+                    case VkDescriptorType.VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE:
                         sampledImageCount += 1;
                         break;
-                    case VkDescriptorType.StorageImage:
+                    case VkDescriptorType.VK_DESCRIPTOR_TYPE_STORAGE_IMAGE:
                         storageImageCount += 1;
                         break;
-                    case VkDescriptorType.UniformBuffer:
+                    case VkDescriptorType.VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
                         uniformBufferCount += 1;
                         break;
-                    case VkDescriptorType.UniformBufferDynamic:
+                    case VkDescriptorType.VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC:
                         uniformBufferDynamicCount += 1;
                         break;
-                    case VkDescriptorType.StorageBuffer:
+                    case VkDescriptorType.VK_DESCRIPTOR_TYPE_STORAGE_BUFFER:
                         storageBufferCount += 1;
                         break;
-                    case VkDescriptorType.StorageBufferDynamic:
+                    case VkDescriptorType.VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC:
                         storageBufferDynamicCount += 1;
                         break;
                 }
@@ -85,14 +84,20 @@ namespace Veldrid.Vk
                 storageBufferDynamicCount,
                 storageImageCount);
 
-            dslCI.bindingCount = (uint)elements.Length;
-            dslCI.pBindings = bindings;
+            VkDescriptorSetLayoutCreateInfo dslCI = new()
+            {
+                sType = VkStructureType.VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+                bindingCount = (uint)elements.Length,
+                pBindings = bindings
+            };
 
-            VkResult result = vkCreateDescriptorSetLayout(_gd.Device, ref dslCI, null, out _dsl);
+            VkDescriptorSetLayout dsl;
+            VkResult result = vkCreateDescriptorSetLayout(_gd.Device, &dslCI, null, &dsl);
             CheckResult(result);
+            _dsl = dsl;
         }
 
-        public override string Name
+        public override string? Name
         {
             get => _name;
             set

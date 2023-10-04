@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 
 namespace Veldrid
 {
@@ -12,10 +11,12 @@ namespace Veldrid
         /// A description of the depth attachment, or null if none exists.
         /// </summary>
         public OutputAttachmentDescription? DepthAttachment;
+
         /// <summary>
-        /// An array of attachment descriptions, one for each color attachment. May be empty.
+        /// An array of attachment descriptions, one for each color attachment. May be null or empty.
         /// </summary>
-        public OutputAttachmentDescription[] ColorAttachments;
+        public OutputAttachmentDescription[]? ColorAttachments;
+
         /// <summary>
         /// The number of samples in each target attachment.
         /// </summary>
@@ -26,10 +27,10 @@ namespace Veldrid
         /// </summary>
         /// <param name="depthAttachment">A description of the depth attachment.</param>
         /// <param name="colorAttachments">An array of descriptions of each color attachment.</param>
-        public OutputDescription(OutputAttachmentDescription? depthAttachment, params OutputAttachmentDescription[] colorAttachments)
+        public OutputDescription(OutputAttachmentDescription? depthAttachment, params OutputAttachmentDescription[]? colorAttachments)
         {
             DepthAttachment = depthAttachment;
-            ColorAttachments = colorAttachments ?? Array.Empty<OutputAttachmentDescription>();
+            ColorAttachments = colorAttachments;
             SampleCount = TextureSampleCount.Count1;
         }
 
@@ -41,28 +42,32 @@ namespace Veldrid
         /// <param name="sampleCount">The number of samples in each target attachment.</param>
         public OutputDescription(
             OutputAttachmentDescription? depthAttachment,
-            OutputAttachmentDescription[] colorAttachments,
+            OutputAttachmentDescription[]? colorAttachments,
             TextureSampleCount sampleCount)
         {
             DepthAttachment = depthAttachment;
-            ColorAttachments = colorAttachments ?? Array.Empty<OutputAttachmentDescription>();
+            ColorAttachments = colorAttachments;
             SampleCount = sampleCount;
         }
 
         internal static OutputDescription CreateFromFramebuffer(Framebuffer fb)
         {
             TextureSampleCount sampleCount = 0;
+
+            FramebufferAttachment? fbDepthAttachment = fb.DepthTarget;
             OutputAttachmentDescription? depthAttachment = null;
-            if (fb.DepthTarget != null)
+            if (fbDepthAttachment != null)
             {
-                depthAttachment = new OutputAttachmentDescription(fb.DepthTarget.Value.Target.Format);
-                sampleCount = fb.DepthTarget.Value.Target.SampleCount;
+                depthAttachment = new OutputAttachmentDescription(fbDepthAttachment.GetValueOrDefault().Target.Format);
+                sampleCount = fbDepthAttachment.GetValueOrDefault().Target.SampleCount;
             }
-            OutputAttachmentDescription[] colorAttachments = new OutputAttachmentDescription[fb.ColorTargets.Count];
+
+            ReadOnlySpan<FramebufferAttachment> fbColorAttachments = fb.ColorTargets;
+            OutputAttachmentDescription[] colorAttachments = new OutputAttachmentDescription[fbColorAttachments.Length];
             for (int i = 0; i < colorAttachments.Length; i++)
             {
-                colorAttachments[i] = new OutputAttachmentDescription(fb.ColorTargets[i].Target.Format);
-                sampleCount = fb.ColorTargets[i].Target.SampleCount;
+                colorAttachments[i] = new OutputAttachmentDescription(fbColorAttachments[i].Target.Format);
+                sampleCount = fbColorAttachments[i].Target.SampleCount;
             }
 
             return new OutputDescription(depthAttachment, colorAttachments, sampleCount);

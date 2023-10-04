@@ -7,5 +7,10 @@ layout(location = 3) in vec4 D_V4;
 
 void main()
 {
-    gl_Position = vec4(0, 0, 0, 1);
+    vec4 result = vec4(0, 0, 0, 1);
+    result += vec4(A_V3, 0);
+    result += B_V4;
+    result += vec4(C_V2, 0, 0);
+    result += D_V4;
+    gl_Position = result;
 }

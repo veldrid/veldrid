@@ -1,6 +1,5 @@
 using System;
 using System.Runtime.CompilerServices;
-using System.Text;
 
 namespace Veldrid.MetalBindings
 {
@@ -9,25 +8,29 @@ namespace Veldrid.MetalBindings
         public readonly IntPtr NativePtr;
         public static implicit operator IntPtr(ObjCClass c) => c.NativePtr;
 
+        [SkipLocalsInit]
         public ObjCClass(string name)
         {
-            int byteCount = Encoding.UTF8.GetMaxByteCount(name.Length);
-            byte* utf8BytesPtr = stackalloc byte[byteCount];
+            int byteCount = MTLUtil.UTF8.GetMaxByteCount(name.Length);
+            byte* utf8BytesPtr = stackalloc byte[byteCount + 1];
             fixed (char* namePtr = name)
             {
-                Encoding.UTF8.GetBytes(namePtr, name.Length, utf8BytesPtr, byteCount);
+                int actualByteCount = MTLUtil.UTF8.GetBytes(namePtr, name.Length, utf8BytesPtr, byteCount);
+                utf8BytesPtr[actualByteCount] = 0;
             }
 
             NativePtr = ObjectiveCRuntime.objc_getClass(utf8BytesPtr);
         }
 
+        [SkipLocalsInit]
         public IntPtr GetProperty(string propertyName)
         {
-            int byteCount = Encoding.UTF8.GetMaxByteCount(propertyName.Length);
-            byte* utf8BytesPtr = stackalloc byte[byteCount];
+            int byteCount = MTLUtil.UTF8.GetMaxByteCount(propertyName.Length);
+            byte* utf8BytesPtr = stackalloc byte[byteCount + 1];
             fixed (char* namePtr = propertyName)
             {
-                Encoding.UTF8.GetBytes(namePtr, propertyName.Length, utf8BytesPtr, byteCount);
+                int actualByteCount = MTLUtil.UTF8.GetBytes(namePtr, propertyName.Length, utf8BytesPtr, byteCount);
+                utf8BytesPtr[actualByteCount] = 0;
             }
 
             return ObjectiveCRuntime.class_getProperty(this, utf8BytesPtr);

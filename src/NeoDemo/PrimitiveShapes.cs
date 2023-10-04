@@ -1,20 +1,16 @@
-﻿using System;
-using System.Numerics;
-using System.Runtime.CompilerServices;
-using System.Text;
-using Veldrid;
+﻿using System.Numerics;
 using Veldrid.Utilities;
 
 namespace Veldrid.NeoDemo
 {
     public static partial class PrimitiveShapes
     {
-        public static MeshData Plane(int width, int height, int uvUnit)
+        public static ConstructedMesh16 Plane(int width, int height, int uvUnit)
         {
             float halfWidth = width / 2;
             float halfHeight = height / 2;
 
-            Vector2 uvScale = new Vector2(width / uvUnit, height / uvUnit);
+            Vector2 uvScale = new(width / uvUnit, height / uvUnit);
 
             VertexPositionNormalTexture[] vertices = new VertexPositionNormalTexture[]
             {
@@ -26,16 +22,16 @@ namespace Veldrid.NeoDemo
 
             ushort[] indices = new ushort[] { 0, 1, 2, 0, 2, 3 };
 
-            return new SimpleMeshDataProvider(vertices, indices);
+            return new ConstructedMesh16(vertices, indices, null);
         }
 
-        internal static MeshData Box(float width, float height, float depth, float uvUnit)
+        internal static ConstructedMesh16 Box(float width, float height, float depth, float uvUnit)
         {
             float halfWidth = width / 2;
             float halfHeight = height / 2;
             float halfDepth = depth / 2;
 
-            Vector2 uvScale = new Vector2(width / uvUnit, height / uvUnit);
+            Vector2 uvScale = new(width / uvUnit, height / uvUnit);
 
             VertexPositionNormalTexture[] vertices = new VertexPositionNormalTexture[]
             {
@@ -81,7 +77,7 @@ namespace Veldrid.NeoDemo
                 20,21,22, 20,22,23,
             };
 
-            return new SimpleMeshDataProvider(vertices, indices);
+            return new ConstructedMesh16(vertices, indices, null);
         }
     }
 }

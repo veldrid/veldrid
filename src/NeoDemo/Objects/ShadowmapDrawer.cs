@@ -9,7 +9,7 @@ namespace Veldrid.NeoDemo.Objects
     public class ShadowmapDrawer : Renderable
     {
         private readonly Func<Sdl2Window> _windowGetter;
-        private readonly DisposeCollector _disposeCollector = new DisposeCollector();
+        private readonly DisposeCollector _disposeCollector = new();
 
         private DeviceBuffer _vb;
         private DeviceBuffer _ib;
@@ -19,7 +19,7 @@ namespace Veldrid.NeoDemo.Objects
         private ResourceSet _resourceSet;
 
         private Vector2 _position;
-        private Vector2 _size = new Vector2(100, 100);
+        private Vector2 _size = new(100, 100);
 
         private readonly Func<TextureView> _bindingGetter;
         private SizeInfo? _si;
@@ -69,7 +69,7 @@ namespace Veldrid.NeoDemo.Objects
                 new ResourceLayoutElementDescription("Tex", ResourceKind.TextureReadOnly, ShaderStages.Fragment),
                 new ResourceLayoutElementDescription("TexSampler", ResourceKind.Sampler, ShaderStages.Fragment)));
 
-            GraphicsPipelineDescription pd = new GraphicsPipelineDescription(
+            GraphicsPipelineDescription pd = new(
                 BlendStateDescription.SingleOverrideBlend,
                 new DepthStencilStateDescription(false, true, ComparisonKind.Always),
                 RasterizerStateDescription.Default,
@@ -81,7 +81,7 @@ namespace Veldrid.NeoDemo.Objects
                 new ResourceLayout[] { layout },
                 sc.MainSceneFramebuffer.OutputDescription);
 
-            _pipeline = factory.CreateGraphicsPipeline(ref pd);
+            _pipeline = factory.CreateGraphicsPipeline(pd);
 
             _sizeInfoBuffer = factory.CreateBuffer(new BufferDescription((uint)Unsafe.SizeOf<SizeInfo>(), BufferUsage.UniformBuffer));
             UpdateSizeInfoBuffer();

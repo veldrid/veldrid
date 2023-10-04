@@ -12,14 +12,17 @@ namespace Veldrid
         /// The red component.
         /// </summary>
         public readonly byte R;
+
         /// <summary>
         /// The green component.
         /// </summary>
         public readonly byte G;
+
         /// <summary>
         /// The blue component.
         /// </summary>
         public readonly byte B;
+
         /// <summary>
         /// The alpha component.
         /// </summary>
@@ -28,59 +31,72 @@ namespace Veldrid
         /// <summary>
         /// Red (255, 0, 0, 255)
         /// </summary>
-        public static readonly RgbaByte Red = new RgbaByte(255, 0, 0, 255);
+        public static readonly RgbaByte Red = new(255, 0, 0, 255);
+
         /// <summary>
         /// Dark Red (153, 0, 0, 255)
         /// </summary>
-        public static readonly RgbaByte DarkRed = new RgbaByte(153, 0, 0, 255);
+        public static readonly RgbaByte DarkRed = new(153, 0, 0, 255);
+
         /// <summary>
         /// Green (0, 255, 0, 255)
         /// </summary>
-        public static readonly RgbaByte Green = new RgbaByte(0, 255, 0, 255);
+        public static readonly RgbaByte Green = new(0, 255, 0, 255);
+
         /// <summary>
         /// Blue (0, 0, 255, 255)
         /// </summary>
-        public static readonly RgbaByte Blue = new RgbaByte(0, 0, 255, 255);
+        public static readonly RgbaByte Blue = new(0, 0, 255, 255);
+
         /// <summary>
         /// Yellow (255, 255, 0, 255)
         /// </summary>
-        public static readonly RgbaByte Yellow = new RgbaByte(255, 255, 0, 255);
+        public static readonly RgbaByte Yellow = new(255, 255, 0, 255);
+
         /// <summary>
         /// Grey (64, 64, 64, 255)
         /// </summary>
-        public static readonly RgbaByte Grey = new RgbaByte(64, 64, 64, 255);
+        public static readonly RgbaByte Grey = new(64, 64, 64, 255);
+
         /// <summary>
         /// Light Grey (166, 166, 166, 255)
         /// </summary>
-        public static readonly RgbaByte LightGrey = new RgbaByte(166, 166, 166, 255);
+        public static readonly RgbaByte LightGrey = new(166, 166, 166, 255);
+
         /// <summary>
         /// Cyan (0, 255, 255, 255)
         /// </summary>
-        public static readonly RgbaByte Cyan = new RgbaByte(0, 255, 255, 255);
+        public static readonly RgbaByte Cyan = new(0, 255, 255, 255);
+
         /// <summary>
         /// White (255, 255, 255, 255)
         /// </summary>
-        public static readonly RgbaByte White = new RgbaByte(255, 255, 255, 255);
+        public static readonly RgbaByte White = new(255, 255, 255, 255);
+
         /// <summary>
         /// Cornflower Blue (100, 149, 237, 255)
         /// </summary>
-        public static readonly RgbaByte CornflowerBlue = new RgbaByte(100, 149, 237, 255);
+        public static readonly RgbaByte CornflowerBlue = new(100, 149, 237, 255);
+
         /// <summary>
         /// Clear (0, 0, 0, 0)
         /// </summary>
-        public static readonly RgbaByte Clear = new RgbaByte(0, 0, 0, 0);
+        public static readonly RgbaByte Clear = new(0, 0, 0, 0);
+
         /// <summary>
         /// Black (0, 0, 0, 255)
         /// </summary>
-        public static readonly RgbaByte Black = new RgbaByte(0, 0, 0, 255);
+        public static readonly RgbaByte Black = new(0, 0, 0, 255);
+
         /// <summary>
         /// Pink (255, 155, 191, 255)
         /// </summary>
-        public static readonly RgbaByte Pink = new RgbaByte(255, 155, 191, 255);
+        public static readonly RgbaByte Pink = new(255, 155, 191, 255);
+
         /// <summary>
         /// Orange (255, 92, 0, 255)
         /// </summary>
-        public static readonly RgbaByte Orange = new RgbaByte(255, 92, 0, 255);
+        public static readonly RgbaByte Orange = new(255, 92, 0, 255);
 
         /// <summary>
         /// Constructs a new RgbaByte from the given components.
@@ -113,7 +129,7 @@ namespace Veldrid
         /// </summary>
         /// <param name="obj">The object to compare with the current object.</param>
         /// <returns>true if the specified object is equal to the current object; otherwise, false.</returns>
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             return obj is RgbaByte other && Equals(other);
         }

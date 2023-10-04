@@ -1,34 +1,12 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Numerics;
-using System.Text;
 
 namespace Veldrid.Utilities
 {
     public static class VdUtilities
     {
-        public static Matrix4x4 CalculateInverseTranspose(Matrix4x4 m) => CalculateInverseTranspose(ref m);
-        public static Matrix4x4 CalculateInverseTranspose(ref Matrix4x4 m)
-        {
-            Matrix4x4 inverted;
-            Matrix4x4.Invert(m, out inverted);
-            return Matrix4x4.Transpose(inverted);
-        }
-
-
-        public static unsafe string GetString(byte* stringStart)
-        {
-            int characters = 0;
-            while (stringStart[characters] != 0)
-            {
-                characters++;
-            }
-
-            return Encoding.UTF8.GetString(stringStart, characters);
-        }
-
         // Code adapted from https://bitbucket.org/sinbad/ogre/src/9db75e3ba05c/OgreMain/include/OgreVector3.h
-        public static Quaternion FromToRotation(Vector3 from, Vector3 to, Vector3 fallbackAxis = default(Vector3))
+        public static Quaternion FromToRotation(Vector3 from, Vector3 to, Vector3 fallbackAxis = default)
         {
             // Based on Stan Melax's article in Game Programming Gems
             Quaternion q;

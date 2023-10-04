@@ -12,19 +12,21 @@ namespace Veldrid
         /// <see cref="Pipeline"/>. Each element in this array describes the input layout of a single <see cref="DeviceBuffer"/>
         /// to be bound when drawing.
         /// </summary>
-        public VertexLayoutDescription[] VertexLayouts;
+        public VertexLayoutDescription[]? VertexLayouts;
+
         /// <summary>
         /// An array of <see cref="Shader"/> objects, one for each shader stage which is to be active in the
         /// <see cref="Pipeline"/>. At a minimum, every graphics Pipeline must include a Vertex and Fragment
         /// shader. All other stages are optional, but if either Tessellation stage is present, then the other must also be.
         /// </summary>
         public Shader[] Shaders;
+
         /// <summary>
         /// An array of <see cref="SpecializationConstant"/> used to override specialization constants in the created
         /// <see cref="Pipeline"/>. Each element in this array describes a single ID-value pair, which will be matched with the
         /// constants specified in each <see cref="Shader"/>.
         /// </summary>
-        public SpecializationConstant[] Specializations;
+        public SpecializationConstant[]? Specializations;
 
         /// <summary>
         /// Constructs a new ShaderSetDescription.
@@ -35,11 +37,8 @@ namespace Veldrid
         /// <param name="shaders">An array of <see cref="Shader"/> objects, one for each shader stage which is to be active
         /// in the <see cref="Pipeline"/>. At a minimum, every graphics Pipeline must include a Vertex and Fragment shader. All
         /// other stages are optional, but if either Tessellation stage is present, then the other must also be.</param>
-        public ShaderSetDescription(VertexLayoutDescription[] vertexLayouts, Shader[] shaders)
+        public ShaderSetDescription(VertexLayoutDescription[]? vertexLayouts, Shader[] shaders) : this(vertexLayouts, shaders, null)
         {
-            VertexLayouts = vertexLayouts;
-            Shaders = shaders;
-            Specializations = null;
         }
 
         /// <summary>
@@ -55,9 +54,9 @@ namespace Veldrid
         /// constants in the created <see cref="Pipeline"/>. Each element in this array describes a single ID-value pair, which
         /// will be matched with the constants specified in each <see cref="Shader"/>.</param>
         public ShaderSetDescription(
-            VertexLayoutDescription[] vertexLayouts,
+            VertexLayoutDescription[]? vertexLayouts,
             Shader[] shaders,
-            SpecializationConstant[] specializations)
+            SpecializationConstant[]? specializations)
         {
             VertexLayouts = vertexLayouts;
             Shaders = shaders;

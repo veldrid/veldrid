@@ -11,14 +11,17 @@ namespace Veldrid
         /// The name of the element.
         /// </summary>
         public string Name;
+
         /// <summary>
         /// The kind of resource.
         /// </summary>
         public ResourceKind Kind;
+
         /// <summary>
         /// The <see cref="ShaderStages"/> in which this element is used.
         /// </summary>
         public ShaderStages Stages;
+
         /// <summary>
         /// Miscellaneous resource options for this element.
         /// </summary>
@@ -90,7 +93,7 @@ namespace Veldrid
         /// <summary>
         /// Can be applied to a buffer type resource (<see cref="ResourceKind.StructuredBufferReadOnly"/>,
         /// <see cref="ResourceKind.StructuredBufferReadWrite"/>, or <see cref="ResourceKind.UniformBuffer"/>), allowing it to be
-        /// bound with a dynamic offset using <see cref="CommandList.SetGraphicsResourceSet(uint, ResourceSet, uint[])"/>.
+        /// bound with a dynamic offset using <see cref="CommandList.SetGraphicsResourceSet(uint, ResourceSet, ReadOnlySpan{uint})"/>.
         /// Offsets specified this way must be a multiple of <see cref="GraphicsDevice.UniformBufferMinOffsetAlignment"/> or
         /// <see cref="GraphicsDevice.StructuredBufferMinOffsetAlignment"/>.
         /// </summary>

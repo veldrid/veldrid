@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using NativeLibraryLoader;
+using NativeLibrary = NativeLibraryLoader.NativeLibrary;
 
 namespace Veldrid.VirtualReality.Oculus
 {
@@ -21,7 +21,7 @@ namespace Veldrid.VirtualReality.Oculus
             string libName = Environment.Is64BitProcess ? LibName64 : LibName32;
             try
             {
-                NativeLibrary lib = new NativeLibrary(libName);
+                NativeLibrary lib = new(libName);
 
                 p_ovr_Initialize = lib.LoadFunction<ovr_Initialize_t>("ovr_Initialize");
                 p_ovr_Shutdown = lib.LoadFunction<ovr_Shutdown_t>("ovr_Shutdown");
@@ -684,7 +684,7 @@ namespace Veldrid.VirtualReality.Oculus
     {
         public readonly byte Value;
         public static implicit operator bool(ovrBool b8) => b8.Value != 0;
-        public static implicit operator ovrBool(bool b) => new ovrBool(b);
+        public static implicit operator ovrBool(bool b) => new(b);
 
         public ovrBool(bool value)
         {

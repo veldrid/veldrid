@@ -12,11 +12,13 @@ namespace Veldrid
         /// or otherwise ignored.
         /// </summary>
         public RgbaFloat BlendFactor;
+
         /// <summary>
         /// An array of <see cref="BlendAttachmentDescription"/> describing how blending is performed for each color target
         /// used in the <see cref="Pipeline"/>.
         /// </summary>
         public BlendAttachmentDescription[] AttachmentStates;
+
         /// <summary>
         /// Enables alpha-to-coverage, which causes a fragment's alpha value to be used when determining multi-sample coverage.
         /// </summary>
@@ -54,7 +56,7 @@ namespace Veldrid
         /// <summary>
         /// Describes a blend state in which a single color target is blended with <see cref="BlendAttachmentDescription.OverrideBlend"/>.
         /// </summary>
-        public static readonly BlendStateDescription SingleOverrideBlend = new BlendStateDescription
+        public static readonly BlendStateDescription SingleOverrideBlend = new()
         {
             AttachmentStates = new BlendAttachmentDescription[] { BlendAttachmentDescription.OverrideBlend }
         };
@@ -62,7 +64,7 @@ namespace Veldrid
         /// <summary>
         /// Describes a blend state in which a single color target is blended with <see cref="BlendAttachmentDescription.AlphaBlend"/>.
         /// </summary>
-        public static readonly BlendStateDescription SingleAlphaBlend = new BlendStateDescription
+        public static readonly BlendStateDescription SingleAlphaBlend = new()
         {
             AttachmentStates = new BlendAttachmentDescription[] { BlendAttachmentDescription.AlphaBlend }
         };
@@ -70,7 +72,7 @@ namespace Veldrid
         /// <summary>
         /// Describes a blend state in which a single color target is blended with <see cref="BlendAttachmentDescription.AdditiveBlend"/>.
         /// </summary>
-        public static readonly BlendStateDescription SingleAdditiveBlend = new BlendStateDescription
+        public static readonly BlendStateDescription SingleAdditiveBlend = new()
         {
             AttachmentStates = new BlendAttachmentDescription[] { BlendAttachmentDescription.AdditiveBlend }
         };
@@ -78,7 +80,7 @@ namespace Veldrid
         /// <summary>
         /// Describes a blend state in which a single color target is blended with <see cref="BlendAttachmentDescription.Disabled"/>.
         /// </summary>
-        public static readonly BlendStateDescription SingleDisabled = new BlendStateDescription
+        public static readonly BlendStateDescription SingleDisabled = new()
         {
             AttachmentStates = new BlendAttachmentDescription[] { BlendAttachmentDescription.Disabled }
         };
@@ -86,7 +88,7 @@ namespace Veldrid
         /// <summary>
         /// Describes an empty blend state in which no color targets are used.
         /// </summary>
-        public static readonly BlendStateDescription Empty = new BlendStateDescription
+        public static readonly BlendStateDescription Empty = new()
         {
             AttachmentStates = Array.Empty<BlendAttachmentDescription>()
         };

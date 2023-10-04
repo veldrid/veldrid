@@ -1,6 +1,6 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Text;
 
 namespace Veldrid.Sdl2
 {
@@ -14,34 +14,24 @@ namespace Veldrid.Sdl2
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate SDL_Window SDL_CreateWindow_t(byte* title, int x, int y, int w, int h, SDL_WindowFlags flags);
         private static SDL_CreateWindow_t s_sdl_createWindow = LoadFunction<SDL_CreateWindow_t>("SDL_CreateWindow");
-        public static SDL_Window SDL_CreateWindow(string title, int x, int y, int w, int h, SDL_WindowFlags flags)
-        {
-            byte* utf8Bytes;
-            if (title != null)
-            {
-                int byteCount = Encoding.UTF8.GetByteCount(title);
-                if (byteCount == 0)
-                {
-                    byte zeroByte = 0;
-                    utf8Bytes = &zeroByte;
-                }
-                else
-                {
-                    byte* utf8BytesAlloc = stackalloc byte[byteCount + 1];
-                    utf8Bytes = utf8BytesAlloc;
-                    fixed (char* titlePtr = title)
-                    {
-                        int actualBytes = Encoding.UTF8.GetBytes(titlePtr, title.Length, utf8Bytes, byteCount);
-                        utf8Bytes[actualBytes] = 0;
-                    }
-                }
-            }
-            else
-            {
-                utf8Bytes = null;
-            }
 
-            return s_sdl_createWindow(utf8Bytes, x, y, w, h, flags);
+        [SkipLocalsInit]
+        public static SDL_Window SDL_CreateWindow(ReadOnlySpan<char> title, int x, int y, int w, int h, SDL_WindowFlags flags)
+        {
+            Span<byte> titleBuffer = stackalloc byte[4096];
+
+            IntPtr ptr = Utilities.GetNullTerminatedUtf8(title, ref titleBuffer);
+            try
+            {
+                fixed (byte* titlePtr = titleBuffer)
+                {
+                    return s_sdl_createWindow(titlePtr, x, y, w, h, flags);
+                }
+            }
+            finally
+            {
+                Utilities.FreeUtf8(ptr);
+            }
         }
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -82,34 +72,24 @@ namespace Veldrid.Sdl2
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate void SDL_SetWindowTitle_t(SDL_Window SDL2Window, byte* title);
         private static SDL_SetWindowTitle_t s_setWindowTitle = LoadFunction<SDL_SetWindowTitle_t>("SDL_SetWindowTitle");
-        public static void SDL_SetWindowTitle(SDL_Window Sdl2Window, string title)
-        {
-            byte* utf8Bytes;
-            if (title != null)
-            {
-                int byteCount = Encoding.UTF8.GetByteCount(title);
-                if (byteCount == 0)
-                {
-                    byte zeroByte = 0;
-                    utf8Bytes = &zeroByte;
-                }
-                else
-                {
-                    byte* utf8BytesAlloc = stackalloc byte[byteCount + 1];
-                    utf8Bytes = utf8BytesAlloc;
-                    fixed (char* titlePtr = title)
-                    {
-                        int actualBytes = Encoding.UTF8.GetBytes(titlePtr, title.Length, utf8Bytes, byteCount);
-                        utf8Bytes[actualBytes] = 0;
-                    }
-                }
-            }
-            else
-            {
-                utf8Bytes = null;
-            }
 
-            s_setWindowTitle(Sdl2Window, utf8Bytes);
+        [SkipLocalsInit]
+        public static void SDL_SetWindowTitle(SDL_Window Sdl2Window, ReadOnlySpan<char> title)
+        {
+            Span<byte> titleBuffer = stackalloc byte[4096];
+
+            IntPtr ptr = Utilities.GetNullTerminatedUtf8(title, ref titleBuffer);
+            try
+            {
+                fixed (byte* titlePtr = titleBuffer)
+                {
+                    s_setWindowTitle(Sdl2Window, titlePtr);
+                }
+            }
+            finally
+            {
+                Utilities.FreeUtf8(ptr);
+            }
         }
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -178,6 +158,16 @@ namespace Veldrid.Sdl2
         public static int SDL_GetDisplayBounds(int displayIndex, Rectangle* rect) => s_sdl_getDisplayBounds(displayIndex, rect);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate int SDL_GetDisplayDPI_t(int displayIndex, float* ddpi, float* hdpi, float* vdpi);
+        private static SDL_GetDisplayDPI_t s_sdl_getDisplayDPI = LoadFunction<SDL_GetDisplayDPI_t>("SDL_GetDisplayDPI");
+        public static int SDL_GetDisplayDPI(int displayIndex, float* ddpi, float* hdpi, float* vdpi) => s_sdl_getDisplayDPI(displayIndex, ddpi, hdpi, vdpi);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate int SDL_GL_GetDrawableSize_t(SDL_Window window, int* w, int* h);
+        private static SDL_GL_GetDrawableSize_t s_sdl_gl_getDrawableSize = LoadFunction<SDL_GL_GetDrawableSize_t>("SDL_GL_GetDrawableSize");
+        public static int SDL_GL_GetDrawableSize(SDL_Window window, int* w, int* h) => s_sdl_gl_getDrawableSize(window, w, h);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate int SDL_GetWindowDisplayIndex_t(SDL_Window window);
         private static SDL_GetWindowDisplayIndex_t s_sdl_getWindowDisplayIndex = LoadFunction<SDL_GetWindowDisplayIndex_t>("SDL_GetWindowDisplayIndex");
         public static int SDL_GetWindowDisplayIndex(SDL_Window window) => s_sdl_getWindowDisplayIndex(window);
@@ -201,7 +191,6 @@ namespace Veldrid.Sdl2
         private delegate bool SDL_SetHint_t(string name, string value);
         private static SDL_SetHint_t s_sdl_setHint = LoadFunction<SDL_SetHint_t>("SDL_SetHint");
         public static bool SDL_SetHint(string name, string value) => s_sdl_setHint(name, value);
-
     }
 
     [Flags]

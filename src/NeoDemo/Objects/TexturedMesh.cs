@@ -4,6 +4,7 @@ using System;
 using Veldrid.ImageSharp;
 using Veldrid.Utilities;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 namespace Veldrid.NeoDemo.Objects
 {
@@ -14,10 +15,10 @@ namespace Veldrid.NeoDemo.Objects
         private uint _uniformOffset = 0;
 
         private readonly string _name;
-        private readonly MeshData _meshData;
+        private readonly ConstructedMesh _meshData;
         private readonly ImageSharpTexture _textureData;
         private readonly ImageSharpTexture _alphaTextureData;
-        private readonly Transform _transform = new Transform();
+        private readonly Transform _transform = new();
 
         private BoundingBox _centeredBounds;
         private DeviceBuffer _vb;
@@ -39,7 +40,7 @@ namespace Veldrid.NeoDemo.Objects
 
         private DeviceBuffer _worldAndInverseBuffer;
 
-        private readonly DisposeCollector _disposeCollector = new DisposeCollector();
+        private readonly DisposeCollector _disposeCollector = new();
 
         private readonly MaterialPropsAndBuffer _materialProps;
         private readonly Vector3 _objectCenter;
@@ -49,7 +50,7 @@ namespace Veldrid.NeoDemo.Objects
 
         public Transform Transform => _transform;
 
-        public TexturedMesh(string name, MeshData meshData, ImageSharpTexture textureData, ImageSharpTexture alphaTexture, MaterialPropsAndBuffer materialProps)
+        public TexturedMesh(string name, ConstructedMesh meshData, ImageSharpTexture textureData, ImageSharpTexture alphaTexture, MaterialPropsAndBuffer materialProps)
         {
             _name = name;
             _meshData = meshData;
@@ -71,13 +72,15 @@ namespace Veldrid.NeoDemo.Objects
             ResourceFactory disposeFactory = new DisposeCollectorResourceFactory(gd.ResourceFactory, _disposeCollector);
             _vb = _meshData.CreateVertexBuffer(disposeFactory, cl);
             _vb.Name = _name + "_VB";
-            _ib = _meshData.CreateIndexBuffer(disposeFactory, cl, out _indexCount);
+            _ib = _meshData.CreateIndexBuffer(disposeFactory, cl);
+            _indexCount = _meshData.IndexCount;
             _ib.Name = _name + "_IB";
 
             uint bufferSize = 128;
-            if (s_useUniformOffset) { bufferSize += _uniformOffset * 2; }
+            if (s_useUniformOffset)
+            { bufferSize += _uniformOffset * 2; }
 
-            _worldAndInverseBuffer = disposeFactory.CreateBuffer(new BufferDescription(bufferSize, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
+            _worldAndInverseBuffer = disposeFactory.CreateBuffer(new BufferDescription(bufferSize, BufferUsage.UniformBuffer | BufferUsage.DynamicWrite));
             if (_materialPropsOwned)
             {
                 _materialProps.CreateDeviceObjects(gd, cl, sc);
@@ -122,7 +125,7 @@ namespace Veldrid.NeoDemo.Objects
             ResourceLayout worldLayout = StaticResourceCache.GetResourceLayout(gd.ResourceFactory, new ResourceLayoutDescription(
                 new ResourceLayoutElementDescription("WorldAndInverse", ResourceKind.UniformBuffer, ShaderStages.Vertex, ResourceLayoutElementOptions.DynamicBinding)));
 
-            GraphicsPipelineDescription depthPD = new GraphicsPipelineDescription(
+            GraphicsPipelineDescription depthPD = new(
                 BlendStateDescription.Empty,
                 gd.IsDepthRangeZeroToOne ? DepthStencilStateDescription.DepthOnlyGreaterEqual : DepthStencilStateDescription.DepthOnlyLessEqual,
                 RasterizerStateDescription.Default,
@@ -181,7 +184,7 @@ namespace Veldrid.NeoDemo.Objects
             BlendStateDescription alphaBlendDesc = BlendStateDescription.SingleAlphaBlend;
             alphaBlendDesc.AlphaToCoverageEnabled = true;
 
-            GraphicsPipelineDescription mainPD = new GraphicsPipelineDescription(
+            GraphicsPipelineDescription mainPD = new(
                 _alphamapTexture != null ? alphaBlendDesc : BlendStateDescription.SingleOverrideBlend,
                 gd.IsDepthRangeZeroToOne ? DepthStencilStateDescription.DepthOnlyGreaterEqual : DepthStencilStateDescription.DepthOnlyLessEqual,
                 RasterizerStateDescription.Default,
@@ -316,30 +319,32 @@ namespace Veldrid.NeoDemo.Objects
         {
             WorldAndInverse wai;
             wai.World = _transform.GetTransformMatrix();
-            wai.InverseWorld = VdUtilities.CalculateInverseTranspose(ref wai.World);
+
+            Matrix4x4.Invert(wai.World, out Matrix4x4 invertedWorld);
+            wai.InverseWorld = Matrix4x4.Transpose(invertedWorld);
             gd.UpdateBuffer(_worldAndInverseBuffer, _uniformOffset * 2, ref wai);
         }
 
         private void RenderShadowMap(CommandList cl, SceneContext sc, int shadowMapIndex)
         {
             cl.SetVertexBuffer(0, _vb);
-            cl.SetIndexBuffer(_ib, IndexFormat.UInt16);
+            cl.SetIndexBuffer(_ib, _meshData.IndexFormat);
             cl.SetPipeline(_shadowMapPipeline);
             cl.SetGraphicsResourceSet(0, _shadowMapResourceSets[shadowMapIndex * 2]);
-            uint offset = _uniformOffset;
-            cl.SetGraphicsResourceSet(1, _shadowMapResourceSets[shadowMapIndex * 2 + 1], 1, ref offset);
+            ReadOnlySpan<uint> offsets = MemoryMarshal.CreateReadOnlySpan(ref _uniformOffset, 1);
+            cl.SetGraphicsResourceSet(1, _shadowMapResourceSets[shadowMapIndex * 2 + 1], offsets);
             cl.DrawIndexed((uint)_indexCount, 1, 0, 0, 0);
         }
 
         private void RenderStandard(CommandList cl, SceneContext sc, bool reflectionPass)
         {
             cl.SetVertexBuffer(0, _vb);
-            cl.SetIndexBuffer(_ib, IndexFormat.UInt16);
+            cl.SetIndexBuffer(_ib, _meshData.IndexFormat);
             cl.SetPipeline(reflectionPass ? _pipelineFrontCull : _pipeline);
             cl.SetGraphicsResourceSet(0, _mainProjViewRS);
             cl.SetGraphicsResourceSet(1, _mainSharedRS);
-            uint offset = _uniformOffset;
-            cl.SetGraphicsResourceSet(2, _mainPerObjectRS, 1, ref offset);
+            ReadOnlySpan<uint> offsets = MemoryMarshal.CreateReadOnlySpan(ref _uniformOffset, 1);
+            cl.SetGraphicsResourceSet(2, _mainPerObjectRS, offsets);
             cl.SetGraphicsResourceSet(3, reflectionPass ? _reflectionRS : _noReflectionRS);
             cl.DrawIndexed((uint)_indexCount, 1, 0, 0, 0);
         }

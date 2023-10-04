@@ -21,7 +21,7 @@ namespace Veldrid.NeoDemo
         public override int GetHashCode()
         {
             int hash = Name.GetHashCode();
-            foreach (var specConst in Specializations)
+            foreach (SpecializationConstant specConst in Specializations)
             {
                 hash ^= specConst.GetHashCode();
             }

@@ -1,10 +1,11 @@
-using System;
+using System.Diagnostics.CodeAnalysis;
 using Veldrid.MetalBindings;
 
 namespace Veldrid.MTL
 {
     internal static class MTLFormats
     {
+        [SuppressMessage("Style", "IDE0066:Convert switch statement to expression", Justification = "<Pending>")]
         internal static MTLPixelFormat VdToMTLPixelFormat(PixelFormat format, bool depthFormat)
         {
             switch (format)
@@ -147,6 +148,7 @@ namespace Veldrid.MTL
             }
         }
 
+        [SuppressMessage("Style", "IDE0066:Convert switch statement to expression", Justification = "<Pending>")]
         internal static bool IsFormatSupported(PixelFormat format, TextureUsage usage, MTLFeatureSupport metalFeatures)
         {
             switch (format)
@@ -189,15 +191,12 @@ namespace Veldrid.MTL
 
         internal static MTLTriangleFillMode VdToMTLFillMode(PolygonFillMode fillMode)
         {
-            switch (fillMode)
+            return fillMode switch
             {
-                case PolygonFillMode.Solid:
-                    return MTLTriangleFillMode.Fill;
-                case PolygonFillMode.Wireframe:
-                    return MTLTriangleFillMode.Lines;
-                default:
-                    throw Illegal.Value<PolygonFillMode>();
-            }
+                PolygonFillMode.Solid => MTLTriangleFillMode.Fill,
+                PolygonFillMode.Wireframe => MTLTriangleFillMode.Lines,
+                _ => throw Illegal.Value<PolygonFillMode>(),
+            };
         }
 
         internal static MTLWinding VdVoMTLFrontFace(FrontFace frontFace)
@@ -294,54 +293,35 @@ namespace Veldrid.MTL
 
         internal static MTLBlendFactor VdToMTLBlendFactor(BlendFactor vdFactor)
         {
-            switch (vdFactor)
+            return vdFactor switch
             {
-                case BlendFactor.Zero:
-                    return MTLBlendFactor.Zero;
-                case BlendFactor.One:
-                    return MTLBlendFactor.One;
-                case BlendFactor.SourceAlpha:
-                    return MTLBlendFactor.SourceAlpha;
-                case BlendFactor.InverseSourceAlpha:
-                    return MTLBlendFactor.OneMinusSourceAlpha;
-                case BlendFactor.DestinationAlpha:
-                    return MTLBlendFactor.DestinationAlpha;
-                case BlendFactor.InverseDestinationAlpha:
-                    return MTLBlendFactor.OneMinusDestinationAlpha;
-                case BlendFactor.SourceColor:
-                    return MTLBlendFactor.SourceColor;
-                case BlendFactor.InverseSourceColor:
-                    return MTLBlendFactor.OneMinusSourceColor;
-                case BlendFactor.DestinationColor:
-                    return MTLBlendFactor.DestinationColor;
-                case BlendFactor.InverseDestinationColor:
-                    return MTLBlendFactor.OneMinusDestinationColor;
-                case BlendFactor.BlendFactor:
-                    return MTLBlendFactor.BlendColor;
-                case BlendFactor.InverseBlendFactor:
-                    return MTLBlendFactor.OneMinusBlendColor;
-                default:
-                    throw Illegal.Value<BlendFactor>();
-            }
+                BlendFactor.Zero => MTLBlendFactor.Zero,
+                BlendFactor.One => MTLBlendFactor.One,
+                BlendFactor.SourceAlpha => MTLBlendFactor.SourceAlpha,
+                BlendFactor.InverseSourceAlpha => MTLBlendFactor.OneMinusSourceAlpha,
+                BlendFactor.DestinationAlpha => MTLBlendFactor.DestinationAlpha,
+                BlendFactor.InverseDestinationAlpha => MTLBlendFactor.OneMinusDestinationAlpha,
+                BlendFactor.SourceColor => MTLBlendFactor.SourceColor,
+                BlendFactor.InverseSourceColor => MTLBlendFactor.OneMinusSourceColor,
+                BlendFactor.DestinationColor => MTLBlendFactor.DestinationColor,
+                BlendFactor.InverseDestinationColor => MTLBlendFactor.OneMinusDestinationColor,
+                BlendFactor.BlendFactor => MTLBlendFactor.BlendColor,
+                BlendFactor.InverseBlendFactor => MTLBlendFactor.OneMinusBlendColor,
+                _ => throw Illegal.Value<BlendFactor>(),
+            };
         }
 
         internal static MTLBlendOperation VdToMTLBlendOp(BlendFunction vdFunction)
         {
-            switch (vdFunction)
+            return vdFunction switch
             {
-                case BlendFunction.Add:
-                    return MTLBlendOperation.Add;
-                case BlendFunction.Maximum:
-                    return MTLBlendOperation.Max;
-                case BlendFunction.Minimum:
-                    return MTLBlendOperation.Min;
-                case BlendFunction.ReverseSubtract:
-                    return MTLBlendOperation.ReverseSubtract;
-                case BlendFunction.Subtract:
-                    return MTLBlendOperation.Subtract;
-                default:
-                    throw Illegal.Value<BlendFunction>();
-            }
+                BlendFunction.Add => MTLBlendOperation.Add,
+                BlendFunction.Maximum => MTLBlendOperation.Max,
+                BlendFunction.Minimum => MTLBlendOperation.Min,
+                BlendFunction.ReverseSubtract => MTLBlendOperation.ReverseSubtract,
+                BlendFunction.Subtract => MTLBlendOperation.Subtract,
+                _ => throw Illegal.Value<BlendFunction>(),
+            };
         }
 
         internal static MTLColorWriteMask VdToMTLColorWriteMask(ColorWriteMask vdMask)
@@ -360,6 +340,7 @@ namespace Veldrid.MTL
             return mask;
         }
 
+        [SuppressMessage("Style", "IDE0066:Convert switch statement to expression", Justification = "<Pending>")]
         internal static MTLDataType VdVoMTLShaderConstantType(ShaderConstantType type)
         {
             switch (type)
@@ -387,93 +368,65 @@ namespace Veldrid.MTL
 
         internal static MTLCompareFunction VdToMTLCompareFunction(ComparisonKind comparisonKind)
         {
-            switch (comparisonKind)
+            return comparisonKind switch
             {
-                case ComparisonKind.Always:
-                    return MTLCompareFunction.Always;
-                case ComparisonKind.Equal:
-                    return MTLCompareFunction.Equal;
-                case ComparisonKind.Greater:
-                    return MTLCompareFunction.Greater;
-                case ComparisonKind.GreaterEqual:
-                    return MTLCompareFunction.GreaterEqual;
-                case ComparisonKind.Less:
-                    return MTLCompareFunction.Less;
-                case ComparisonKind.LessEqual:
-                    return MTLCompareFunction.LessEqual;
-                case ComparisonKind.Never:
-                    return MTLCompareFunction.Never;
-                case ComparisonKind.NotEqual:
-                    return MTLCompareFunction.NotEqual;
-                default:
-                    throw Illegal.Value<ComparisonKind>();
-            }
+                ComparisonKind.Always => MTLCompareFunction.Always,
+                ComparisonKind.Equal => MTLCompareFunction.Equal,
+                ComparisonKind.Greater => MTLCompareFunction.Greater,
+                ComparisonKind.GreaterEqual => MTLCompareFunction.GreaterEqual,
+                ComparisonKind.Less => MTLCompareFunction.Less,
+                ComparisonKind.LessEqual => MTLCompareFunction.LessEqual,
+                ComparisonKind.Never => MTLCompareFunction.Never,
+                ComparisonKind.NotEqual => MTLCompareFunction.NotEqual,
+                _ => throw Illegal.Value<ComparisonKind>(),
+            };
         }
 
         internal static MTLCullMode VdToMTLCullMode(FaceCullMode cullMode)
         {
-            switch (cullMode)
+            return cullMode switch
             {
-                case FaceCullMode.Front:
-                    return MTLCullMode.Front;
-                case FaceCullMode.Back:
-                    return MTLCullMode.Back;
-                case FaceCullMode.None:
-                    return MTLCullMode.None;
-                default:
-                    throw Illegal.Value<FaceCullMode>();
-            }
+                FaceCullMode.Front => MTLCullMode.Front,
+                FaceCullMode.Back => MTLCullMode.Back,
+                FaceCullMode.None => MTLCullMode.None,
+                _ => throw Illegal.Value<FaceCullMode>(),
+            };
         }
 
         internal static MTLSamplerBorderColor VdToMTLBorderColor(SamplerBorderColor borderColor)
         {
-            switch (borderColor)
+            return borderColor switch
             {
-                case SamplerBorderColor.TransparentBlack:
-                    return MTLSamplerBorderColor.TransparentBlack;
-                case SamplerBorderColor.OpaqueBlack:
-                    return MTLSamplerBorderColor.OpaqueBlack;
-                case SamplerBorderColor.OpaqueWhite:
-                    return MTLSamplerBorderColor.OpaqueWhite;
-                default:
-                    throw Illegal.Value<SamplerBorderColor>();
-            }
+                SamplerBorderColor.TransparentBlack => MTLSamplerBorderColor.TransparentBlack,
+                SamplerBorderColor.OpaqueBlack => MTLSamplerBorderColor.OpaqueBlack,
+                SamplerBorderColor.OpaqueWhite => MTLSamplerBorderColor.OpaqueWhite,
+                _ => throw Illegal.Value<SamplerBorderColor>(),
+            };
         }
 
         internal static MTLSamplerAddressMode VdToMTLAddressMode(SamplerAddressMode mode)
         {
-            switch (mode)
+            return mode switch
             {
-                case SamplerAddressMode.Border:
-                    return MTLSamplerAddressMode.ClampToBorderColor;
-                case SamplerAddressMode.Clamp:
-                    return MTLSamplerAddressMode.ClampToEdge;
-                case SamplerAddressMode.Mirror:
-                    return MTLSamplerAddressMode.MirrorRepeat;
-                case SamplerAddressMode.Wrap:
-                    return MTLSamplerAddressMode.Repeat;
-                default:
-                    throw Illegal.Value<SamplerAddressMode>();
-            }
+                SamplerAddressMode.Border => MTLSamplerAddressMode.ClampToBorderColor,
+                SamplerAddressMode.Clamp => MTLSamplerAddressMode.ClampToEdge,
+                SamplerAddressMode.Mirror => MTLSamplerAddressMode.MirrorRepeat,
+                SamplerAddressMode.Wrap => MTLSamplerAddressMode.Repeat,
+                _ => throw Illegal.Value<SamplerAddressMode>(),
+            };
         }
 
         internal static MTLPrimitiveType VdToMTLPrimitiveTopology(PrimitiveTopology primitiveTopology)
         {
-            switch (primitiveTopology)
+            return primitiveTopology switch
             {
-                case PrimitiveTopology.LineList:
-                    return MTLPrimitiveType.Line;
-                case PrimitiveTopology.LineStrip:
-                    return MTLPrimitiveType.LineStrip;
-                case PrimitiveTopology.TriangleList:
-                    return MTLPrimitiveType.Triangle;
-                case PrimitiveTopology.TriangleStrip:
-                    return MTLPrimitiveType.TriangleStrip;
-                case PrimitiveTopology.PointList:
-                    return MTLPrimitiveType.Point;
-                default:
-                    throw Illegal.Value<PrimitiveTopology>();
-            }
+                PrimitiveTopology.LineList => MTLPrimitiveType.Line,
+                PrimitiveTopology.LineStrip => MTLPrimitiveType.LineStrip,
+                PrimitiveTopology.TriangleList => MTLPrimitiveType.Triangle,
+                PrimitiveTopology.TriangleStrip => MTLPrimitiveType.TriangleStrip,
+                PrimitiveTopology.PointList => MTLPrimitiveType.Point,
+                _ => throw Illegal.Value<PrimitiveTopology>(),
+            };
         }
 
         internal static MTLTextureUsage VdToMTLTextureUsage(TextureUsage usage)
@@ -499,73 +452,41 @@ namespace Veldrid.MTL
 
         internal static MTLVertexFormat VdToMTLVertexFormat(VertexElementFormat format)
         {
-            switch (format)
+            return format switch
             {
-                case VertexElementFormat.Byte2_Norm:
-                    return MTLVertexFormat.uchar2Normalized;
-                case VertexElementFormat.Byte2:
-                    return MTLVertexFormat.uchar2;
-                case VertexElementFormat.Byte4_Norm:
-                    return MTLVertexFormat.uchar4Normalized;
-                case VertexElementFormat.Byte4:
-                    return MTLVertexFormat.uchar4;
-                case VertexElementFormat.SByte2_Norm:
-                    return MTLVertexFormat.char2Normalized;
-                case VertexElementFormat.SByte2:
-                    return MTLVertexFormat.char2;
-                case VertexElementFormat.SByte4_Norm:
-                    return MTLVertexFormat.char4Normalized;
-                case VertexElementFormat.SByte4:
-                    return MTLVertexFormat.char4;
-                case VertexElementFormat.UShort2_Norm:
-                    return MTLVertexFormat.ushort2Normalized;
-                case VertexElementFormat.UShort2:
-                    return MTLVertexFormat.ushort2;
-                case VertexElementFormat.Short2_Norm:
-                    return MTLVertexFormat.short2Normalized;
-                case VertexElementFormat.Short2:
-                    return MTLVertexFormat.short2;
-                case VertexElementFormat.UShort4_Norm:
-                    return MTLVertexFormat.ushort4Normalized;
-                case VertexElementFormat.UShort4:
-                    return MTLVertexFormat.ushort4;
-                case VertexElementFormat.Short4_Norm:
-                    return MTLVertexFormat.short4Normalized;
-                case VertexElementFormat.Short4:
-                    return MTLVertexFormat.short4;
-                case VertexElementFormat.UInt1:
-                    return MTLVertexFormat.@uint;
-                case VertexElementFormat.UInt2:
-                    return MTLVertexFormat.uint2;
-                case VertexElementFormat.UInt3:
-                    return MTLVertexFormat.uint3;
-                case VertexElementFormat.UInt4:
-                    return MTLVertexFormat.uint4;
-                case VertexElementFormat.Int1:
-                    return MTLVertexFormat.@int;
-                case VertexElementFormat.Int2:
-                    return MTLVertexFormat.int2;
-                case VertexElementFormat.Int3:
-                    return MTLVertexFormat.int3;
-                case VertexElementFormat.Int4:
-                    return MTLVertexFormat.int4;
-                case VertexElementFormat.Float1:
-                    return MTLVertexFormat.@float;
-                case VertexElementFormat.Float2:
-                    return MTLVertexFormat.float2;
-                case VertexElementFormat.Float3:
-                    return MTLVertexFormat.float3;
-                case VertexElementFormat.Float4:
-                    return MTLVertexFormat.float4;
-                case VertexElementFormat.Half1:
-                    return MTLVertexFormat.half;
-                case VertexElementFormat.Half2:
-                    return MTLVertexFormat.half2;
-                case VertexElementFormat.Half4:
-                    return MTLVertexFormat.half4;
-                default:
-                    throw Illegal.Value<VertexElementFormat>();
-            }
+                VertexElementFormat.Byte2_Norm => MTLVertexFormat.uchar2Normalized,
+                VertexElementFormat.Byte2 => MTLVertexFormat.uchar2,
+                VertexElementFormat.Byte4_Norm => MTLVertexFormat.uchar4Normalized,
+                VertexElementFormat.Byte4 => MTLVertexFormat.uchar4,
+                VertexElementFormat.SByte2_Norm => MTLVertexFormat.char2Normalized,
+                VertexElementFormat.SByte2 => MTLVertexFormat.char2,
+                VertexElementFormat.SByte4_Norm => MTLVertexFormat.char4Normalized,
+                VertexElementFormat.SByte4 => MTLVertexFormat.char4,
+                VertexElementFormat.UShort2_Norm => MTLVertexFormat.ushort2Normalized,
+                VertexElementFormat.UShort2 => MTLVertexFormat.ushort2,
+                VertexElementFormat.Short2_Norm => MTLVertexFormat.short2Normalized,
+                VertexElementFormat.Short2 => MTLVertexFormat.short2,
+                VertexElementFormat.UShort4_Norm => MTLVertexFormat.ushort4Normalized,
+                VertexElementFormat.UShort4 => MTLVertexFormat.ushort4,
+                VertexElementFormat.Short4_Norm => MTLVertexFormat.short4Normalized,
+                VertexElementFormat.Short4 => MTLVertexFormat.short4,
+                VertexElementFormat.UInt1 => MTLVertexFormat.@uint,
+                VertexElementFormat.UInt2 => MTLVertexFormat.uint2,
+                VertexElementFormat.UInt3 => MTLVertexFormat.uint3,
+                VertexElementFormat.UInt4 => MTLVertexFormat.uint4,
+                VertexElementFormat.Int1 => MTLVertexFormat.@int,
+                VertexElementFormat.Int2 => MTLVertexFormat.int2,
+                VertexElementFormat.Int3 => MTLVertexFormat.int3,
+                VertexElementFormat.Int4 => MTLVertexFormat.int4,
+                VertexElementFormat.Float1 => MTLVertexFormat.@float,
+                VertexElementFormat.Float2 => MTLVertexFormat.float2,
+                VertexElementFormat.Float3 => MTLVertexFormat.float3,
+                VertexElementFormat.Float4 => MTLVertexFormat.float4,
+                VertexElementFormat.Half1 => MTLVertexFormat.half,
+                VertexElementFormat.Half2 => MTLVertexFormat.half2,
+                VertexElementFormat.Half4 => MTLVertexFormat.half4,
+                _ => throw Illegal.Value<VertexElementFormat>(),
+            };
         }
 
         internal static MTLIndexType VdToMTLIndexFormat(IndexFormat format)
@@ -575,30 +496,21 @@ namespace Veldrid.MTL
 
         internal static MTLStencilOperation VdToMTLStencilOperation(StencilOperation op)
         {
-            switch (op)
+            return op switch
             {
-                case StencilOperation.Keep:
-                    return MTLStencilOperation.Keep;
-                case StencilOperation.Zero:
-                    return MTLStencilOperation.Zero;
-                case StencilOperation.Replace:
-                    return MTLStencilOperation.Replace;
-                case StencilOperation.IncrementAndClamp:
-                    return MTLStencilOperation.IncrementClamp;
-                case StencilOperation.DecrementAndClamp:
-                    return MTLStencilOperation.DecrementClamp;
-                case StencilOperation.Invert:
-                    return MTLStencilOperation.Invert;
-                case StencilOperation.IncrementAndWrap:
-                    return MTLStencilOperation.IncrementWrap;
-                case StencilOperation.DecrementAndWrap:
-                    return MTLStencilOperation.DecrementWrap;
-                default:
-                    throw Illegal.Value<StencilOperation>();
-
-            }
+                StencilOperation.Keep => MTLStencilOperation.Keep,
+                StencilOperation.Zero => MTLStencilOperation.Zero,
+                StencilOperation.Replace => MTLStencilOperation.Replace,
+                StencilOperation.IncrementAndClamp => MTLStencilOperation.IncrementClamp,
+                StencilOperation.DecrementAndClamp => MTLStencilOperation.DecrementClamp,
+                StencilOperation.Invert => MTLStencilOperation.Invert,
+                StencilOperation.IncrementAndWrap => MTLStencilOperation.IncrementWrap,
+                StencilOperation.DecrementAndWrap => MTLStencilOperation.DecrementWrap,
+                _ => throw Illegal.Value<StencilOperation>(),
+            };
         }
 
+        [SuppressMessage("Style", "IDE0066:Convert switch statement to expression", Justification = "<Pending>")]
         internal static uint GetMaxTexture1DWidth(MTLFeatureSet fs)
         {
             switch (fs)
@@ -630,6 +542,7 @@ namespace Veldrid.MTL
             }
         }
 
+        [SuppressMessage("Style", "IDE0066:Convert switch statement to expression", Justification = "<Pending>")]
         internal static uint GetMaxTexture2DDimensions(MTLFeatureSet fs)
         {
             switch (fs)
@@ -661,6 +574,7 @@ namespace Veldrid.MTL
             }
         }
 
+        [SuppressMessage("Style", "IDE0066:Convert switch statement to expression", Justification = "<Pending>")]
         internal static uint GetMaxTextureCubeDimensions(MTLFeatureSet fs)
         {
             switch (fs)

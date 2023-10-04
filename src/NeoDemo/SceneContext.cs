@@ -61,17 +61,17 @@ namespace Veldrid.NeoDemo
         public virtual void CreateDeviceObjects(GraphicsDevice gd, CommandList cl, SceneContext sc)
         {
             ResourceFactory factory = gd.ResourceFactory;
-            ProjectionMatrixBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
-            ViewMatrixBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
-            LightViewProjectionBuffer0 = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
+            ProjectionMatrixBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.DynamicWrite));
+            ViewMatrixBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.DynamicWrite));
+            LightViewProjectionBuffer0 = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.DynamicWrite));
             LightViewProjectionBuffer0.Name = "LightViewProjectionBuffer0";
-            LightViewProjectionBuffer1 = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
+            LightViewProjectionBuffer1 = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.DynamicWrite));
             LightViewProjectionBuffer1.Name = "LightViewProjectionBuffer1";
-            LightViewProjectionBuffer2 = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
+            LightViewProjectionBuffer2 = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.DynamicWrite));
             LightViewProjectionBuffer2.Name = "LightViewProjectionBuffer2";
-            DepthLimitsBuffer = factory.CreateBuffer(new BufferDescription((uint)Unsafe.SizeOf<DepthCascadeLimits>(), BufferUsage.UniformBuffer | BufferUsage.Dynamic));
-            LightInfoBuffer = factory.CreateBuffer(new BufferDescription((uint)Unsafe.SizeOf<DirectionalLightInfo>(), BufferUsage.UniformBuffer | BufferUsage.Dynamic));
-            CameraInfoBuffer = factory.CreateBuffer(new BufferDescription((uint)Unsafe.SizeOf<CameraInfo>(), BufferUsage.UniformBuffer | BufferUsage.Dynamic));
+            DepthLimitsBuffer = factory.CreateBuffer(new BufferDescription((uint)Unsafe.SizeOf<DepthCascadeLimits>(), BufferUsage.UniformBuffer | BufferUsage.DynamicWrite));
+            LightInfoBuffer = factory.CreateBuffer(new BufferDescription((uint)Unsafe.SizeOf<DirectionalLightInfo>(), BufferUsage.UniformBuffer | BufferUsage.DynamicWrite));
+            CameraInfoBuffer = factory.CreateBuffer(new BufferDescription((uint)Unsafe.SizeOf<CameraInfo>(), BufferUsage.UniformBuffer | BufferUsage.DynamicWrite));
             if (Camera != null)
             {
                 UpdateCameraBuffers(cl);
@@ -79,7 +79,7 @@ namespace Veldrid.NeoDemo
 
             PointLightsBuffer = factory.CreateBuffer(new BufferDescription((uint)Unsafe.SizeOf<PointLightsInfo.Blittable>(), BufferUsage.UniformBuffer));
 
-            PointLightsInfo pli = new PointLightsInfo();
+            PointLightsInfo pli = new();
             pli.NumActiveLights = 4;
             pli.PointLights = new PointLightInfo[4]
             {
@@ -100,7 +100,7 @@ namespace Veldrid.NeoDemo
             ReflectionDepthTexture = factory.CreateTexture(TextureDescription.Texture2D(ReflectionMapSize, ReflectionMapSize, 1, 1, PixelFormat.R32_Float, TextureUsage.DepthStencil));
             ReflectionColorView = factory.CreateTextureView(ReflectionColorTexture);
             ReflectionFramebuffer = factory.CreateFramebuffer(new FramebufferDescription(ReflectionDepthTexture, ReflectionColorTexture));
-            ReflectionViewProjBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
+            ReflectionViewProjBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.DynamicWrite));
 
             MirrorClipPlaneBuffer = factory.CreateBuffer(new BufferDescription(32, BufferUsage.UniformBuffer));
             gd.UpdateBuffer(MirrorClipPlaneBuffer, 0, new ClipPlaneInfo(MirrorMesh.Plane, true));
@@ -186,7 +186,7 @@ namespace Veldrid.NeoDemo
             TextureSampleCount sampleCount = MainSceneSampleCount;
             while (!properties.IsSampleCountSupported(sampleCount))
             {
-                sampleCount = sampleCount - 1;
+                sampleCount--;
             }
 
             TextureDescription mainColorDesc = TextureDescription.Texture2D(
@@ -198,11 +198,11 @@ namespace Veldrid.NeoDemo
                 TextureUsage.RenderTarget | TextureUsage.Sampled,
                 sampleCount);
 
-            MainSceneColorTexture = factory.CreateTexture(ref mainColorDesc);
+            MainSceneColorTexture = factory.CreateTexture(mainColorDesc);
             if (sampleCount != TextureSampleCount.Count1)
             {
                 mainColorDesc.SampleCount = TextureSampleCount.Count1;
-                MainSceneResolvedColorTexture = factory.CreateTexture(ref mainColorDesc);
+                MainSceneResolvedColorTexture = factory.CreateTexture(mainColorDesc);
             }
             else
             {
@@ -227,15 +227,15 @@ namespace Veldrid.NeoDemo
                 1,
                 PixelFormat.R16_G16_B16_A16_Float,
                 TextureUsage.RenderTarget | TextureUsage.Sampled);
-            DuplicatorTarget0 = factory.CreateTexture(ref colorTargetDesc);
+            DuplicatorTarget0 = factory.CreateTexture(colorTargetDesc);
             DuplicatorTargetView0 = factory.CreateTextureView(DuplicatorTarget0);
-            DuplicatorTarget1 = factory.CreateTexture(ref colorTargetDesc);
+            DuplicatorTarget1 = factory.CreateTexture(colorTargetDesc);
             DuplicatorTargetView1 = factory.CreateTextureView(DuplicatorTarget1);
             DuplicatorTargetSet0 = factory.CreateResourceSet(new ResourceSetDescription(TextureSamplerResourceLayout, DuplicatorTargetView0, gd.PointSampler));
             DuplicatorTargetSet1 = factory.CreateResourceSet(new ResourceSetDescription(TextureSamplerResourceLayout, DuplicatorTargetView1, gd.PointSampler));
 
-            FramebufferDescription fbDesc = new FramebufferDescription(null, DuplicatorTarget0, DuplicatorTarget1);
-            DuplicatorFramebuffer = factory.CreateFramebuffer(ref fbDesc);
+            FramebufferDescription fbDesc = new(null, DuplicatorTarget0, DuplicatorTarget1);
+            DuplicatorFramebuffer = factory.CreateFramebuffer(fbDesc);
         }
     }
 
@@ -255,7 +255,7 @@ namespace Veldrid.NeoDemo
 
         public void CreateDeviceResources(GraphicsDevice gd)
         {
-            var factory = gd.ResourceFactory;
+            ResourceFactory factory = gd.ResourceFactory;
             TextureDescription desc = TextureDescription.Texture2D(2048, 2048, 1, 1, PixelFormat.D32_Float_S8_UInt, TextureUsage.DepthStencil | TextureUsage.Sampled);
             NearShadowMap = factory.CreateTexture(desc);
             NearShadowMap.Name = "Near Shadow Map";

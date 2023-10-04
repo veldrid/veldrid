@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Veldrid.Vulkan;
 
 namespace Veldrid
 {
@@ -11,72 +13,91 @@ namespace Veldrid
     /// </summary>
     public abstract class GraphicsDevice : IDisposable
     {
-        private readonly object _deferredDisposalLock = new object();
-        private readonly List<IDisposable> _disposables = new List<IDisposable>();
-        private Sampler _aniso4xSampler;
+        private readonly object _deferredDisposalLock = new();
+        private readonly List<IDisposable> _disposables = new();
+        private Sampler? _aniso4xSampler;
+        private bool _disposed;
 
-        internal GraphicsDevice() { }
+        internal GraphicsDevice()
+        {
+            DeviceName = "";
+            VendorName = "";
+            ResourceFactory = null!;
+            Features = null!;
+        }
 
         /// <summary>
         /// Gets the name of the device.
         /// </summary>
-        public abstract string DeviceName { get; }
+        public string DeviceName { get; protected set; }
 
         /// <summary>
         /// Gets the name of the device vendor.
         /// </summary>
-        public abstract string VendorName { get; }
+        public string VendorName { get; protected set; }
 
         /// <summary>
         /// Gets the API version of the graphics backend.
         /// </summary>
-        public abstract GraphicsApiVersion ApiVersion { get; }
+        public GraphicsApiVersion ApiVersion { get; protected set; }
 
         /// <summary>
         /// Gets a value identifying the specific graphics API used by this instance.
         /// </summary>
-        public abstract GraphicsBackend BackendType { get; }
+        public GraphicsBackend BackendType { get; protected set; }
 
         /// <summary>
         /// Gets a value identifying whether texture coordinates begin in the top left corner of a Texture.
         /// If true, (0, 0) refers to the top-left texel of a Texture. If false, (0, 0) refers to the bottom-left 
         /// texel of a Texture. This property is useful for determining how the output of a Framebuffer should be sampled.
         /// </summary>
-        public abstract bool IsUvOriginTopLeft { get; }
+        public bool IsUvOriginTopLeft { get; protected set; }
 
         /// <summary>
         /// Gets a value indicating whether this device's depth values range from 0 to 1.
         /// If false, depth values instead range from -1 to 1.
         /// </summary>
-        public abstract bool IsDepthRangeZeroToOne { get; }
+        public bool IsDepthRangeZeroToOne { get; protected set; }
 
         /// <summary>
         /// Gets a value indicating whether this device's clip space Y values increase from top (-1) to bottom (1).
         /// If false, clip space Y values instead increase from bottom (-1) to top (1).
         /// </summary>
-        public abstract bool IsClipSpaceYInverted { get; }
+        public bool IsClipSpaceYInverted { get; protected set; }
+
+        /// <summary>
+        /// Gets whether debug was enabled when creating the device.
+        /// </summary>
+        public bool IsDebug { get; protected set; }
+
+        /// <summary>
+        /// Gets whether driver-level debug is enabled.
+        /// Depends on a combination of graphics API, driver and installed SDKs.
+        /// </summary>
+        public bool IsDriverDebug { get; protected set; }
 
         /// <summary>
         /// Gets the <see cref="ResourceFactory"/> controlled by this instance.
         /// </summary>
-        public abstract ResourceFactory ResourceFactory { get; }
+        public ResourceFactory ResourceFactory { get; protected set; }
 
         /// <summary>
-        /// Retrieves the main Swapchain for this device. This property is only valid if the device was created with a main
-        /// Swapchain, and will return null otherwise.
+        /// Retrieves the main <see cref="Swapchain"/> for this device.
+        /// This property is only valid if the device was created with a main
+        /// <see cref="Swapchain"/>, and will return null otherwise.
         /// </summary>
-        public abstract Swapchain MainSwapchain { get; }
+        public Swapchain? MainSwapchain { get; protected set; }
 
         /// <summary>
         /// Gets a <see cref="GraphicsDeviceFeatures"/> which enumerates the optional features supported by this instance.
         /// </summary>
-        public abstract GraphicsDeviceFeatures Features { get; }
+        public GraphicsDeviceFeatures Features { get; protected set; }
 
         /// <summary>
-        /// Gets or sets whether the main Swapchain's <see cref="SwapBuffers()"/> should be synchronized to the window system's
+        /// Gets or sets whether the main swapchain's <see cref="SwapBuffers()"/> should be synchronized to the window system's
         /// vertical refresh rate.
         /// This is equivalent to <see cref="MainSwapchain"/>.<see cref="Swapchain.SyncToVerticalBlank"/>.
-        /// This property cannot be set if this GraphicsDevice was created without a main Swapchain.
+        /// This property cannot be set if this <see cref="GraphicsDevice"/> was created without a main <see cref="Swapchain"/>.
         /// </summary>
         public virtual bool SyncToVerticalBlank
         {
@@ -85,7 +106,9 @@ namespace Veldrid
             {
                 if (MainSwapchain == null)
                 {
-                    throw new VeldridException($"This GraphicsDevice was created without a main Swapchain. This property cannot be set.");
+                    throw new VeldridException(
+                        $"This {nameof(GraphicsDevice)} was created without a main {nameof(Swapchain)}. " +
+                        $"This property cannot be set.");
                 }
 
                 MainSwapchain.SyncToVerticalBlank = value;
@@ -97,17 +120,14 @@ namespace Veldrid
         /// multiple of this value. When binding a <see cref="ResourceSet"/> to a <see cref="CommandList"/> with an overload
         /// accepting dynamic offsets, each offset must be a multiple of this value.
         /// </summary>
-        public uint UniformBufferMinOffsetAlignment => GetUniformBufferMinOffsetAlignmentCore();
+        public uint UniformBufferMinOffsetAlignment { get; protected set; }
 
         /// <summary>
         /// The required alignment, in bytes, for structured buffer offsets. <see cref="DeviceBufferRange.Offset"/> must be a
         /// multiple of this value. When binding a <see cref="ResourceSet"/> to a <see cref="CommandList"/> with an overload
         /// accepting dynamic offsets, each offset must be a multiple of this value.
         /// </summary>
-        public uint StructuredBufferMinOffsetAlignment => GetStructuredBufferMinOffsetAlignmentCore();
-
-        internal abstract uint GetUniformBufferMinOffsetAlignmentCore();
-        internal abstract uint GetStructuredBufferMinOffsetAlignmentCore();
+        public uint StructuredBufferMinOffsetAlignment { get; protected set; }
 
         /// <summary>
         /// Submits the given <see cref="CommandList"/> for execution by this device.
@@ -115,8 +135,10 @@ namespace Veldrid
         /// Use <see cref="WaitForIdle"/> to wait for all submitted commands to complete.
         /// <see cref="CommandList.End"/> must have been called on <paramref name="commandList"/> for this method to succeed.
         /// </summary>
-        /// <param name="commandList">The completed <see cref="CommandList"/> to execute. <see cref="CommandList.End"/> must have
-        /// been previously called on this object.</param>
+        /// <param name="commandList">
+        /// The completed <see cref="CommandList"/> to execute. <see cref="CommandList.End"/> must have
+        /// been previously called on this object.
+        /// </param>
         public void SubmitCommands(CommandList commandList) => SubmitCommandsCore(commandList, null);
 
         /// <summary>
@@ -125,15 +147,18 @@ namespace Veldrid
         /// Use <see cref="WaitForIdle"/> to wait for all submitted commands to complete.
         /// <see cref="CommandList.End"/> must have been called on <paramref name="commandList"/> for this method to succeed.
         /// </summary>
-        /// <param name="commandList">The completed <see cref="CommandList"/> to execute. <see cref="CommandList.End"/> must have
-        /// been previously called on this object.</param>
-        /// <param name="fence">A <see cref="Fence"/> which will become signaled after this submission fully completes
-        /// execution.</param>
-        public void SubmitCommands(CommandList commandList, Fence fence) => SubmitCommandsCore(commandList, fence);
+        /// <param name="commandList">
+        /// The completed <see cref="CommandList"/> to execute. <see cref="CommandList.End"/> must have
+        /// been previously called on this object.
+        /// </param>
+        /// <param name="fence">
+        /// A <see cref="Fence"/> which will become signaled after this submission fully completes execution.
+        /// </param>
+        public void SubmitCommands(CommandList commandList, Fence? fence) => SubmitCommandsCore(commandList, fence);
 
         private protected abstract void SubmitCommandsCore(
             CommandList commandList,
-            Fence fence);
+            Fence? fence);
 
         /// <summary>
         /// Blocks the calling thread until the given <see cref="Fence"/> becomes signaled.
@@ -143,7 +168,7 @@ namespace Veldrid
         {
             if (!WaitForFence(fence, ulong.MaxValue))
             {
-                throw new VeldridException("The operation timed out before the Fence was signaled.");
+                throw new VeldridException($"The operation timed out before the {nameof(Fence)} was signaled.");
             }
         }
 
@@ -156,6 +181,7 @@ namespace Veldrid
         /// <returns>True if the Fence was signaled. False if the timeout was reached instead.</returns>
         public bool WaitForFence(Fence fence, TimeSpan timeout)
             => WaitForFence(fence, (ulong)timeout.TotalMilliseconds * 1_000_000);
+
         /// <summary>
         /// Blocks the calling thread until the given <see cref="Fence"/> becomes signaled, or until a time greater than the
         /// given TimeSpan has elapsed.
@@ -175,7 +201,7 @@ namespace Veldrid
         {
             if (!WaitForFences(fences, waitAll, ulong.MaxValue))
             {
-                throw new VeldridException("The operation timed out before the Fence(s) were signaled.");
+                throw new VeldridException($"The operation timed out before the {nameof(Fence)}(s) were signaled.");
             }
         }
 
@@ -198,7 +224,10 @@ namespace Veldrid
         /// <param name="fences">An array of <see cref="Fence"/> objects to wait on.</param>
         /// <param name="waitAll">If true, then this method blocks until all of the given Fences become signaled.
         /// If false, then this method only waits until one of the Fences become signaled.</param>
-        /// <param name="nanosecondTimeout">A value in nanoseconds, indicating the maximum time to wait on the Fence.  Pass ulong.MaxValue to wait indefinitely.</param>
+        /// <param name="nanosecondTimeout">
+        /// A value in nanoseconds, indicating the maximum time to wait on the Fence.
+        /// Pass ulong.MaxValue to wait indefinitely.
+        /// </param>
         /// <returns>True if the Fence was signaled. False if the timeout was reached instead.</returns>
         public abstract bool WaitForFences(Fence[] fences, bool waitAll, ulong nanosecondTimeout);
 
@@ -211,13 +240,15 @@ namespace Veldrid
         /// <summary>
         /// Swaps the buffers of the main swapchain and presents the rendered image to the screen.
         /// This is equivalent to passing <see cref="MainSwapchain"/> to <see cref="SwapBuffers(Swapchain)"/>.
-        /// This method can only be called if this GraphicsDevice was created with a main Swapchain.
+        /// This method can only be called if this <see cref="GraphicsDevice"/> was created with a main <see cref="Swapchain"/>.
         /// </summary>
         public void SwapBuffers()
         {
             if (MainSwapchain == null)
             {
-                throw new VeldridException("This GraphicsDevice was created without a main Swapchain, so the requested operation cannot be performed.");
+                throw new VeldridException(
+                    $"This {nameof(GraphicsDevice)} was created without a main {nameof(Swapchain)}, " +
+                    $"so the requested operation cannot be performed.");
             }
 
             SwapBuffers(MainSwapchain);
@@ -234,15 +265,15 @@ namespace Veldrid
         /// <summary>
         /// Gets a <see cref="Framebuffer"/> object representing the render targets of the main swapchain.
         /// This is equivalent to <see cref="MainSwapchain"/>.<see cref="Swapchain.Framebuffer"/>.
-        /// If this GraphicsDevice was created without a main Swapchain, then this returns null.
+        /// If this <see cref="GraphicsDevice"/> was created without a main <see cref="Swapchain"/>, then this returns null.
         /// </summary>
-        public Framebuffer SwapchainFramebuffer => MainSwapchain?.Framebuffer;
+        public Framebuffer? SwapchainFramebuffer => MainSwapchain?.Framebuffer;
 
         /// <summary>
         /// Notifies this instance that the main window has been resized. This causes the <see cref="SwapchainFramebuffer"/> to
         /// be appropriately resized and recreated.
         /// This is equivalent to calling <see cref="MainSwapchain"/>.<see cref="Swapchain.Resize(uint, uint)"/>.
-        /// This method can only be called if this GraphicsDevice was created with a main Swapchain.
+        /// This method can only be called if this <see cref="GraphicsDevice"/> was created with a main <see cref="Swapchain"/>.
         /// </summary>
         /// <param name="width">The new width of the main window.</param>
         /// <param name="height">The new height of the main window.</param>
@@ -250,7 +281,9 @@ namespace Veldrid
         {
             if (MainSwapchain == null)
             {
-                throw new VeldridException("This GraphicsDevice was created without a main Swapchain, so the requested operation cannot be performed.");
+                throw new VeldridException(
+                    $"This {nameof(GraphicsDevice)} was created without a main {nameof(Swapchain)}, " +
+                    $"so the requested operation cannot be performed.");
             }
 
             MainSwapchain.Resize(width, height);
@@ -272,84 +305,167 @@ namespace Veldrid
         /// </summary>
         /// <param name="format">The format to query.</param>
         /// <param name="depthFormat">Whether the format will be used in a depth texture.</param>
-        /// <returns>A <see cref="TextureSampleCount"/> value representing the maximum count that a <see cref="Texture"/> of that
-        /// format can be created with.</returns>
+        /// <returns>
+        /// A <see cref="TextureSampleCount"/> value representing the maximum count that a <see cref="Texture"/> of
+        /// that format can be created with.
+        /// </returns>
         public abstract TextureSampleCount GetSampleCountLimit(PixelFormat format, bool depthFormat);
 
         /// <summary>
-        /// Maps a <see cref="DeviceBuffer"/> or <see cref="Texture"/> into a CPU-accessible data region. For Texture resources, this
-        /// overload maps the first subresource.
+        /// Maps a <see cref="DeviceBuffer"/> or <see cref="Texture"/> into a CPU-accessible data region.
+        /// For <see cref="Texture"/> resources, this overload maps the first subresource.
         /// </summary>
         /// <param name="resource">The <see cref="DeviceBuffer"/> or <see cref="Texture"/> resource to map.</param>
         /// <param name="mode">The <see cref="MapMode"/> to use.</param>
         /// <returns>A <see cref="MappedResource"/> structure describing the mapped data region.</returns>
-        public MappedResource Map(MappableResource resource, MapMode mode) => Map(resource, mode, 0);
+        public MappedResource Map(MappableResource resource, MapMode mode)
+        {
+            return Map(resource, mode, 0);
+        }
+
+        /// <summary>
+        /// Maps a <see cref="DeviceBuffer"/> or <see cref="Texture"/> into a CPU-accessible data region.
+        /// For <see cref="Texture"/> resources, this overload maps the first subresource.
+        /// </summary>
+        /// <param name="resource">The <see cref="DeviceBuffer"/> or <see cref="Texture"/> resource to map.</param>
+        /// <param name="mode">The <see cref="MapMode"/> to use.</param>
+        /// <param name="subresource">
+        /// The subresource to map. Subresources are indexed first by mip slice, then by array layer.
+        /// For <see cref="DeviceBuffer"/> resources, this parameter must be 0.
+        /// </param>
+        /// <returns>A <see cref="MappedResource"/> structure describing the mapped data region.</returns>
+        public MappedResource Map(MappableResource resource, MapMode mode, uint subresource)
+        {
+            return Map(resource, 0, resource.GetSizeInBytes(subresource), mode, subresource);
+        }
+
         /// <summary>
         /// Maps a <see cref="DeviceBuffer"/> or <see cref="Texture"/> into a CPU-accessible data region.
         /// </summary>
         /// <param name="resource">The <see cref="DeviceBuffer"/> or <see cref="Texture"/> resource to map.</param>
+        /// <param name="offsetInBytes">
+        /// An offset, in bytes, from the beginning of the <see cref="MappableResource"/>'s storage, at
+        /// which data will be mapped.
+        /// </param>
+        /// <param name="sizeInBytes">The total size of the mapped data, in bytes.</param>
         /// <param name="mode">The <see cref="MapMode"/> to use.</param>
-        /// <param name="subresource">The subresource to map. Subresources are indexed first by mip slice, then by array layer.
-        /// For <see cref="DeviceBuffer"/> resources, this parameter must be 0.</param>
+        /// <param name="subresource">
+        /// The subresource to map. Subresources are indexed first by mip slice, then by array layer.
+        /// For <see cref="DeviceBuffer"/> resources, this parameter must be 0.
+        /// </param>
         /// <returns>A <see cref="MappedResource"/> structure describing the mapped data region.</returns>
-        public MappedResource Map(MappableResource resource, MapMode mode, uint subresource)
+        public MappedResource Map(MappableResource resource, uint offsetInBytes, uint sizeInBytes, MapMode mode, uint subresource)
         {
 #if VALIDATE_USAGE
             if (resource is DeviceBuffer buffer)
             {
-                if ((buffer.Usage & BufferUsage.Dynamic) != BufferUsage.Dynamic
-                    && (buffer.Usage & BufferUsage.Staging) != BufferUsage.Staging)
-                {
-                    throw new VeldridException("Buffers must have the Staging or Dynamic usage flag to be mapped.");
-                }
                 if (subresource != 0)
                 {
-                    throw new VeldridException("Subresource must be 0 for Buffer resources.");
-                }
-                if ((mode == MapMode.Read || mode == MapMode.ReadWrite) && (buffer.Usage & BufferUsage.Staging) == 0)
-                {
                     throw new VeldridException(
-                        $"{nameof(MapMode)}.{nameof(MapMode.Read)} and {nameof(MapMode)}.{nameof(MapMode.ReadWrite)} can only be used on buffers created with {nameof(BufferUsage)}.{nameof(BufferUsage.Staging)}.");
+                        $"The {nameof(resource)} ({buffer}) cannot be mapped. " +
+                        $"The {nameof(subresource)} ({subresource}) must be 0 for {nameof(DeviceBuffer)} resources.");
+                }
+
+                if ((mode & MapMode.Read) != 0)
+                {
+                    if ((buffer.Usage & BufferUsage.DynamicRead) == 0 &&
+                        (buffer.Usage & BufferUsage.StagingRead) == 0)
+                    {
+                        throw new VeldridException(
+                            $"The {nameof(resource)} ({buffer}) cannot be mapped. " +
+                            $"{nameof(MapMode)}.{nameof(MapMode.Read)} can only be used on buffers created with the " +
+                            $"{nameof(BufferUsage)}.{nameof(BufferUsage.StagingRead)} and/or " +
+                            $"{nameof(BufferUsage)}.{nameof(BufferUsage.DynamicRead)} flags.");
+                    }
+                }
+
+                if ((mode & MapMode.Write) != 0)
+                {
+                    if ((buffer.Usage & BufferUsage.DynamicWrite) == 0 &&
+                        (buffer.Usage & BufferUsage.StagingWrite) == 0)
+                    {
+                        throw new VeldridException(
+                            $"The {nameof(resource)} ({buffer}) cannot be mapped. " +
+                            $"{nameof(MapMode)}.{nameof(MapMode.Write)} can only be used on buffers created with the " +
+                            $"{nameof(BufferUsage)}.{nameof(BufferUsage.StagingWrite)} and/or " +
+                            $"{nameof(BufferUsage)}.{nameof(BufferUsage.DynamicWrite)} flags.");
+                    }
                 }
             }
-            else if (resource is Texture tex)
+            else if (resource is Texture texture)
             {
-                if ((tex.Usage & TextureUsage.Staging) == 0)
-                {
-                    throw new VeldridException("Texture must have the Staging usage flag to be mapped.");
-                }
-                if (subresource >= tex.ArrayLayers * tex.MipLevels)
+                if ((texture.Usage & TextureUsage.Staging) == 0)
                 {
                     throw new VeldridException(
-                        "Subresource must be less than the number of subresources in the Texture being mapped.");
+                        $"The texture {nameof(resource)} ({texture}) must have been created with the " +
+                        $"{nameof(TextureUsage)}.{nameof(TextureUsage.Staging)} flag to be mapped.");
                 }
+
+                if (subresource >= texture.ArrayLayers * texture.MipLevels)
+                {
+                    throw new VeldridException(
+                        $"The {nameof(resource)} ({texture}) cannot be mapped." +
+                        $"The {nameof(subresource)} ({subresource}) must be less than " +
+                        $"the number of subresources in the texture being mapped.");
+                }
+            }
+
+            uint subresourceSizeInBytes = resource.GetSizeInBytes(subresource);
+            if (offsetInBytes + sizeInBytes > subresourceSizeInBytes)
+            {
+                throw new VeldridException(
+                    $"The given offset {offsetInBytes} and size {sizeInBytes} exceed the subresource size {subresourceSizeInBytes}.");
             }
 #endif
 
-            return MapCore(resource, mode, subresource);
+            return MapCore(resource, offsetInBytes, sizeInBytes, mode, subresource);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="resource"></param>
-        /// <param name="mode"></param>
-        /// <param name="subresource"></param>
-        /// <returns></returns>
-        protected abstract MappedResource MapCore(MappableResource resource, MapMode mode, uint subresource);
+        private protected abstract MappedResource MapCore(
+            MappableResource resource,
+            uint bufferOffsetInBytes,
+            uint sizeInBytes,
+            MapMode mode,
+            uint subresource);
 
         /// <summary>
-        /// Maps a <see cref="DeviceBuffer"/> or <see cref="Texture"/> into a CPU-accessible data region, and returns a structured
-        /// view over that region. For Texture resources, this overload maps the first subresource.
+        /// Maps a <see cref="DeviceBuffer"/> or <see cref="Texture"/> into a CPU-accessible data region,
+        /// and returns a structured view over that region.
+        /// For <see cref="Texture"/> resources, this overload maps the first subresource.
         /// </summary>
         /// <param name="resource">The <see cref="DeviceBuffer"/> or <see cref="Texture"/> resource to map.</param>
         /// <param name="mode">The <see cref="MapMode"/> to use.</param>
         /// <typeparam name="T">The blittable value type which mapped data is viewed as.</typeparam>
         /// <returns>A <see cref="MappedResource"/> structure describing the mapped data region.</returns>
         public MappedResourceView<T> Map<T>(MappableResource resource, MapMode mode) where T : unmanaged
-            => Map<T>(resource, mode, 0);
+        {
+            return Map<T>(resource, mode, 0);
+        }
+
         /// <summary>
-        /// Maps a <see cref="DeviceBuffer"/> or <see cref="Texture"/> into a CPU-accessible data region, and returns a structured
-        /// view over that region.
+        /// Maps a <see cref="DeviceBuffer"/> or <see cref="Texture"/> into a CPU-accessible data region,
+        /// and returns a structured view over that region.
+        /// </summary>
+        /// <param name="resource">The <see cref="DeviceBuffer"/> or <see cref="Texture"/> resource to map.</param>
+        /// <param name="offsetInBytes">
+        /// An offset, in bytes, from the beginning of the <see cref="MappableResource"/>'s storage, at
+        /// which data will be mapped.
+        /// </param>
+        /// <param name="elementCount">The size of the mapped data, in elements of size <typeparamref name="T"/>.</param>
+        /// <param name="mode">The <see cref="MapMode"/> to use.</param>
+        /// <param name="subresource">The subresource to map. Subresources are indexed first by mip slice, then by array layer.</param>
+        /// <typeparam name="T">The blittable value type which mapped data is viewed as.</typeparam>
+        /// <returns>A <see cref="MappedResource"/> structure describing the mapped data region.</returns>
+        public MappedResourceView<T> Map<T>(
+            MappableResource resource, uint offsetInBytes, uint elementCount, MapMode mode, uint subresource) where T : unmanaged
+        {
+            MappedResource mappedResource = Map(resource, offsetInBytes, elementCount * (uint)Unsafe.SizeOf<T>(), mode, subresource);
+            return new MappedResourceView<T>(mappedResource);
+        }
+
+        /// <summary>
+        /// Maps a <see cref="DeviceBuffer"/> or <see cref="Texture"/> into a CPU-accessible data region,
+        /// and returns a structured view over that region.
         /// </summary>
         /// <param name="resource">The <see cref="DeviceBuffer"/> or <see cref="Texture"/> resource to map.</param>
         /// <param name="mode">The <see cref="MapMode"/> to use.</param>
@@ -372,37 +488,41 @@ namespace Veldrid
         /// Invalidates a previously-mapped data region for the given <see cref="DeviceBuffer"/> or <see cref="Texture"/>.
         /// </summary>
         /// <param name="resource">The resource to unmap.</param>
-        /// <param name="subresource">The subresource to unmap. Subresources are indexed first by mip slice, then by array layer.
-        /// For <see cref="DeviceBuffer"/> resources, this parameter must be 0.</param>
+        /// <param name="subresource">
+        /// The subresource to unmap. Subresources are indexed first by mip slice, then by array layer.
+        /// For <see cref="DeviceBuffer"/> resources, this parameter must be 0.
+        /// </param>
         public void Unmap(MappableResource resource, uint subresource)
         {
             UnmapCore(resource, subresource);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="resource"></param>
-        /// <param name="subresource"></param>
-        protected abstract void UnmapCore(MappableResource resource, uint subresource);
+        private protected abstract void UnmapCore(MappableResource resource, uint subresource);
 
         /// <summary>
         /// Updates a portion of a <see cref="Texture"/> resource with new data.
         /// </summary>
         /// <param name="texture">The resource to update.</param>
-        /// <param name="source">A pointer to the start of the data to upload. This must point to tightly-packed pixel data for
-        /// the region specified.</param>
-        /// <param name="sizeInBytes">The number of bytes to upload. This value must match the total size of the texture region
-        /// specified.</param>
+        /// <param name="source">
+        /// A pointer to the start of the data to upload.
+        /// This must point to tightly-packed pixel data for the region specified.
+        /// </param>
+        /// <param name="sizeInBytes">
+        /// The number of bytes to upload.
+        /// This value must match the total size of the texture region specified.
+        /// </param>
         /// <param name="x">The minimum X value of the updated region.</param>
         /// <param name="y">The minimum Y value of the updated region.</param>
         /// <param name="z">The minimum Z value of the updated region.</param>
         /// <param name="width">The width of the updated region, in texels.</param>
         /// <param name="height">The height of the updated region, in texels.</param>
         /// <param name="depth">The depth of the updated region, in texels.</param>
-        /// <param name="mipLevel">The mipmap level to update. Must be less than the total number of mipmaps contained in the
-        /// <see cref="Texture"/>.</param>
-        /// <param name="arrayLayer">The array layer to update. Must be less than the total array layer count contained in the
-        /// <see cref="Texture"/>.</param>
+        /// <param name="mipLevel">
+        /// The mipmap level to update. Must be less than the total number of mipmaps contained in the <see cref="Texture"/>.
+        /// </param>
+        /// <param name="arrayLayer">
+        /// The array layer to update. Must be less than the total array layer count contained in the <see cref="Texture"/>.
+        /// </param>
         public void UpdateTexture(
             Texture texture,
             IntPtr source,
@@ -421,18 +541,22 @@ namespace Veldrid
         /// Updates a portion of a <see cref="Texture"/> resource with new data contained in an array
         /// </summary>
         /// <param name="texture">The resource to update.</param>
-        /// <param name="source">An array containing the data to upload. This must contain tightly-packed pixel data for the
-        /// region specified.</param>
+        /// <param name="source">
+        /// An array containing the data to upload.
+        /// This must contain tightly-packed pixel data for the region specified.
+        /// </param>
         /// <param name="x">The minimum X value of the updated region.</param>
         /// <param name="y">The minimum Y value of the updated region.</param>
         /// <param name="z">The minimum Z value of the updated region.</param>
         /// <param name="width">The width of the updated region, in texels.</param>
         /// <param name="height">The height of the updated region, in texels.</param>
         /// <param name="depth">The depth of the updated region, in texels.</param>
-        /// <param name="mipLevel">The mipmap level to update. Must be less than the total number of mipmaps contained in the
-        /// <see cref="Texture"/>.</param>
-        /// <param name="arrayLayer">The array layer to update. Must be less than the total array layer count contained in the
-        /// <see cref="Texture"/>.</param>
+        /// <param name="mipLevel">
+        /// The mipmap level to update. Must be less than the total number of mipmaps contained in the <see cref="Texture"/>.
+        /// </param>
+        /// <param name="arrayLayer">
+        /// The array layer to update. Must be less than the total array layer count contained in the <see cref="Texture"/>.
+        /// </param>
         public void UpdateTexture<T>(
             Texture texture,
             T[] source,
@@ -447,18 +571,22 @@ namespace Veldrid
         /// Updates a portion of a <see cref="Texture"/> resource with new data contained in an array
         /// </summary>
         /// <param name="texture">The resource to update.</param>
-        /// <param name="source">A readonly span containing the data to upload. This must contain tightly-packed pixel data for the
-        /// region specified.</param>
+        /// <param name="source">
+        /// A readonly span containing the data to upload.
+        /// This must contain tightly-packed pixel data for the region specified.
+        /// </param>
         /// <param name="x">The minimum X value of the updated region.</param>
         /// <param name="y">The minimum Y value of the updated region.</param>
         /// <param name="z">The minimum Z value of the updated region.</param>
         /// <param name="width">The width of the updated region, in texels.</param>
         /// <param name="height">The height of the updated region, in texels.</param>
         /// <param name="depth">The depth of the updated region, in texels.</param>
-        /// <param name="mipLevel">The mipmap level to update. Must be less than the total number of mipmaps contained in the
-        /// <see cref="Texture"/>.</param>
-        /// <param name="arrayLayer">The array layer to update. Must be less than the total array layer count contained in the
-        /// <see cref="Texture"/>.</param>
+        /// <param name="mipLevel">
+        /// The mipmap level to update. Must be less than the total number of mipmaps contained in the <see cref="Texture"/>.
+        /// </param>
+        /// <param name="arrayLayer">
+        /// The array layer to update. Must be less than the total array layer count contained in the <see cref="Texture"/>.
+        /// </param>
         public unsafe void UpdateTexture<T>(
             Texture texture,
             ReadOnlySpan<T> source,
@@ -471,15 +599,15 @@ namespace Veldrid
             ValidateUpdateTextureParameters(texture, sizeInBytes, x, y, z, width, height, depth, mipLevel, arrayLayer);
 #endif
 
-            fixed (void* pin = &MemoryMarshal.GetReference(source))
+            fixed (T* pin = source)
             {
                 UpdateTextureCore(
-                texture,
-                (IntPtr)pin,
-                sizeInBytes,
-                x, y, z,
-                width, height, depth,
-                mipLevel, arrayLayer);
+                    texture,
+                    (IntPtr)pin,
+                    sizeInBytes,
+                    x, y, z,
+                    width, height, depth,
+                    mipLevel, arrayLayer);
             }
         }
 
@@ -487,18 +615,22 @@ namespace Veldrid
         /// Updates a portion of a <see cref="Texture"/> resource with new data contained in an array
         /// </summary>
         /// <param name="texture">The resource to update.</param>
-        /// <param name="source">A readonly span containing the data to upload. This must contain tightly-packed pixel data for the
-        /// region specified.</param>
+        /// <param name="source">
+        /// A readonly span containing the data to upload.
+        /// This must contain tightly-packed pixel data for the region specified.
+        /// </param>
         /// <param name="x">The minimum X value of the updated region.</param>
         /// <param name="y">The minimum Y value of the updated region.</param>
         /// <param name="z">The minimum Z value of the updated region.</param>
         /// <param name="width">The width of the updated region, in texels.</param>
         /// <param name="height">The height of the updated region, in texels.</param>
         /// <param name="depth">The depth of the updated region, in texels.</param>
-        /// <param name="mipLevel">The mipmap level to update. Must be less than the total number of mipmaps contained in the
-        /// <see cref="Texture"/>.</param>
-        /// <param name="arrayLayer">The array layer to update. Must be less than the total array layer count contained in the
-        /// <see cref="Texture"/>.</param>
+        /// <param name="mipLevel">
+        /// The mipmap level to update. Must be less than the total number of mipmaps contained in the <see cref="Texture"/>.
+        /// </param>
+        /// <param name="arrayLayer">
+        /// The array layer to update. Must be less than the total array layer count contained in the <see cref="Texture"/>.
+        /// </param>
         public void UpdateTexture<T>(
             Texture texture,
             Span<T> source,
@@ -529,18 +661,21 @@ namespace Veldrid
             {
                 if (x % 4 != 0 || y % 4 != 0 || height % 4 != 0 || width % 4 != 0)
                 {
-                    Util.GetMipDimensions(texture, mipLevel, out uint mipWidth, out uint mipHeight, out _);
+                    Util.GetMipDimensions(texture, mipLevel, out uint mipWidth, out uint mipHeight);
                     if (width != mipWidth && height != mipHeight)
                     {
-                        throw new VeldridException($"Updates to block-compressed textures must use a region that is block-size aligned and sized.");
+                        throw new VeldridException(
+                            $"Updates to block-compressed textures must use a region that is block-size aligned and sized.");
                     }
                 }
             }
+
             uint expectedSize = FormatHelpers.GetRegionSize(width, height, depth, texture.Format);
             if (sizeInBytes < expectedSize)
             {
                 throw new VeldridException(
-                    $"The data size is less than expected for the given update region. At least {expectedSize} bytes must be provided, but only {sizeInBytes} were.");
+                    $"The data size is less than expected for the given update region. " +
+                    $"At least {expectedSize} bytes must be provided, but only {sizeInBytes} were.");
             }
 
             // Compressed textures don't necessarily need to have a Texture.Width and Texture.Height that are a multiple of 4.
@@ -576,7 +711,8 @@ namespace Veldrid
             if (arrayLayer >= effectiveArrayLayers)
             {
                 throw new VeldridException(
-                    $"{nameof(arrayLayer)} ({arrayLayer}) must be less than the Texture's effective array layer count ({effectiveArrayLayers}).");
+                    $"{nameof(arrayLayer)} ({arrayLayer}) must be less than " +
+                    $"the Texture's effective array layer count ({effectiveArrayLayers}).");
             }
         }
 
@@ -586,19 +722,17 @@ namespace Veldrid
         /// </summary>
         /// <typeparam name="T">The type of data to upload.</typeparam>
         /// <param name="buffer">The resource to update.</param>
-        /// <param name="bufferOffsetInBytes">An offset, in bytes, from the beginning of the <see cref="DeviceBuffer"/> storage, at
-        /// which new data will be uploaded.</param>
+        /// <param name="bufferOffsetInBytes">
+        /// An offset, in bytes, from the beginning of the <see cref="DeviceBuffer"/> storage, at
+        /// which new data will be uploaded.
+        /// </param>
         /// <param name="source">The value to upload.</param>
         public unsafe void UpdateBuffer<T>(
             DeviceBuffer buffer,
             uint bufferOffsetInBytes,
             T source) where T : unmanaged
         {
-            ref byte sourceByteRef = ref Unsafe.AsRef<byte>(Unsafe.AsPointer(ref source));
-            fixed (byte* ptr = &sourceByteRef)
-            {
-                UpdateBuffer(buffer, bufferOffsetInBytes, (IntPtr)ptr, (uint)sizeof(T));
-            }
+            UpdateBuffer(buffer, bufferOffsetInBytes, (IntPtr)(&source), (uint)sizeof(T));
         }
 
         /// <summary>
@@ -607,16 +741,17 @@ namespace Veldrid
         /// </summary>
         /// <typeparam name="T">The type of data to upload.</typeparam>
         /// <param name="buffer">The resource to update.</param>
-        /// <param name="bufferOffsetInBytes">An offset, in bytes, from the beginning of the <see cref="DeviceBuffer"/>'s storage, at
-        /// which new data will be uploaded.</param>
+        /// <param name="bufferOffsetInBytes">
+        /// An offset, in bytes, from the beginning of the <see cref="DeviceBuffer"/>'s storage, at
+        /// which new data will be uploaded.
+        /// </param>
         /// <param name="source">A reference to the single value to upload.</param>
         public unsafe void UpdateBuffer<T>(
             DeviceBuffer buffer,
             uint bufferOffsetInBytes,
             ref T source) where T : unmanaged
         {
-            ref byte sourceByteRef = ref Unsafe.AsRef<byte>(Unsafe.AsPointer(ref source));
-            fixed (byte* ptr = &sourceByteRef)
+            fixed (T* ptr = &source)
             {
                 UpdateBuffer(buffer, bufferOffsetInBytes, (IntPtr)ptr, (uint)sizeof(T));
             }
@@ -628,8 +763,10 @@ namespace Veldrid
         /// </summary>
         /// <typeparam name="T">The type of data to upload.</typeparam>
         /// <param name="buffer">The resource to update.</param>
-        /// <param name="bufferOffsetInBytes">An offset, in bytes, from the beginning of the <see cref="DeviceBuffer"/>'s storage, at
-        /// which new data will be uploaded.</param>
+        /// <param name="bufferOffsetInBytes">
+        /// An offset, in bytes, from the beginning of the <see cref="DeviceBuffer"/>'s storage, at
+        /// which new data will be uploaded.
+        /// </param>
         /// <param name="source">A reference to the first of a series of values to upload.</param>
         /// <param name="sizeInBytes">The total size of the uploaded data, in bytes.</param>
         public unsafe void UpdateBuffer<T>(
@@ -638,8 +775,7 @@ namespace Veldrid
             ref T source,
             uint sizeInBytes) where T : unmanaged
         {
-            ref byte sourceByteRef = ref Unsafe.AsRef<byte>(Unsafe.AsPointer(ref source));
-            fixed (byte* ptr = &sourceByteRef)
+            fixed (T* ptr = &source)
             {
                 UpdateBuffer(buffer, bufferOffsetInBytes, (IntPtr)ptr, sizeInBytes);
             }
@@ -651,8 +787,10 @@ namespace Veldrid
         /// </summary>
         /// <typeparam name="T">The type of data to upload.</typeparam>
         /// <param name="buffer">The resource to update.</param>
-        /// <param name="bufferOffsetInBytes">An offset, in bytes, from the beginning of the <see cref="DeviceBuffer"/>'s storage, at
-        /// which new data will be uploaded.</param>
+        /// <param name="bufferOffsetInBytes">
+        /// An offset, in bytes, from the beginning of the <see cref="DeviceBuffer"/>'s storage, at
+        /// which new data will be uploaded.
+        /// </param>
         /// <param name="source">An array containing the data to upload.</param>
         public void UpdateBuffer<T>(
             DeviceBuffer buffer,
@@ -668,15 +806,17 @@ namespace Veldrid
         /// </summary>
         /// <typeparam name="T">The type of data to upload.</typeparam>
         /// <param name="buffer">The resource to update.</param>
-        /// <param name="bufferOffsetInBytes">An offset, in bytes, from the beginning of the <see cref="DeviceBuffer"/>'s storage, at
-        /// which new data will be uploaded.</param>
+        /// <param name="bufferOffsetInBytes">
+        /// An offset, in bytes, from the beginning of the <see cref="DeviceBuffer"/>'s storage, at
+        /// which new data will be uploaded.
+        /// </param>
         /// <param name="source">A readonly span containing the data to upload.</param>
         public unsafe void UpdateBuffer<T>(
             DeviceBuffer buffer,
             uint bufferOffsetInBytes,
             ReadOnlySpan<T> source) where T : unmanaged
         {
-            fixed (void* pin = &MemoryMarshal.GetReference(source))
+            fixed (T* pin = source)
             {
                 UpdateBuffer(buffer, bufferOffsetInBytes, (IntPtr)pin, (uint)(sizeof(T) * source.Length));
             }
@@ -688,8 +828,10 @@ namespace Veldrid
         /// </summary>
         /// <typeparam name="T">The type of data to upload.</typeparam>
         /// <param name="buffer">The resource to update.</param>
-        /// <param name="bufferOffsetInBytes">An offset, in bytes, from the beginning of the <see cref="DeviceBuffer"/>'s storage, at
-        /// which new data will be uploaded.</param>
+        /// <param name="bufferOffsetInBytes">
+        /// An offset, in bytes, from the beginning of the <see cref="DeviceBuffer"/>'s storage, at
+        /// which new data will be uploaded.
+        /// </param>
         /// <param name="source">A span containing the data to upload.</param>
         public void UpdateBuffer<T>(
             DeviceBuffer buffer,
@@ -703,8 +845,10 @@ namespace Veldrid
         /// Updates a <see cref="DeviceBuffer"/> region with new data.
         /// </summary>
         /// <param name="buffer">The resource to update.</param>
-        /// <param name="bufferOffsetInBytes">An offset, in bytes, from the beginning of the <see cref="DeviceBuffer"/>'s storage, at
-        /// which new data will be uploaded.</param>
+        /// <param name="bufferOffsetInBytes">
+        /// An offset, in bytes, from the beginning of the <see cref="DeviceBuffer"/>'s storage, at
+        /// which new data will be uploaded.
+        /// </param>
         /// <param name="source">A pointer to the start of the data to upload.</param>
         /// <param name="sizeInBytes">The total size of the uploaded data, in bytes.</param>
         public void UpdateBuffer(
@@ -713,15 +857,24 @@ namespace Veldrid
             IntPtr source,
             uint sizeInBytes)
         {
+#if VALIDATE_USAGE
             if (bufferOffsetInBytes + sizeInBytes > buffer.SizeInBytes)
             {
                 throw new VeldridException(
-                    $"The data size given to UpdateBuffer is too large. The given buffer can only hold {buffer.SizeInBytes} total bytes. The requested update would require {bufferOffsetInBytes + sizeInBytes} bytes.");
+                    $"The buffer ({buffer}) is not large enough to store the amount of " +
+                    $"data specified ({sizeInBytes}) at the given offset ({bufferOffsetInBytes}).");
             }
+#endif
+            if (sizeInBytes == 0)
+            {
+                return;
+            }
+
             UpdateBufferCore(buffer, bufferOffsetInBytes, source, sizeInBytes);
         }
 
-        private protected abstract void UpdateBufferCore(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes);
+        private protected abstract void UpdateBufferCore(
+            DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes);
 
         /// <summary>
         /// Gets whether or not the given <see cref="PixelFormat"/>, <see cref="TextureType"/>, and <see cref="TextureUsage"/>
@@ -766,11 +919,13 @@ namespace Veldrid
             out PixelFormatProperties properties);
 
         /// <summary>
-        /// Adds the given object to a deferred disposal list, which will be processed when this GraphicsDevice becomes idle.
+        /// Adds the given object to a deferred disposal list,
+        /// which will be processed when this <see cref="GraphicsDevice"/> becomes idle.
         /// This method can be used to safely dispose a device resource which may be in use at the time this method is called,
         /// but which will no longer be in use when the device is idle.
         /// </summary>
         /// <param name="disposable">An object to dispose when this instance becomes idle.</param>
+        [Obsolete($"Implementation detail: resource will not be disposed if {nameof(WaitForIdle)} is never called.")]
         public void DisposeWhenIdle(IDisposable disposable)
         {
             lock (_deferredDisposalLock)
@@ -792,11 +947,6 @@ namespace Veldrid
         }
 
         /// <summary>
-        /// Performs API-specific disposal of resources controlled by this instance.
-        /// </summary>
-        protected abstract void PlatformDispose();
-
-        /// <summary>
         /// Creates and caches common device resources after device creation completes.
         /// </summary>
         protected void PostDeviceCreated()
@@ -809,17 +959,41 @@ namespace Veldrid
             }
         }
 
+        [DoesNotReturn]
+        protected static void ThrowMappedException(MappableResource resource, uint subresource)
+        {
+            throw new VeldridMappedResourceException($"The resource ({resource}@{subresource}) is mapped.");
+        }
+
+        [DoesNotReturn]
+        protected static void ThrowNotMappedException(MappableResource resource, uint subresource)
+        {
+            throw new VeldridMappedResourceException($"The resource ({resource}@{subresource}) is not mapped.");
+        }
+
+        [DoesNotReturn]
+        protected static void ThrowCorruptMapException(MappableResource resource, uint subresource)
+        {
+            throw new VeldridMappedResourceException($"The mapped resource ({resource}@{subresource}) is corrupted.");
+        }
+
+        [DoesNotReturn]
+        protected static void ThrowMapFailedException(MappableResource resource, uint subresource)
+        {
+            throw new VeldridMappedResourceException($"Failed to map the resource ({resource}@{subresource}).");
+        }
+
         /// <summary>
         /// Gets a simple point-filtered <see cref="Sampler"/> object owned by this instance.
         /// This object is created with <see cref="SamplerDescription.Point"/>.
         /// </summary>
-        public Sampler PointSampler { get; private set; }
+        public Sampler PointSampler { get; private set; } = null!;
 
         /// <summary>
         /// Gets a simple linear-filtered <see cref="Sampler"/> object owned by this instance.
         /// This object is created with <see cref="SamplerDescription.Linear"/>.
         /// </summary>
-        public Sampler LinearSampler { get; private set; }
+        public Sampler LinearSampler { get; private set; } = null!;
 
         /// <summary>
         /// Gets a simple 4x anisotropic-filtered <see cref="Sampler"/> object owned by this instance.
@@ -833,7 +1007,8 @@ namespace Veldrid
                 if (!Features.SamplerAnisotropy)
                 {
                     throw new VeldridException(
-                        "GraphicsDevice.Aniso4xSampler cannot be used unless GraphicsDeviceFeatures.SamplerAnisotropy is supported.");
+                        $"{nameof(GraphicsDevice)}.{nameof(Aniso4xSampler)} cannot be used unless " +
+                        $"{nameof(GraphicsDeviceFeatures)}.{nameof(GraphicsDeviceFeatures.SamplerAnisotropy)} is supported.");
                 }
 
                 Debug.Assert(_aniso4xSampler != null);
@@ -842,89 +1017,128 @@ namespace Veldrid
         }
 
         /// <summary>
+        /// Performs API-specific disposal of resources controlled by this device.
+        /// </summary>
+        /// <remarks>
+        /// All created child resources must be disposed prior to calling this method.
+        /// </remarks>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposed)
+            {
+                if (disposing)
+                {
+                    WaitForIdle();
+                    PointSampler.Dispose();
+                    LinearSampler.Dispose();
+                    _aniso4xSampler?.Dispose();
+                }
+
+                _disposed = true;
+            }
+        }
+
+        /// <summary>
+        /// Disposes the device upon finalization.
+        /// </summary>
+        ~GraphicsDevice()
+        {
+            Dispose(disposing: false);
+        }
+
+        /// <summary>
         /// Frees unmanaged resources controlled by this device.
-        /// All created child resources must be Disposed prior to calling this method.
+        /// All created child resources must be disposed prior to calling this method.
         /// </summary>
         public void Dispose()
         {
-            WaitForIdle();
-            PointSampler.Dispose();
-            LinearSampler.Dispose();
-            _aniso4xSampler?.Dispose();
-            PlatformDispose();
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
         }
 
 #if !EXCLUDE_D3D11_BACKEND
         /// <summary>
-        /// Tries to get a <see cref="BackendInfoD3D11"/> for this instance. This method will only succeed if this is a D3D11
-        /// GraphicsDevice.
+        /// Tries to get a <see cref="BackendInfoD3D11"/> for this instance.
+        /// This method will only succeed if this is a D3D11 <see cref="GraphicsDevice"/>.
         /// </summary>
         /// <param name="info">If successful, this will contain the <see cref="BackendInfoD3D11"/> for this instance.</param>
-        /// <returns>True if this is a D3D11 GraphicsDevice and the operation was successful. False otherwise.</returns>
-        public virtual bool GetD3D11Info(out BackendInfoD3D11 info) { info = null; return false; }
+        /// <returns>True if this is a D3D11 <see cref="GraphicsDevice"/> and the operation was successful. False otherwise.</returns>
+        public virtual bool GetD3D11Info([MaybeNullWhen(false)] out BackendInfoD3D11 info)
+        {
+            info = null;
+            return false;
+        }
 
         /// <summary>
-        /// Gets a <see cref="BackendInfoD3D11"/> for this instance. This method will only succeed if this is a D3D11
-        /// GraphicsDevice. Otherwise, this method will throw an exception.
+        /// Gets a <see cref="BackendInfoD3D11"/> for this instance.
+        /// This method will only succeed if this is a D3D11 <see cref="GraphicsDevice"/>.
+        /// Otherwise, this method will throw an exception.
         /// </summary>
         /// <returns>The <see cref="BackendInfoD3D11"/> for this instance.</returns>
         public BackendInfoD3D11 GetD3D11Info()
         {
-            if (!GetD3D11Info(out BackendInfoD3D11 info))
+            if (!GetD3D11Info(out BackendInfoD3D11? info))
             {
-                throw new VeldridException($"{nameof(GetD3D11Info)} can only be used on a D3D11 GraphicsDevice.");
+                throw new VeldridException($"{nameof(GetD3D11Info)} can only be used on a D3D11 {nameof(GraphicsDevice)}.");
             }
-
             return info;
         }
 #endif
 
 #if !EXCLUDE_VULKAN_BACKEND
         /// <summary>
-        /// Tries to get a <see cref="BackendInfoVulkan"/> for this instance. This method will only succeed if this is a Vulkan
-        /// GraphicsDevice.
+        /// Tries to get a <see cref="BackendInfoVulkan"/> for this instance.
+        /// This method will only succeed if this is a Vulkan <see cref="GraphicsDevice"/>.
         /// </summary>
         /// <param name="info">If successful, this will contain the <see cref="BackendInfoVulkan"/> for this instance.</param>
-        /// <returns>True if this is a Vulkan GraphicsDevice and the operation was successful. False otherwise.</returns>
-        public virtual bool GetVulkanInfo(out BackendInfoVulkan info) { info = null; return false; }
+        /// <returns>True if this is a Vulkan <see cref="GraphicsDevice"/> and the operation was successful. False otherwise.</returns>
+        public virtual bool GetVulkanInfo([MaybeNullWhen(false)] out BackendInfoVulkan info)
+        {
+            info = null;
+            return false;
+        }
 
         /// <summary>
-        /// Gets a <see cref="BackendInfoVulkan"/> for this instance. This method will only succeed if this is a Vulkan
-        /// GraphicsDevice. Otherwise, this method will throw an exception.
+        /// Gets a <see cref="BackendInfoVulkan"/> for this instance.
+        /// This method will only succeed if this is a Vulkan <see cref="GraphicsDevice"/>.
+        /// Otherwise, this method will throw an exception.
         /// </summary>
         /// <returns>The <see cref="BackendInfoVulkan"/> for this instance.</returns>
         public BackendInfoVulkan GetVulkanInfo()
         {
-            if (!GetVulkanInfo(out BackendInfoVulkan info))
+            if (!GetVulkanInfo(out BackendInfoVulkan? info))
             {
-                throw new VeldridException($"{nameof(GetVulkanInfo)} can only be used on a Vulkan GraphicsDevice.");
+                throw new VeldridException($"{nameof(GetVulkanInfo)} can only be used on a Vulkan {nameof(GraphicsDevice)}.");
             }
-
             return info;
         }
 #endif
 
 #if !EXCLUDE_OPENGL_BACKEND
         /// <summary>
-        /// Tries to get a <see cref="BackendInfoOpenGL"/> for this instance. This method will only succeed if this is an OpenGL
-        /// GraphicsDevice.
+        /// Tries to get a <see cref="BackendInfoOpenGL"/> for this instance.
+        /// This method will only succeed if this is an OpenGL <see cref="GraphicsDevice"/>.
         /// </summary>
         /// <param name="info">If successful, this will contain the <see cref="BackendInfoOpenGL"/> for this instance.</param>
-        /// <returns>True if this is an OpenGL GraphicsDevice and the operation was successful. False otherwise.</returns>
-        public virtual bool GetOpenGLInfo(out BackendInfoOpenGL info) { info = null; return false; }
+        /// <returns>True if this is an OpenGL <see cref="GraphicsDevice"/> and the operation was successful. False otherwise.</returns>
+        public virtual bool GetOpenGLInfo([MaybeNullWhen(false)] out BackendInfoOpenGL info)
+        {
+            info = null;
+            return false;
+        }
 
         /// <summary>
-        /// Gets a <see cref="BackendInfoOpenGL"/> for this instance. This method will only succeed if this is an OpenGL
-        /// GraphicsDevice. Otherwise, this method will throw an exception.
+        /// Gets a <see cref="BackendInfoOpenGL"/> for this instance.
+        /// This method will only succeed if this is an OpenGL <see cref="GraphicsDevice"/>.
+        /// Otherwise, this method will throw an exception.
         /// </summary>
         /// <returns>The <see cref="BackendInfoOpenGL"/> for this instance.</returns>
         public BackendInfoOpenGL GetOpenGLInfo()
         {
-            if (!GetOpenGLInfo(out BackendInfoOpenGL info))
+            if (!GetOpenGLInfo(out BackendInfoOpenGL? info))
             {
-                throw new VeldridException($"{nameof(GetOpenGLInfo)} can only be used on an OpenGL GraphicsDevice.");
+                throw new VeldridException($"{nameof(GetOpenGLInfo)} can only be used on an OpenGL {nameof(GraphicsDevice)}.");
             }
-
             return info;
         }
 #endif
@@ -932,24 +1146,28 @@ namespace Veldrid
 #if !EXCLUDE_METAL_BACKEND
         /// <summary>
         /// Tries to get a <see cref="BackendInfoMetal"/> for this instance.
-        /// This method will only succeed if this is a Metal GraphicsDevice.
+        /// This method will only succeed if this is a Metal <see cref="GraphicsDevice"/>.
         /// </summary>
         /// <param name="info">If successful, this will contain the <see cref="BackendInfoOpenGL"/> for this instance.</param>
-        /// <returns>True if this is an Metal GraphicsDevice and the operation was successful. False otherwise.</returns>
-        public virtual bool GetMetalInfo(out BackendInfoMetal info) { info = null; return false; }
+        /// <returns>True if this is an Metal <see cref="GraphicsDevice"/> and the operation was successful. False otherwise.</returns>
+        public virtual bool GetMetalInfo([MaybeNullWhen(false)] out BackendInfoMetal info)
+        {
+            info = null;
+            return false;
+        }
 
         /// <summary>
-        /// Gets a <see cref="BackendInfoMetal"/> for this instance. This method will only succeed if this is an OpenGL
-        /// GraphicsDevice. Otherwise, this method will throw an exception.
+        /// Gets a <see cref="BackendInfoMetal"/> for this instance.
+        /// This method will only succeed if this is an OpenGL <see cref="GraphicsDevice"/>.
+        /// Otherwise, this method will throw an exception.
         /// </summary>
         /// <returns>The <see cref="BackendInfoMetal"/> for this instance.</returns>
         public BackendInfoMetal GetMetalInfo()
         {
-            if (!GetMetalInfo(out BackendInfoMetal info))
+            if (!GetMetalInfo(out BackendInfoMetal? info))
             {
-                throw new VeldridException($"{nameof(GetMetalInfo)} can only be used on a Metal GraphicsDevice.");
+                throw new VeldridException($"{nameof(GetMetalInfo)} can only be used on a Metal {nameof(GraphicsDevice)}.");
             }
-
             return info;
         }
 #endif
@@ -959,40 +1177,46 @@ namespace Veldrid
         /// </summary>
         /// <param name="backend">The GraphicsBackend to check.</param>
         /// <returns>True if the GraphicsBackend is supported; false otherwise.</returns>
+        [SuppressMessage("Style", "IDE0066:Convert switch statement to expression", Justification = "<Pending>")]
         public static bool IsBackendSupported(GraphicsBackend backend)
         {
             switch (backend)
             {
                 case GraphicsBackend.Direct3D11:
 #if !EXCLUDE_D3D11_BACKEND
-                    return RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+                    return OperatingSystem.IsWindows();
 #else
                     return false;
 #endif
+
                 case GraphicsBackend.Vulkan:
 #if !EXCLUDE_VULKAN_BACKEND
-                    return Vk.VkGraphicsDevice.IsSupported();
+                    return VkGraphicsDevice.IsSupported();
 #else
                     return false;
 #endif
+
                 case GraphicsBackend.OpenGL:
 #if !EXCLUDE_OPENGL_BACKEND
                     return true;
 #else
                     return false;
 #endif
+
                 case GraphicsBackend.Metal:
 #if !EXCLUDE_METAL_BACKEND
                     return MTL.MTLGraphicsDevice.IsSupported();
 #else
                     return false;
 #endif
+
                 case GraphicsBackend.OpenGLES:
 #if !EXCLUDE_OPENGL_BACKEND
                     return !RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
 #else
                     return false;
 #endif
+
                 default:
                     throw Illegal.Value<GraphicsBackend>();
             }
@@ -1002,7 +1226,7 @@ namespace Veldrid
         /// <summary>
         /// Creates a new <see cref="GraphicsDevice"/> using Direct3D 11.
         /// </summary>
-        /// <param name="options">Describes several common properties of the GraphicsDevice.</param>
+        /// <param name="options">Describes several common properties of the <see cref="GraphicsDevice"/>.</param>
         /// <returns>A new <see cref="GraphicsDevice"/> using the Direct3D 11 API.</returns>
         public static GraphicsDevice CreateD3D11(GraphicsDeviceOptions options)
         {
@@ -1010,10 +1234,10 @@ namespace Veldrid
         }
 
         /// <summary>
-        /// Creates a new <see cref="GraphicsDevice"/> using Direct3D 11, with a main Swapchain.
+        /// Creates a new <see cref="GraphicsDevice"/> using Direct3D 11, with a main <see cref="Swapchain"/>.
         /// </summary>
-        /// <param name="options">Describes several common properties of the GraphicsDevice.</param>
-        /// <param name="swapchainDescription">A description of the main Swapchain to create.</param>
+        /// <param name="options">Describes several common properties of the <see cref="GraphicsDevice"/>.</param>
+        /// <param name="swapchainDescription">A description of the main <see cref="Swapchain"/> to create.</param>
         /// <returns>A new <see cref="GraphicsDevice"/> using the Direct3D 11 API.</returns>
         public static GraphicsDevice CreateD3D11(GraphicsDeviceOptions options, SwapchainDescription swapchainDescription)
         {
@@ -1023,7 +1247,7 @@ namespace Veldrid
         /// <summary>
         /// Creates a new <see cref="GraphicsDevice"/> using Direct3D 11.
         /// </summary>
-        /// <param name="options">Describes several common properties of the GraphicsDevice.</param>
+        /// <param name="options">Describes several common properties of the <see cref="GraphicsDevice"/>.</param>
         /// <param name="d3d11Options">The Direct3D11-specific options used to create the device.</param>
         /// <returns>A new <see cref="GraphicsDevice"/> using the Direct3D 11 API.</returns>
         public static GraphicsDevice CreateD3D11(GraphicsDeviceOptions options, D3D11DeviceOptions d3d11Options)
@@ -1032,28 +1256,29 @@ namespace Veldrid
         }
 
         /// <summary>
-        /// Creates a new <see cref="GraphicsDevice"/> using Direct3D 11, with a main Swapchain.
+        /// Creates a new <see cref="GraphicsDevice"/> using Direct3D 11, with a main <see cref="Swapchain"/>.
         /// </summary>
-        /// <param name="options">Describes several common properties of the GraphicsDevice.</param>
+        /// <param name="options">Describes several common properties of the <see cref="GraphicsDevice"/>.</param>
         /// <param name="d3d11Options">The Direct3D11-specific options used to create the device.</param>
-        /// <param name="swapchainDescription">A description of the main Swapchain to create.</param>
+        /// <param name="swapchainDescription">A description of the main <see cref="Swapchain"/> to create.</param>
         /// <returns>A new <see cref="GraphicsDevice"/> using the Direct3D 11 API.</returns>
-        public static GraphicsDevice CreateD3D11(GraphicsDeviceOptions options, D3D11DeviceOptions d3d11Options, SwapchainDescription swapchainDescription)
+        public static GraphicsDevice CreateD3D11(
+            GraphicsDeviceOptions options, D3D11DeviceOptions d3d11Options, SwapchainDescription swapchainDescription)
         {
             return new D3D11.D3D11GraphicsDevice(options, d3d11Options, swapchainDescription);
         }
 
         /// <summary>
-        /// Creates a new <see cref="GraphicsDevice"/> using Direct3D 11, with a main Swapchain.
+        /// Creates a new <see cref="GraphicsDevice"/> using Direct3D 11, with a main <see cref="Swapchain"/>.
         /// </summary>
-        /// <param name="options">Describes several common properties of the GraphicsDevice.</param>
+        /// <param name="options">Describes several common properties of the <see cref="GraphicsDevice"/>.</param>
         /// <param name="hwnd">The Win32 window handle to render into.</param>
         /// <param name="width">The initial width of the window.</param>
         /// <param name="height">The initial height of the window.</param>
         /// <returns>A new <see cref="GraphicsDevice"/> using the Direct3D 11 API.</returns>
         public static GraphicsDevice CreateD3D11(GraphicsDeviceOptions options, IntPtr hwnd, uint width, uint height)
         {
-            SwapchainDescription swapchainDescription = new SwapchainDescription(
+            SwapchainDescription swapchainDescription = new(
                 SwapchainSource.CreateWin32(hwnd, IntPtr.Zero),
                 width, height,
                 options.SwapchainDepthFormat,
@@ -1064,9 +1289,9 @@ namespace Veldrid
         }
 
         /// <summary>
-        /// Creates a new <see cref="GraphicsDevice"/> using Direct3D 11, with a main Swapchain.
+        /// Creates a new <see cref="GraphicsDevice"/> using Direct3D 11, with a main <see cref="Swapchain"/>.
         /// </summary>
-        /// <param name="options">Describes several common properties of the GraphicsDevice.</param>
+        /// <param name="options">Describes several common properties of the <see cref="GraphicsDevice"/>.</param>
         /// <param name="swapChainPanel">A COM object which must implement the <see cref="Vortice.DXGI.ISwapChainPanelNative"/>
         /// or <see cref="Vortice.DXGI.ISwapChainBackgroundPanelNative"/> interface. Generally, this should be a SwapChainPanel
         /// or SwapChainBackgroundPanel contained in your application window.</param>
@@ -1081,7 +1306,7 @@ namespace Veldrid
             double renderHeight,
             float logicalDpi)
         {
-            SwapchainDescription swapchainDescription = new SwapchainDescription(
+            SwapchainDescription swapchainDescription = new(
                 SwapchainSource.CreateUwp(swapChainPanel, logicalDpi),
                 (uint)renderWidth,
                 (uint)renderHeight,
@@ -1097,76 +1322,76 @@ namespace Veldrid
         /// <summary>
         /// Creates a new <see cref="GraphicsDevice"/> using Vulkan.
         /// </summary>
-        /// <param name="options">Describes several common properties of the GraphicsDevice.</param>
+        /// <param name="options">Describes several common properties of the <see cref="GraphicsDevice"/>.</param>
         /// <returns>A new <see cref="GraphicsDevice"/> using the Vulkan API.</returns>
         public static GraphicsDevice CreateVulkan(GraphicsDeviceOptions options)
         {
-            return new Vk.VkGraphicsDevice(options, null);
+            return new VkGraphicsDevice(options, null);
         }
 
         /// <summary>
         /// Creates a new <see cref="GraphicsDevice"/> using Vulkan.
         /// </summary>
-        /// <param name="options">Describes several common properties of the GraphicsDevice.</param>
+        /// <param name="options">Describes several common properties of the <see cref="GraphicsDevice"/>.</param>
         /// <param name="vkOptions">The Vulkan-specific options used to create the device.</param>
         /// <returns>A new <see cref="GraphicsDevice"/> using the Vulkan API.</returns>
         public static GraphicsDevice CreateVulkan(GraphicsDeviceOptions options, VulkanDeviceOptions vkOptions)
         {
-            return new Vk.VkGraphicsDevice(options, null, vkOptions);
+            return new VkGraphicsDevice(options, null, vkOptions);
         }
 
         /// <summary>
-        /// Creates a new <see cref="GraphicsDevice"/> using Vulkan, with a main Swapchain.
+        /// Creates a new <see cref="GraphicsDevice"/> using Vulkan, with a main <see cref="Swapchain"/>.
         /// </summary>
-        /// <param name="options">Describes several common properties of the GraphicsDevice.</param>
-        /// <param name="swapchainDescription">A description of the main Swapchain to create.</param>
+        /// <param name="options">Describes several common properties of the <see cref="GraphicsDevice"/>.</param>
+        /// <param name="swapchainDescription">A description of the main <see cref="Swapchain"/> to create.</param>
         /// <returns>A new <see cref="GraphicsDevice"/> using the Vulkan API.</returns>
         public static GraphicsDevice CreateVulkan(GraphicsDeviceOptions options, SwapchainDescription swapchainDescription)
         {
-            return new Vk.VkGraphicsDevice(options, swapchainDescription);
+            return new VkGraphicsDevice(options, swapchainDescription);
         }
 
         /// <summary>
-        /// Creates a new <see cref="GraphicsDevice"/> using Vulkan, with a main Swapchain.
+        /// Creates a new <see cref="GraphicsDevice"/> using Vulkan, with a main <see cref="Swapchain"/>.
         /// </summary>
-        /// <param name="options">Describes several common properties of the GraphicsDevice.</param>
+        /// <param name="options">Describes several common properties of the <see cref="GraphicsDevice"/>.</param>
         /// <param name="vkOptions">The Vulkan-specific options used to create the device.</param>
-        /// <param name="swapchainDescription">A description of the main Swapchain to create.</param>
+        /// <param name="swapchainDescription">A description of the main <see cref="Swapchain"/> to create.</param>
         /// <returns>A new <see cref="GraphicsDevice"/> using the Vulkan API.</returns>
         public static GraphicsDevice CreateVulkan(
             GraphicsDeviceOptions options,
             SwapchainDescription swapchainDescription,
             VulkanDeviceOptions vkOptions)
         {
-            return new Vk.VkGraphicsDevice(options, swapchainDescription, vkOptions);
+            return new VkGraphicsDevice(options, swapchainDescription, vkOptions);
         }
 
         /// <summary>
-        /// Creates a new <see cref="GraphicsDevice"/> using Vulkan, with a main Swapchain.
+        /// Creates a new <see cref="GraphicsDevice"/> using Vulkan, with a main <see cref="Swapchain"/>.
         /// </summary>
-        /// <param name="options">Describes several common properties of the GraphicsDevice.</param>
+        /// <param name="options">Describes several common properties of the <see cref="GraphicsDevice"/>.</param>
         /// <param name="surfaceSource">The source from which a Vulkan surface can be created.</param>
         /// <param name="width">The initial width of the window.</param>
         /// <param name="height">The initial height of the window.</param>
         /// <returns>A new <see cref="GraphicsDevice"/> using the Vulkan API.</returns>
-        public static GraphicsDevice CreateVulkan(GraphicsDeviceOptions options, Vk.VkSurfaceSource surfaceSource, uint width, uint height)
+        public static GraphicsDevice CreateVulkan(GraphicsDeviceOptions options, VkSurfaceSource surfaceSource, uint width, uint height)
         {
-            SwapchainDescription scDesc = new SwapchainDescription(
+            SwapchainDescription scDesc = new(
                 surfaceSource.GetSurfaceSource(),
                 width, height,
                 options.SwapchainDepthFormat,
                 options.SyncToVerticalBlank,
                 options.SwapchainSrgbFormat);
 
-            return new Vk.VkGraphicsDevice(options, scDesc);
+            return new VkGraphicsDevice(options, scDesc);
         }
 #endif
 
 #if !EXCLUDE_OPENGL_BACKEND
         /// <summary>
-        /// Creates a new <see cref="GraphicsDevice"/> using OpenGL or OpenGL ES, with a main Swapchain.
+        /// Creates a new <see cref="GraphicsDevice"/> using OpenGL or OpenGL ES, with a main <see cref="Swapchain"/>.
         /// </summary>
-        /// <param name="options">Describes several common properties of the GraphicsDevice.</param>
+        /// <param name="options">Describes several common properties of the <see cref="GraphicsDevice"/>.</param>
         /// <param name="platformInfo">An <see cref="OpenGL.OpenGLPlatformInfo"/> object encapsulating necessary OpenGL context
         /// information.</param>
         /// <param name="width">The initial width of the window.</param>
@@ -1182,11 +1407,12 @@ namespace Veldrid
         }
 
         /// <summary>
-        /// Creates a new <see cref="GraphicsDevice"/> using OpenGL ES, with a main Swapchain.
-        /// This overload can only be used on iOS or Android to create a GraphicsDevice for an Android Surface or an iOS UIView.
+        /// Creates a new <see cref="GraphicsDevice"/> using OpenGL ES, with a main <see cref="Swapchain"/>.
+        /// This overload can only be used on iOS or Android to create a <see cref="GraphicsDevice"/>
+        /// for an Android Surface or an iOS UIView.
         /// </summary>
-        /// <param name="options">Describes several common properties of the GraphicsDevice.</param>
-        /// <param name="swapchainDescription">A description of the main Swapchain to create.
+        /// <param name="options">Describes several common properties of the <see cref="GraphicsDevice"/>.</param>
+        /// <param name="swapchainDescription">A description of the main <see cref="Swapchain"/> to create.
         /// The SwapchainSource must have been created from an Android Surface or an iOS UIView.</param>
         /// <returns>A new <see cref="GraphicsDevice"/> using the OpenGL or OpenGL ES API.</returns>
         public static GraphicsDevice CreateOpenGLES(
@@ -1201,7 +1427,7 @@ namespace Veldrid
         /// <summary>
         /// Creates a new <see cref="GraphicsDevice"/> using Metal.
         /// </summary>
-        /// <param name="options">Describes several common properties of the GraphicsDevice.</param>
+        /// <param name="options">Describes several common properties of the <see cref="GraphicsDevice"/>.</param>
         /// <returns>A new <see cref="GraphicsDevice"/> using the Metal API.</returns>
         public static GraphicsDevice CreateMetal(GraphicsDeviceOptions options)
         {
@@ -1209,10 +1435,10 @@ namespace Veldrid
         }
 
         /// <summary>
-        /// Creates a new <see cref="GraphicsDevice"/> using Metal, with a main Swapchain.
+        /// Creates a new <see cref="GraphicsDevice"/> using Metal, with a main <see cref="Swapchain"/>.
         /// </summary>
-        /// <param name="options">Describes several common properties of the GraphicsDevice.</param>
-        /// <param name="swapchainDescription">A description of the main Swapchain to create.</param>
+        /// <param name="options">Describes several common properties of the <see cref="GraphicsDevice"/>.</param>
+        /// <param name="swapchainDescription">A description of the main <see cref="Swapchain"/> to create.</param>
         /// <returns>A new <see cref="GraphicsDevice"/> using the Metal API.</returns>
         public static GraphicsDevice CreateMetal(GraphicsDeviceOptions options, SwapchainDescription swapchainDescription)
         {
@@ -1220,15 +1446,15 @@ namespace Veldrid
         }
 
         /// <summary>
-        /// Creates a new <see cref="GraphicsDevice"/> using Metal, with a main Swapchain.
+        /// Creates a new <see cref="GraphicsDevice"/> using Metal, with a main <see cref="Swapchain"/>.
         /// </summary>
-        /// <param name="options">Describes several common properties of the GraphicsDevice.</param>
+        /// <param name="options">Describes several common properties of the <see cref="GraphicsDevice"/>.</param>
         /// <param name="nsWindow">A pointer to an NSWindow object, which will be used to create the Metal device's swapchain.
         /// </param>
         /// <returns>A new <see cref="GraphicsDevice"/> using the Metal API.</returns>
         public static GraphicsDevice CreateMetal(GraphicsDeviceOptions options, IntPtr nsWindow)
         {
-            SwapchainDescription swapchainDesc = new SwapchainDescription(
+            SwapchainDescription swapchainDesc = new(
                 new NSWindowSwapchainSource(nsWindow),
                 0, 0,
                 options.SwapchainDepthFormat,

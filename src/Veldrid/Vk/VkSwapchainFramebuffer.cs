@@ -1,13 +1,11 @@
-﻿using Vulkan;
-using static Vulkan.VulkanNative;
-using static Veldrid.Vk.VulkanUtil;
-using System;
-using System.Linq;
-using System.Collections.Generic;
+﻿using System;
+using TerraFX.Interop.Vulkan;
+using static TerraFX.Interop.Vulkan.Vulkan;
+using static Veldrid.Vulkan.VulkanUtil;
 
-namespace Veldrid.Vk
+namespace Veldrid.Vulkan
 {
-    internal unsafe class VkSwapchainFramebuffer : VkFramebufferBase
+    internal sealed unsafe class VkSwapchainFramebuffer : VkFramebufferBase
     {
         private readonly VkGraphicsDevice _gd;
         private readonly VkSwapchain _swapchain;
@@ -15,40 +13,24 @@ namespace Veldrid.Vk
         private readonly PixelFormat? _depthFormat;
         private uint _currentImageIndex;
 
-        private VkFramebuffer[] _scFramebuffers;
-        private VkImage[] _scImages;
+        private VkFramebuffer[] _scFramebuffers = Array.Empty<VkFramebuffer>();
+        private VkImage[] _scImages = Array.Empty<VkImage>();
         private VkFormat _scImageFormat;
         private VkExtent2D _scExtent;
-        private FramebufferAttachment[][] _scColorTextures;
+        private FramebufferAttachment[][] _scColorTextures = Array.Empty<FramebufferAttachment[]>();
 
-        private FramebufferAttachment? _depthAttachment;
-        private uint _desiredWidth;
-        private uint _desiredHeight;
         private bool _destroyed;
-        private string _name;
-        private OutputDescription _outputDescription;
+        private string? _name;
 
-        public override Vulkan.VkFramebuffer CurrentFramebuffer => _scFramebuffers[(int)_currentImageIndex].CurrentFramebuffer;
+        public override TerraFX.Interop.Vulkan.VkFramebuffer CurrentFramebuffer => _scFramebuffers[(int)_currentImageIndex].CurrentFramebuffer;
 
         public override VkRenderPass RenderPassNoClear_Init => _scFramebuffers[0].RenderPassNoClear_Init;
         public override VkRenderPass RenderPassNoClear_Load => _scFramebuffers[0].RenderPassNoClear_Load;
         public override VkRenderPass RenderPassClear => _scFramebuffers[0].RenderPassClear;
 
-        public override IReadOnlyList<FramebufferAttachment> ColorTargets => _scColorTextures[(int)_currentImageIndex];
-
-        public override FramebufferAttachment? DepthTarget => _depthAttachment;
-
-        public override uint RenderableWidth => _scExtent.width;
-        public override uint RenderableHeight => _scExtent.height;
-
-        public override uint Width => _desiredWidth;
-        public override uint Height => _desiredHeight;
+        public override VkExtent2D RenderableExtent => _scExtent;
 
         public uint ImageIndex => _currentImageIndex;
-
-        public override OutputDescription OutputDescription => _outputDescription;
-
-        public override uint AttachmentCount { get; }
 
         public VkSwapchain Swapchain => _swapchain;
 
@@ -58,22 +40,21 @@ namespace Veldrid.Vk
             VkGraphicsDevice gd,
             VkSwapchain swapchain,
             VkSurfaceKHR surface,
-            uint width,
-            uint height,
-            PixelFormat? depthFormat)
+            in SwapchainDescription description)
             : base()
         {
             _gd = gd;
             _swapchain = swapchain;
             _surface = surface;
-            _depthFormat = depthFormat;
+            _depthFormat = description.DepthFormat;
 
-            AttachmentCount = depthFormat.HasValue ? 2u : 1u; // 1 Color + 1 Depth
+            AttachmentCount = _depthFormat.HasValue ? 2u : 1u; // 1 Color + 1 Depth
         }
 
         internal void SetImageIndex(uint index)
         {
             _currentImageIndex = index;
+            _colorTargets = _scColorTextures[(int)_currentImageIndex];
         }
 
         internal void SetNewSwapchain(
@@ -83,19 +64,22 @@ namespace Veldrid.Vk
             VkSurfaceFormatKHR surfaceFormat,
             VkExtent2D swapchainExtent)
         {
-            _desiredWidth = width;
-            _desiredHeight = height;
+            Width = width;
+            Height = height;
 
             // Get the images
             uint scImageCount = 0;
-            VkResult result = vkGetSwapchainImagesKHR(_gd.Device, deviceSwapchain, ref scImageCount, null);
+            VkResult result = vkGetSwapchainImagesKHR(_gd.Device, deviceSwapchain, &scImageCount, null);
             CheckResult(result);
-            if (_scImages == null)
+            if (_scImages.Length < scImageCount)
             {
                 _scImages = new VkImage[(int)scImageCount];
             }
-            result = vkGetSwapchainImagesKHR(_gd.Device, deviceSwapchain, ref scImageCount, out _scImages[0]);
-            CheckResult(result);
+            fixed (VkImage* scImagesPtr = _scImages)
+            {
+                result = vkGetSwapchainImagesKHR(_gd.Device, deviceSwapchain, &scImageCount, scImagesPtr);
+                CheckResult(result);
+            }
 
             _scImageFormat = surfaceFormat.format;
             _scExtent = swapchainExtent;
@@ -103,19 +87,15 @@ namespace Veldrid.Vk
             CreateDepthTexture();
             CreateFramebuffers();
 
-            _outputDescription = OutputDescription.CreateFromFramebuffer(this);
+            OutputDescription = OutputDescription.CreateFromFramebuffer(this);
         }
 
         private void DestroySwapchainFramebuffers()
         {
-            if (_scFramebuffers != null)
+            for (int i = 0; i < _scFramebuffers.Length; i++)
             {
-                for (int i = 0; i < _scFramebuffers.Length; i++)
-                {
-                    _scFramebuffers[i]?.Dispose();
-                    _scFramebuffers[i] = null;
-                }
-                Array.Clear(_scFramebuffers, 0, _scFramebuffers.Length);
+                _scFramebuffers[i]?.Dispose();
+                _scFramebuffers[i] = null!;
             }
         }
 
@@ -123,7 +103,7 @@ namespace Veldrid.Vk
         {
             if (_depthFormat.HasValue)
             {
-                _depthAttachment?.Target.Dispose();
+                _depthTarget?.Target.Dispose();
                 VkTexture depthTexture = (VkTexture)_gd.ResourceFactory.CreateTexture(TextureDescription.Texture2D(
                     Math.Max(1, _scExtent.width),
                     Math.Max(1, _scExtent.height),
@@ -131,27 +111,20 @@ namespace Veldrid.Vk
                     1,
                     _depthFormat.Value,
                     TextureUsage.DepthStencil));
-                _depthAttachment = new FramebufferAttachment(depthTexture, 0);
+                _depthTarget = new FramebufferAttachment(depthTexture, 0);
             }
         }
 
         private void CreateFramebuffers()
         {
-            if (_scFramebuffers != null)
-            {
-                for (int i = 0; i < _scFramebuffers.Length; i++)
-                {
-                    _scFramebuffers[i]?.Dispose();
-                    _scFramebuffers[i] = null;
-                }
-                Array.Clear(_scFramebuffers, 0, _scFramebuffers.Length);
-            }
+            DestroySwapchainFramebuffers();
 
             Util.EnsureArrayMinimumSize(ref _scFramebuffers, (uint)_scImages.Length);
             Util.EnsureArrayMinimumSize(ref _scColorTextures, (uint)_scImages.Length);
+
             for (uint i = 0; i < _scImages.Length; i++)
             {
-                VkTexture colorTex = new VkTexture(
+                VkTexture colorTex = new(
                     _gd,
                     Math.Max(1, _scExtent.width),
                     Math.Max(1, _scExtent.height),
@@ -161,34 +134,38 @@ namespace Veldrid.Vk
                     TextureUsage.RenderTarget,
                     TextureSampleCount.Count1,
                     _scImages[i]);
-                FramebufferDescription desc = new FramebufferDescription(_depthAttachment?.Target, colorTex);
-                VkFramebuffer fb = new VkFramebuffer(_gd, ref desc, true);
+                FramebufferDescription desc = new(_depthTarget?.Target, colorTex);
+                VkFramebuffer fb = new(_gd, desc, true);
                 _scFramebuffers[i] = fb;
                 _scColorTextures[i] = new FramebufferAttachment[] { new FramebufferAttachment(colorTex, 0) };
             }
+
+            SetImageIndex(0);
         }
 
         public override void TransitionToIntermediateLayout(VkCommandBuffer cb)
         {
-            for (int i = 0; i < ColorTargets.Count; i++)
+            foreach (ref readonly FramebufferAttachment ca in ColorTargets)
             {
-                FramebufferAttachment ca = ColorTargets[i];
                 VkTexture vkTex = Util.AssertSubtype<Texture, VkTexture>(ca.Target);
-                vkTex.SetImageLayout(0, ca.ArrayLayer, VkImageLayout.ColorAttachmentOptimal);
+                vkTex.SetImageLayout(0, ca.ArrayLayer, VkImageLayout.VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
             }
         }
 
-        public override void TransitionToFinalLayout(VkCommandBuffer cb)
+        public override void TransitionToFinalLayout(VkCommandBuffer cb, bool attachment)
         {
-            for (int i = 0; i < ColorTargets.Count; i++)
+            VkImageLayout layout = attachment
+                ? VkImageLayout.VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
+                : VkImageLayout.VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+            foreach (ref readonly FramebufferAttachment ca in ColorTargets)
             {
-                FramebufferAttachment ca = ColorTargets[i];
                 VkTexture vkTex = Util.AssertSubtype<Texture, VkTexture>(ca.Target);
-                vkTex.TransitionImageLayout(cb, 0, 1, ca.ArrayLayer, 1, VkImageLayout.PresentSrcKHR);
+                vkTex.TransitionImageLayout(cb, 0, 1, ca.ArrayLayer, 1, layout);
             }
         }
 
-        public override string Name
+        public override string? Name
         {
             get => _name;
             set
@@ -203,7 +180,7 @@ namespace Veldrid.Vk
             if (!_destroyed)
             {
                 _destroyed = true;
-                _depthAttachment?.Target.Dispose();
+                _depthTarget?.Target.Dispose();
                 DestroySwapchainFramebuffers();
             }
         }

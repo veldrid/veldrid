@@ -1,12 +1,11 @@
 ﻿using static Veldrid.OpenGLBinding.OpenGLNative;
 using static Veldrid.OpenGL.OpenGLUtil;
 using Veldrid.OpenGLBinding;
-using System.Text;
 using System;
 
 namespace Veldrid.OpenGL
 {
-    internal unsafe class OpenGLShader : Shader, OpenGLDeferredResource
+    internal sealed unsafe class OpenGLShader : Shader, OpenGLDeferredResource
     {
         private readonly OpenGLGraphicsDevice _gd;
         private readonly ShaderType _shaderType;
@@ -14,9 +13,11 @@ namespace Veldrid.OpenGL
 
         private bool _disposeRequested;
         private bool _disposed;
-        private string _name;
+        private string? _name;
         private bool _nameChanged;
-        public override string Name { get => _name; set { _name = value; _nameChanged = true; } }
+
+        public override string? Name { get => _name; set { _name = value; _nameChanged = true; } }
+
         public override bool IsDisposed => _disposeRequested;
 
         private uint _shader;
@@ -29,7 +30,7 @@ namespace Veldrid.OpenGL
 #if VALIDATE_USAGE
             if (stage == ShaderStages.Compute && !gd.Extensions.ComputeShaders)
             {
-                if (_gd.BackendType == GraphicsBackend.OpenGLES)
+                if (gd.BackendType == GraphicsBackend.OpenGLES)
                 {
                     throw new VeldridException("Compute shaders require OpenGL ES 3.1.");
                 }
@@ -77,25 +78,28 @@ namespace Veldrid.OpenGL
             glCompileShader(_shader);
             CheckLastError();
 
-            int compileStatus;
+            int compileStatus = 0;
             glGetShaderiv(_shader, ShaderParameter.CompileStatus, &compileStatus);
             CheckLastError();
 
             if (compileStatus != 1)
             {
-                int infoLogLength;
+                int infoLogLength = 0;
                 glGetShaderiv(_shader, ShaderParameter.InfoLogLength, &infoLogLength);
                 CheckLastError();
 
-                byte* infoLog = stackalloc byte[infoLogLength];
+                Span<byte> infoLog = stackalloc byte[4096];
+                if (infoLogLength > infoLog.Length)
+                    infoLog = new byte[infoLogLength];
+
                 uint returnedInfoLength;
-                glGetShaderInfoLog(_shader, (uint)infoLogLength, &returnedInfoLength, infoLog);
-                CheckLastError();
+                fixed (byte* infoLogPtr = infoLog)
+                {
+                    glGetShaderInfoLog(_shader, (uint)infoLogLength, &returnedInfoLength, infoLogPtr);
+                    CheckLastError();
+                }
 
-                string message = infoLog != null
-                    ? Encoding.UTF8.GetString(infoLog, (int)returnedInfoLength)
-                    : "<null>";
-
+                string message = Util.UTF8.GetString(infoLog.Slice(0, (int)returnedInfoLength));
                 throw new VeldridException($"Unable to compile shader code for shader [{_name}] of type {_shaderType}: {message}");
             }
 

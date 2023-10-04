@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
@@ -106,7 +107,7 @@ void main()
             // Read back from our texture and make sure it has been properly filled.
             for (uint depth = 0; depth < computeTargetTexture.Depth; depth++)
             {
-                RgbaFloat expectedFillValue = new RgbaFloat(new System.Numerics.Vector4(FillValue * (depth + 1)));
+                RgbaFloat expectedFillValue = new(new System.Numerics.Vector4(FillValue * (depth + 1)));
                 int notFilledCount = CountTexelsNotFilledAtDepth(GD, computeTargetTexture, expectedFillValue, depth);
 
                 Assert.Equal(0, notFilledCount);
@@ -123,12 +124,12 @@ void main()
             ResourceFactory factory = device.ResourceFactory;
 
             // We need to create a staging texture and copy into it.
-            TextureDescription description = new TextureDescription(texture.Width, texture.Height, depth: 1,
+            TextureDescription description = new(texture.Width, texture.Height, depth: 1,
                 texture.MipLevels, texture.ArrayLayers,
                 texture.Format, TextureUsage.Staging,
                 texture.Type, texture.SampleCount);
 
-            Texture staging = factory.CreateTexture(ref description);
+            Texture staging = factory.CreateTexture(description);
 
             using CommandList cl = factory.CreateCommandList();
             cl.Begin();
@@ -194,8 +195,8 @@ void main()
             uint width = 1024;
             uint height = 1024;
             DeviceBuffer paramsBuffer = RF.CreateBuffer(new BufferDescription((uint)Unsafe.SizeOf<BasicComputeTestParams>(), BufferUsage.UniformBuffer));
-            DeviceBuffer sourceBuffer = RF.CreateBuffer(new BufferDescription(width * height * 4, BufferUsage.StructuredBufferReadWrite, 4, true));
-            DeviceBuffer destinationBuffer = RF.CreateBuffer(new BufferDescription(width * height * 4, BufferUsage.StructuredBufferReadWrite, 4, true));
+            DeviceBuffer sourceBuffer = RF.CreateBuffer(new BufferDescription(width * height * sizeof(float), BufferUsage.StructuredBufferReadWrite));
+            DeviceBuffer destinationBuffer = RF.CreateBuffer(new BufferDescription(width * height * sizeof(float), BufferUsage.StructuredBufferReadWrite));
 
             GD.UpdateBuffer(paramsBuffer, 0, new BasicComputeTestParams { Width = width, Height = height });
 
@@ -285,15 +286,15 @@ void main()
             GD.SubmitCommands(cl);
             GD.WaitForIdle();
 
-            using (var readback = GetReadback(computeOutput))
+            using (Texture readback = GetReadback(computeOutput))
             {
                 for (uint mip = 0; mip < MipLevels; mip++)
                 {
                     for (uint face = 0; face < 6; face++)
                     {
-                        var subresource = readback.CalculateSubresource(mip, face);
-                        var mipSize = (TexSize >> (int)mip);
-                        var expectedColor = new RgbaByte((byte)faceColors[face].X, (byte)faceColors[face].Y, (byte)faceColors[face].Z, (byte)faceColors[face].Z);
+                        uint subresource = readback.CalculateSubresource(mip, face);
+                        int mipSize = (TexSize >> (int)mip);
+                        RgbaByte expectedColor = new((byte)faceColors[face].X, (byte)faceColors[face].Y, (byte)faceColors[face].Z, (byte)faceColors[face].Z);
                         MappedResourceView<RgbaByte> readView = GD.Map<RgbaByte>(readback, MapMode.Read, subresource);
                         for (int y = 0; y < mipSize; y++)
                             for (int x = 0; x < mipSize; x++)
@@ -345,15 +346,15 @@ void main()
                 computeLayout,
                 32, 32, 1));
 
-            using (var readback = GetReadback(computeOutput))
+            using (Texture readback = GetReadback(computeOutput))
             {
                 for (uint mip = 0; mip < MipLevels; mip++)
                 {
                     for (uint face = 0; face < 6; face++)
                     {
-                        var subresource = readback.CalculateSubresource(mip, face);
-                        var mipSize = (uint)(TexSize / (1 << (int)mip));
-                        var expectedColor = RgbaByte.Clear;
+                        uint subresource = readback.CalculateSubresource(mip, face);
+                        uint mipSize = (uint)(TexSize / (1 << (int)mip));
+                        RgbaByte expectedColor = RgbaByte.Clear;
                         MappedResourceView<RgbaByte> readView = GD.Map<RgbaByte>(readback, MapMode.Read, subresource);
                         for (int y = 0; y < mipSize; y++)
                             for (int x = 0; x < mipSize; x++)
@@ -374,15 +375,15 @@ void main()
             GD.SubmitCommands(cl);
             GD.WaitForIdle();
 
-            using (var readback = GetReadback(computeOutput))
+            using (Texture readback = GetReadback(computeOutput))
             {
                 for (uint mip = 0; mip < MipLevels; mip++)
                 {
                     for (uint face = 0; face < 6; face++)
                     {
-                        var subresource = readback.CalculateSubresource(mip, face);
-                        var mipSize = (uint)(TexSize / (1 << (int)mip));
-                        var expectedColor = mip == BoundMipLevel ? new RgbaByte((byte)faceColors[face].X, (byte)faceColors[face].Y, (byte)faceColors[face].Z, (byte)faceColors[face].Z) : RgbaByte.Clear;
+                        uint subresource = readback.CalculateSubresource(mip, face);
+                        uint mipSize = (uint)(TexSize / (1 << (int)mip));
+                        RgbaByte expectedColor = mip == BoundMipLevel ? new RgbaByte((byte)faceColors[face].X, (byte)faceColors[face].Y, (byte)faceColors[face].Z, (byte)faceColors[face].Z) : RgbaByte.Clear;
                         MappedResourceView<RgbaByte> readView = GD.Map<RgbaByte>(readback, MapMode.Read, subresource);
                         for (int y = 0; y < mipSize; y++)
                             for (int x = 0; x < mipSize; x++)
@@ -410,15 +411,15 @@ void main()
             uint totalDstAlignment = GD.StructuredBufferMinOffsetAlignment * (dstSetMultiple + dstBindingMultiple);
 
             DeviceBuffer copySrc = RF.CreateBuffer(
-                new BufferDescription(totalSrcAlignment + dataSize, BufferUsage.StructuredBufferReadOnly, sizeof(uint), true));
+                new BufferDescription(totalSrcAlignment + dataSize, BufferUsage.StructuredBufferReadOnly));
             DeviceBuffer copyDst = RF.CreateBuffer(
-                new BufferDescription(totalDstAlignment + dataSize, BufferUsage.StructuredBufferReadWrite, sizeof(uint), true));
+                new BufferDescription(totalDstAlignment + dataSize, BufferUsage.StructuredBufferReadWrite));
 
             ResourceLayout[] layouts;
             ResourceSet[] sets;
 
-            DeviceBufferRange srcRange = new DeviceBufferRange(copySrc, srcSetMultiple * GD.StructuredBufferMinOffsetAlignment, dataSize);
-            DeviceBufferRange dstRange = new DeviceBufferRange(copyDst, dstSetMultiple * GD.StructuredBufferMinOffsetAlignment, dataSize);
+            DeviceBufferRange srcRange = new(copySrc, srcSetMultiple * GD.StructuredBufferMinOffsetAlignment, dataSize);
+            DeviceBufferRange dstRange = new(copyDst, dstSetMultiple * GD.StructuredBufferMinOffsetAlignment, dataSize);
 
             if (combinedLayout)
             {
@@ -488,9 +489,10 @@ void main()
             else
             {
                 uint offset = srcBindingMultiple * GD.StructuredBufferMinOffsetAlignment;
-                cl.SetComputeResourceSet(0, sets[0], 1, ref offset);
+                ReadOnlySpan<uint> offsets = MemoryMarshal.CreateReadOnlySpan(ref offset, 1);
+                cl.SetComputeResourceSet(0, sets[0], offsets);
                 offset = dstBindingMultiple * GD.StructuredBufferMinOffsetAlignment;
-                cl.SetComputeResourceSet(1, sets[1], 1, ref offset);
+                cl.SetComputeResourceSet(1, sets[1], offsets);
             }
             cl.Dispatch(512, 1, 1);
             cl.End();

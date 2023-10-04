@@ -7,8 +7,7 @@ namespace Veldrid.MetalBindings
     public unsafe struct NSView
     {
         public readonly IntPtr NativePtr;
-        public static implicit operator IntPtr(NSView nsView) => nsView.NativePtr;
-
+        
         public NSView(IntPtr ptr) => NativePtr = ptr;
 
         public Bool8 wantsLayer

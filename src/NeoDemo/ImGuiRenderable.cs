@@ -33,7 +33,7 @@ namespace Veldrid.NeoDemo
 
         public override void DestroyDeviceObjects()
         {
-            _imguiRenderer.Dispose();
+            _imguiRenderer.DestroyDeviceObjects();
         }
 
         public override RenderOrderKey GetRenderOrderKey(Vector3 cameraPosition)

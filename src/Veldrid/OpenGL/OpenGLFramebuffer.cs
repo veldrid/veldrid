@@ -1,20 +1,21 @@
 ﻿using static Veldrid.OpenGLBinding.OpenGLNative;
 using static Veldrid.OpenGL.OpenGLUtil;
 using Veldrid.OpenGLBinding;
+using System;
 
 namespace Veldrid.OpenGL
 {
-    internal unsafe class OpenGLFramebuffer : Framebuffer, OpenGLDeferredResource
+    internal sealed unsafe class OpenGLFramebuffer : Framebuffer, OpenGLDeferredResource
     {
         private readonly OpenGLGraphicsDevice _gd;
         private uint _framebuffer;
 
-        private string _name;
+        private string? _name;
         private bool _nameChanged;
         private bool _disposeRequested;
         private bool _disposed;
 
-        public override string Name { get => _name; set { _name = value; _nameChanged = true; } }
+        public override string? Name { get => _name; set { _name = value; _nameChanged = true; } }
 
         public uint Framebuffer => _framebuffer;
 
@@ -22,7 +23,7 @@ namespace Veldrid.OpenGL
 
         public override bool IsDisposed => _disposeRequested;
 
-        public OpenGLFramebuffer(OpenGLGraphicsDevice gd, ref FramebufferDescription description)
+        public OpenGLFramebuffer(OpenGLGraphicsDevice gd, in FramebufferDescription description)
             : base(description.DepthTarget, description.ColorTargets)
         {
             _gd = gd;
@@ -46,26 +47,28 @@ namespace Veldrid.OpenGL
 
         public void CreateGLResources()
         {
-            glGenFramebuffers(1, out _framebuffer);
+            uint fb;
+            glGenFramebuffers(1, &fb);
             CheckLastError();
+            _framebuffer = fb;
 
             glBindFramebuffer(FramebufferTarget.Framebuffer, _framebuffer);
             CheckLastError();
 
-            uint colorCount = (uint)ColorTargets.Count;
-
+            ReadOnlySpan<FramebufferAttachment> colorTargets = ColorTargets;
+            uint colorCount = (uint)colorTargets.Length;
             if (colorCount > 0)
             {
-                for (int i = 0; i < colorCount; i++)
+                for (int i = 0; i < colorTargets.Length; i++)
                 {
-                    FramebufferAttachment colorAttachment = ColorTargets[i];
+                    FramebufferAttachment colorAttachment = colorTargets[i];
                     OpenGLTexture glTex = Util.AssertSubtype<Texture, OpenGLTexture>(colorAttachment.Target);
                     glTex.EnsureResourcesCreated();
 
                     _gd.TextureSamplerManager.SetTextureTransient(glTex.TextureTarget, glTex.Texture);
                     CheckLastError();
 
-                    TextureTarget textureTarget = GetTextureTarget (glTex, colorAttachment.ArrayLayer);
+                    TextureTarget textureTarget = GetTextureTarget(glTex, colorAttachment.ArrayLayer);
 
                     if (glTex.ArrayLayers == 1)
                     {
@@ -75,18 +78,17 @@ namespace Veldrid.OpenGL
                             textureTarget,
                             glTex.Texture,
                             (int)colorAttachment.MipLevel);
-                        CheckLastError();
                     }
                     else
                     {
                         glFramebufferTextureLayer(
                             FramebufferTarget.Framebuffer,
                             GLFramebufferAttachment.ColorAttachment0 + i,
-                            (uint)glTex.Texture,
+                            glTex.Texture,
                             (int)colorAttachment.MipLevel,
                             (int)colorAttachment.ArrayLayer);
-                        CheckLastError();
                     }
+                    CheckLastError();
                 }
 
                 DrawBuffersEnum* bufs = stackalloc DrawBuffersEnum[(int)colorCount];
@@ -102,7 +104,9 @@ namespace Veldrid.OpenGL
             TextureTarget depthTarget = TextureTarget.Texture2D;
             if (DepthTarget != null)
             {
-                OpenGLTexture glDepthTex = Util.AssertSubtype<Texture, OpenGLTexture>(DepthTarget.Value.Target);
+                FramebufferAttachment depthTargetValue = DepthTarget.GetValueOrDefault();
+
+                OpenGLTexture glDepthTex = Util.AssertSubtype<Texture, OpenGLTexture>(depthTargetValue.Target);
                 glDepthTex.EnsureResourcesCreated();
                 depthTarget = glDepthTex.TextureTarget;
 
@@ -111,7 +115,7 @@ namespace Veldrid.OpenGL
                 _gd.TextureSamplerManager.SetTextureTransient(depthTarget, glDepthTex.Texture);
                 CheckLastError();
 
-                depthTarget = GetTextureTarget (glDepthTex, DepthTarget.Value.ArrayLayer);
+                depthTarget = GetTextureTarget(glDepthTex, depthTargetValue.ArrayLayer);
 
                 GLFramebufferAttachment framebufferAttachment = GLFramebufferAttachment.DepthAttachment;
                 if (FormatHelpers.IsStencilFormat(glDepthTex.Format))
@@ -126,8 +130,7 @@ namespace Veldrid.OpenGL
                         framebufferAttachment,
                         depthTarget,
                         depthTextureID,
-                        (int)DepthTarget.Value.MipLevel);
-                    CheckLastError();
+                        (int)depthTargetValue.MipLevel);
                 }
                 else
                 {
@@ -135,10 +138,10 @@ namespace Veldrid.OpenGL
                         FramebufferTarget.Framebuffer,
                         framebufferAttachment,
                         glDepthTex.Texture,
-                        (int)DepthTarget.Value.MipLevel,
-                        (int)DepthTarget.Value.ArrayLayer);
-                    CheckLastError();
+                        (int)depthTargetValue.MipLevel,
+                        (int)depthTargetValue.ArrayLayer);
                 }
+                CheckLastError();
 
             }
 
@@ -167,8 +170,9 @@ namespace Veldrid.OpenGL
             {
                 _disposed = true;
                 uint framebuffer = _framebuffer;
-                glDeleteFramebuffers(1, ref framebuffer);
+                glDeleteFramebuffers(1, &framebuffer);
                 CheckLastError();
+                _framebuffer = framebuffer;
             }
         }
     }

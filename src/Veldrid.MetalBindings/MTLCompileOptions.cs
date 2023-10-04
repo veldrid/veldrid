@@ -28,7 +28,7 @@ namespace Veldrid.MetalBindings
             set => objc_msgSend(NativePtr, sel_setLanguageVersion, (uint)value);
         }
 
-        private static readonly ObjCClass s_class = new ObjCClass(nameof(MTLCompileOptions));
+        private static readonly ObjCClass s_class = new(nameof(MTLCompileOptions));
         private static readonly Selector sel_fastMathEnabled = "fastMathEnabled";
         private static readonly Selector sel_setFastMathEnabled = "setFastMathEnabled:";
         private static readonly Selector sel_languageVersion = "languageVersion";

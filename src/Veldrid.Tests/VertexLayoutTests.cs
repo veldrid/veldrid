@@ -22,7 +22,7 @@ namespace Veldrid.Tests
                 TextureDescription.Texture2D(1, 1, 1, 1, PixelFormat.R32_G32_B32_A32_Float, TextureUsage.RenderTarget));
             Framebuffer fb = RF.CreateFramebuffer(new FramebufferDescription(null, outTex));
 
-            VertexLayoutDescription vertexLayoutDesc = new VertexLayoutDescription(
+            VertexLayoutDescription vertexLayoutDesc = new(
                 new VertexElementDescription("A_V3", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float3, firstOffset),
                 new VertexElementDescription("B_V4", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float4, secondOffset),
                 new VertexElementDescription("C_V2", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float2, thirdOffset),
@@ -33,7 +33,7 @@ namespace Veldrid.Tests
                 vertexLayoutDesc.Stride = (uint)stride;
             }
 
-            ShaderSetDescription shaderSet = new ShaderSetDescription(
+            ShaderSetDescription shaderSet = new(
                 new VertexLayoutDescription[]
                 {
                     vertexLayoutDesc

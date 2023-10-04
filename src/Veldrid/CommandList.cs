@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
+using System.Text;
 
 namespace Veldrid
 {
@@ -27,17 +28,18 @@ namespace Veldrid
         private readonly uint _uniformBufferAlignment;
         private readonly uint _structuredBufferAlignment;
 
-        private protected Framebuffer _framebuffer;
-        private protected Pipeline _graphicsPipeline;
-        private protected Pipeline _computePipeline;
+        private protected Framebuffer? _framebuffer;
+        private protected Pipeline? _graphicsPipeline;
+        private protected Pipeline? _computePipeline;
+        private StringBuilder? _debugStringBuilder;
 
 #if VALIDATE_USAGE
-        private DeviceBuffer _indexBuffer;
+        private DeviceBuffer? _indexBuffer;
         private IndexFormat _indexFormat;
 #endif
 
         internal CommandList(
-            ref CommandListDescription description,
+            in CommandListDescription description,
             GraphicsDeviceFeatures features,
             uint uniformAlignment,
             uint structuredAlignment)
@@ -45,6 +47,11 @@ namespace Veldrid
             _features = features;
             _uniformBufferAlignment = uniformAlignment;
             _structuredBufferAlignment = structuredAlignment;
+        }
+
+        internal StringBuilder GetDebugStringBuilder()
+        {
+            return (_debugStringBuilder ??= new StringBuilder()).Clear();
         }
 
         internal void ClearCachedState()
@@ -124,8 +131,14 @@ namespace Veldrid
 #if VALIDATE_USAGE
             if ((buffer.Usage & BufferUsage.VertexBuffer) == 0)
             {
-                throw new VeldridException(
-                    $"Buffer cannot be bound as a vertex buffer because it was not created with BufferUsage.VertexBuffer.");
+                void Throw()
+                {
+                    throw new VeldridException(
+                        $"The {nameof(buffer)} ({buffer}) cannot be bound as an vertex buffer. " +
+                        $"It must have been created with the " +
+                        $"{nameof(BufferUsage)}.{nameof(BufferUsage.VertexBuffer)} flag.");
+                }
+                Throw();
             }
 #endif
             SetVertexBufferCore(index, buffer, offset);
@@ -157,8 +170,14 @@ namespace Veldrid
 #if VALIDATE_USAGE
             if ((buffer.Usage & BufferUsage.IndexBuffer) == 0)
             {
-                throw new VeldridException(
-                    $"Buffer cannot be bound as an index buffer because it was not created with BufferUsage.IndexBuffer.");
+                void Throw()
+                {
+                    throw new VeldridException(
+                        $"The {nameof(buffer)} ({buffer}) cannot be bound as an index buffer. " +
+                        $"It must have been created with the " +
+                        $"{nameof(BufferUsage)}.{nameof(BufferUsage.IndexBuffer)} flag.");
+                }
+                Throw();
             }
             _indexBuffer = buffer;
             _indexFormat = format;
@@ -175,7 +194,9 @@ namespace Veldrid
         /// <param name="slot">The resource slot.</param>
         /// <param name="rs">The new <see cref="ResourceSet"/>.</param>
         public unsafe void SetGraphicsResourceSet(uint slot, ResourceSet rs)
-            => SetGraphicsResourceSet(slot, rs, 0, ref Unsafe.AsRef<uint>(null));
+        {
+            SetGraphicsResourceSet(slot, rs, ReadOnlySpan<uint>.Empty);
+        }
 
         /// <summary>
         /// Sets the active <see cref="ResourceSet"/> for the given index. This ResourceSet is only active for the graphics
@@ -183,43 +204,37 @@ namespace Veldrid
         /// </summary>
         /// <param name="slot">The resource slot.</param>
         /// <param name="rs">The new <see cref="ResourceSet"/>.</param>
-        /// <param name="dynamicOffsets">An array containing the offsets to apply to the dynamic
-        /// buffers contained in the <see cref="ResourceSet"/>. The number of elements in this array must be equal to the number
-        /// of dynamic buffers (<see cref="ResourceLayoutElementOptions.DynamicBinding"/>) contained in the
-        /// <see cref="ResourceSet"/>. These offsets are applied in the order that dynamic buffer
+        /// <param name="dynamicOffsets">A span of offsets which will be applied to the dynamic
+        /// buffers contained in the <see cref="ResourceSet"/>. The length must be equal to the number of
+        /// dynamic buffers (<see cref="ResourceLayoutElementOptions.DynamicBinding"/>) contained in the <see cref="ResourceSet"/>.
+        /// These offsets are applied in the order that dynamic buffer
         /// elements appear in the <see cref="ResourceSet"/>. Each of these offsets must be a multiple of either
         /// <see cref="GraphicsDevice.UniformBufferMinOffsetAlignment"/> or
         /// <see cref="GraphicsDevice.StructuredBufferMinOffsetAlignment"/>, depending on the kind of resource.</param>
-        public void SetGraphicsResourceSet(uint slot, ResourceSet rs, uint[] dynamicOffsets)
-            => SetGraphicsResourceSet(slot, rs, (uint)dynamicOffsets.Length, ref dynamicOffsets[0]);
-
-        /// <summary>
-        /// Sets the active <see cref="ResourceSet"/> for the given index. This ResourceSet is only active for the graphics
-        /// Pipeline.
-        /// </summary>
-        /// <param name="slot">The resource slot.</param>
-        /// <param name="rs">The new <see cref="ResourceSet"/>.</param>
-        /// <param name="dynamicOffsetsCount">The number of dynamic offsets being used. This must be equal to the number of
-        /// dynamic buffers (<see cref="ResourceLayoutElementOptions.DynamicBinding"/>) contained in the
-        /// <see cref="ResourceSet"/>.</param>
-        /// <param name="dynamicOffsets">A reference to the first of a series of offsets which will be applied to the dynamic
-        /// buffers contained in the <see cref="ResourceSet"/>. These offsets are applied in the order that dynamic buffer
-        /// elements appear in the <see cref="ResourceSet"/>. Each of these offsets must be a multiple of either
-        /// <see cref="GraphicsDevice.UniformBufferMinOffsetAlignment"/> or
-        /// <see cref="GraphicsDevice.StructuredBufferMinOffsetAlignment"/>, depending on the kind of resource.</param>
-        public void SetGraphicsResourceSet(uint slot, ResourceSet rs, uint dynamicOffsetsCount, ref uint dynamicOffsets)
+        public void SetGraphicsResourceSet(uint slot, ResourceSet rs, ReadOnlySpan<uint> dynamicOffsets)
         {
 #if VALIDATE_USAGE
             if (_graphicsPipeline == null)
             {
-                throw new VeldridException($"A graphics Pipeline must be active before {nameof(SetGraphicsResourceSet)} can be called.");
+                [DoesNotReturn]
+                static void Throw()
+                {
+                    throw new VeldridException(
+                        $"A graphics {nameof(Pipeline)} must be active before {nameof(SetGraphicsResourceSet)} can be called.");
+                }
+                Throw();
             }
 
             int layoutsCount = _graphicsPipeline.ResourceLayouts.Length;
             if (layoutsCount <= slot)
             {
-                throw new VeldridException(
-                    $"Failed to bind ResourceSet to slot {slot}. The active graphics Pipeline only contains {layoutsCount} ResourceLayouts.");
+                void Throw()
+                {
+                    throw new VeldridException(
+                        $"Failed to bind {nameof(ResourceSet)} to slot {slot}. " +
+                        $"The active graphics {nameof(Pipeline)} only contains {layoutsCount} ResourceLayouts.");
+                }
+                Throw();
             }
 
             ResourceLayout layout = _graphicsPipeline.ResourceLayouts[slot];
@@ -228,7 +243,14 @@ namespace Veldrid
             int setLength = layoutDesc.Elements.Length;
             if (pipelineLength != setLength)
             {
-                throw new VeldridException($"Failed to bind ResourceSet to slot {slot}. The number of resources in the ResourceSet ({setLength}) does not match the number expected by the active Pipeline ({pipelineLength}).");
+                void Throw()
+                {
+                    throw new VeldridException(
+                        $"Failed to bind {nameof(ResourceSet)} to slot {slot}. " +
+                        $"The number of resources in the {nameof(ResourceSet)} ({setLength}) does not " +
+                        $"match the number expected by the active {nameof(Pipeline)} ({pipelineLength}).");
+                }
+                Throw();
             }
 
             for (int i = 0; i < pipelineLength; i++)
@@ -237,20 +259,30 @@ namespace Veldrid
                 ResourceKind setKind = layoutDesc.Elements[i].Kind;
                 if (pipelineKind != setKind)
                 {
-                    throw new VeldridException(
-                        $"Failed to bind ResourceSet to slot {slot}. Resource element {i} was of the incorrect type. The bound Pipeline expects {pipelineKind}, but the ResourceSet contained {setKind}.");
+                    void Throw()
+                    {
+                        throw new VeldridException(
+                            $"Failed to bind {nameof(ResourceSet)} to slot {slot}. " +
+                            $"Resource element in slot {i} was of the incorrect type. " +
+                            $"The bound {nameof(Pipeline)} expects {pipelineKind}, but the {nameof(ResourceSet)} contained {setKind}.");
+                    }
+                    Throw();
                 }
             }
 
-            if (rs.Layout.DynamicBufferCount != dynamicOffsetsCount)
+            if (rs.Layout.DynamicBufferCount != dynamicOffsets.Length)
             {
-                throw new VeldridException(
-                    $"A dynamic offset must be provided for each resource that specifies " +
-                    $"{nameof(ResourceLayoutElementOptions)}.{nameof(ResourceLayoutElementOptions.DynamicBinding)}. " +
-                    $"{rs.Layout.DynamicBufferCount} offsets were expected, but only {dynamicOffsetsCount} were provided.");
+                void Throw(int length)
+                {
+                    throw new VeldridException(
+                        $"A dynamic offset must be provided for each resource that specifies " +
+                        $"{nameof(ResourceLayoutElementOptions)}.{nameof(ResourceLayoutElementOptions.DynamicBinding)}. " +
+                        $"{rs.Layout.DynamicBufferCount} offsets were expected, but only {length} were provided.");
+                }
+                Throw(dynamicOffsets.Length);
             }
 
-            uint dynamicOffsetIndex = 0;
+            int dynamicOffsetIndex = 0;
             for (uint i = 0; i < layoutDesc.Elements.Length; i++)
             {
                 if ((layoutDesc.Elements[i].Options & ResourceLayoutElementOptions.DynamicBinding) != 0)
@@ -258,32 +290,41 @@ namespace Veldrid
                     uint requiredAlignment = layoutDesc.Elements[i].Kind == ResourceKind.UniformBuffer
                         ? _uniformBufferAlignment
                         : _structuredBufferAlignment;
-                    uint desiredOffset = Unsafe.Add(ref dynamicOffsets, (int)dynamicOffsetIndex);
+                    uint desiredOffset = dynamicOffsets[dynamicOffsetIndex];
                     dynamicOffsetIndex += 1;
                     DeviceBufferRange range = Util.GetBufferRange(rs.Resources[i], desiredOffset);
 
                     if ((range.Offset % requiredAlignment) != 0)
                     {
-                        throw new VeldridException(
-                            $"The effective offset of the buffer in slot {i} does not meet the alignment " +
-                            $"requirements of this device. The offset must be a multiple of {requiredAlignment}, but it is " +
-                            $"{range.Offset}");
+                        void Throw()
+                        {
+                            throw new VeldridException(
+                                $"The effective offset of the buffer in slot {i} ({range.Buffer}) does not " +
+                                $"meet the alignment requirements of this device. " +
+                                $"The offset must be a multiple of {requiredAlignment}, but it is {range.Offset}");
+                        }
+                        Throw();
                     }
                 }
             }
 
 #endif
-            SetGraphicsResourceSetCore(slot, rs, dynamicOffsetsCount, ref dynamicOffsets);
+            SetGraphicsResourceSetCore(slot, rs, dynamicOffsets);
         }
 
         // TODO: private protected
+        protected abstract void SetGraphicsResourceSetCore(uint slot, ResourceSet rs, ReadOnlySpan<uint> dynamicOffsets);
+
         /// <summary>
+        /// Sets the active <see cref="ResourceSet"/> for the given index.
+        /// This ResourceSet is only active for the compute <see cref="Pipeline"/>.
         /// </summary>
-        /// <param name="slot"></param>
-        /// <param name="rs"></param>
-        /// <param name="dynamicOffsets"></param>
-        /// <param name="dynamicOffsetsCount"></param>
-        protected abstract void SetGraphicsResourceSetCore(uint slot, ResourceSet rs, uint dynamicOffsetsCount, ref uint dynamicOffsets);
+        /// <param name="slot">The resource slot.</param>
+        /// <param name="rs">The new <see cref="ResourceSet"/>.</param>
+        public void SetComputeResourceSet(uint slot, ResourceSet rs)
+        {
+            SetComputeResourceSet(slot, rs, ReadOnlySpan<uint>.Empty);
+        }
 
         /// <summary>
         /// Sets the active <see cref="ResourceSet"/> for the given index. This ResourceSet is only active for the compute
@@ -291,49 +332,39 @@ namespace Veldrid
         /// </summary>
         /// <param name="slot">The resource slot.</param>
         /// <param name="rs">The new <see cref="ResourceSet"/>.</param>
-        public unsafe void SetComputeResourceSet(uint slot, ResourceSet rs)
-            => SetComputeResourceSet(slot, rs, 0, ref Unsafe.AsRef<uint>(null));
-
-        /// <summary>
-        /// Sets the active <see cref="ResourceSet"/> for the given index. This ResourceSet is only active for the compute
-        /// <see cref="Pipeline"/>.
-        /// </summary>
-        /// <param name="slot">The resource slot.</param>
-        /// <param name="rs">The new <see cref="ResourceSet"/>.</param>
-        /// <param name="dynamicOffsets">An array containing the offsets to apply to the dynamic buffers contained in the
-        /// <see cref="ResourceSet"/>. The number of elements in this array must be equal to the number of dynamic buffers
-        /// (<see cref="ResourceLayoutElementOptions.DynamicBinding"/>) contained in the <see cref="ResourceSet"/>. These offsets
-        /// are applied in the order that dynamic buffer elements appear in the <see cref="ResourceSet"/>.</param>
-        public void SetComputeResourceSet(uint slot, ResourceSet rs, uint[] dynamicOffsets)
-            => SetComputeResourceSet(slot, rs, (uint)dynamicOffsets.Length, ref dynamicOffsets[0]);
-
-        /// <summary>
-        /// Sets the active <see cref="ResourceSet"/> for the given index. This ResourceSet is only active for the compute
-        /// <see cref="Pipeline"/>.
-        /// </summary>
-        /// <param name="slot">The resource slot.</param>
-        /// <param name="rs">The new <see cref="ResourceSet"/>.</param>
-        /// <param name="dynamicOffsetsCount">The number of dynamic offsets being used. This must be equal to the number of
-        /// dynamic buffers (<see cref="ResourceLayoutElementOptions.DynamicBinding"/>) contained in the
-        /// <see cref="ResourceSet"/>.</param>
-        /// <param name="dynamicOffsets">A reference to the first of a series of offsets which will be applied to the dynamic
-        /// buffers contained in the <see cref="ResourceSet"/>. These offsets are applied in the order that dynamic buffer
-        /// elements appear in the <see cref="ResourceSet"/>. Each of these offsets must be a multiple of either
+        /// <param name="dynamicOffsets">
+        /// A span of offsets which will be applied to the dynamic  buffers contained in the <see cref="ResourceSet"/>.
+        /// The length must be equal to the number of dynamic buffers
+        /// (<see cref="ResourceLayoutElementOptions.DynamicBinding"/>) contained in the <see cref="ResourceSet"/>.
+        /// These offsets are applied in the order that dynamic buffer elements appear in the <see cref="ResourceSet"/>.
+        /// Each of these offsets must be a multiple of either
         /// <see cref="GraphicsDevice.UniformBufferMinOffsetAlignment"/> or
-        /// <see cref="GraphicsDevice.StructuredBufferMinOffsetAlignment"/>, depending on the kind of resource.</param>
-        public unsafe void SetComputeResourceSet(uint slot, ResourceSet rs, uint dynamicOffsetsCount, ref uint dynamicOffsets)
+        /// <see cref="GraphicsDevice.StructuredBufferMinOffsetAlignment"/>, depending on the kind of resource.
+        /// </param>
+        public void SetComputeResourceSet(uint slot, ResourceSet rs, ReadOnlySpan<uint> dynamicOffsets)
         {
 #if VALIDATE_USAGE
             if (_computePipeline == null)
             {
-                throw new VeldridException($"A compute Pipeline must be active before {nameof(SetComputeResourceSet)} can be called.");
+                [DoesNotReturn]
+                static void Throw()
+                {
+                    throw new VeldridException(
+                        $"A compute Pipeline must be active before {nameof(SetComputeResourceSet)} can be called.");
+                }
+                Throw();
             }
 
             int layoutsCount = _computePipeline.ResourceLayouts.Length;
             if (layoutsCount <= slot)
             {
-                throw new VeldridException(
-                    $"Failed to bind ResourceSet to slot {slot}. The active compute Pipeline only contains {layoutsCount} ResourceLayouts.");
+                void Throw()
+                {
+                    throw new VeldridException(
+                        $"Failed to bind ResourceSet to slot {slot}. " +
+                        $"The active compute Pipeline only contains {layoutsCount} ResourceLayouts.");
+                }
+                Throw();
             }
 
             ResourceLayout layout = _computePipeline.ResourceLayouts[slot];
@@ -341,7 +372,14 @@ namespace Veldrid
             int setLength = rs.Layout.Description.Elements.Length;
             if (pipelineLength != setLength)
             {
-                throw new VeldridException($"Failed to bind ResourceSet to slot {slot}. The number of resources in the ResourceSet ({setLength}) does not match the number expected by the active Pipeline ({pipelineLength}).");
+                void Throw()
+                {
+                    throw new VeldridException(
+                        $"Failed to bind ResourceSet to slot {slot}. " +
+                        $"The number of resources in the ResourceSet ({setLength}) does not " +
+                        $"match the number expected by the active Pipeline ({pipelineLength}).");
+                }
+                Throw();
             }
 
             for (int i = 0; i < pipelineLength; i++)
@@ -350,12 +388,17 @@ namespace Veldrid
                 ResourceKind setKind = rs.Layout.Description.Elements[i].Kind;
                 if (pipelineKind != setKind)
                 {
-                    throw new VeldridException(
-                        $"Failed to bind ResourceSet to slot {slot}. Resource element {i} was of the incorrect type. The bound Pipeline expects {pipelineKind}, but the ResourceSet contained {setKind}.");
+                    void Throw()
+                    {
+                        throw new VeldridException(
+                            $"Failed to bind ResourceSet to slot {slot}. Resource element {i} was of the incorrect type. " +
+                            $"The bound Pipeline expects {pipelineKind}, but the ResourceSet contained {setKind}.");
+                    }
+                    Throw();
                 }
             }
 #endif
-            SetComputeResourceSetCore(slot, rs, dynamicOffsetsCount, ref dynamicOffsets);
+            SetComputeResourceSetCore(slot, rs, dynamicOffsets);
         }
 
         // TODO: private protected
@@ -363,9 +406,8 @@ namespace Veldrid
         /// </summary>
         /// <param name="slot"></param>
         /// <param name="set"></param>
-        /// <param name="dynamicOffsetsCount"></param>
         /// <param name="dynamicOffsets"></param>
-        protected abstract void SetComputeResourceSetCore(uint slot, ResourceSet set, uint dynamicOffsetsCount, ref uint dynamicOffsets);
+        protected abstract void SetComputeResourceSetCore(uint slot, ResourceSet set, ReadOnlySpan<uint> dynamicOffsets);
 
         /// <summary>
         /// Sets the active <see cref="Framebuffer"/> which will be rendered to.
@@ -401,12 +443,22 @@ namespace Veldrid
 #if VALIDATE_USAGE
             if (_framebuffer == null)
             {
-                throw new VeldridException($"Cannot use ClearColorTarget. There is no Framebuffer bound.");
+                [DoesNotReturn]
+                static void Throw()
+                {
+                    throw new VeldridException($"Cannot use ClearColorTarget. There is no Framebuffer bound.");
+                }
+                Throw();
             }
-            if (_framebuffer.ColorTargets.Count <= index)
+
+            if (_framebuffer.ColorTargets.Length <= index)
             {
-                throw new VeldridException(
-                    "ClearColorTarget index must be less than the current Framebuffer's color target count.");
+                static void Throw()
+                {
+                    throw new VeldridException(
+                        "ClearColorTarget index must be less than the current Framebuffer's color target count.");
+                }
+                Throw();
             }
 #endif
             ClearColorTargetCore(index, clearColor);
@@ -436,12 +488,22 @@ namespace Veldrid
 #if VALIDATE_USAGE
             if (_framebuffer == null)
             {
-                throw new VeldridException($"Cannot use ClearDepthStencil. There is no Framebuffer bound.");
+                [DoesNotReturn]
+                static void Throw()
+                {
+                    throw new VeldridException($"Cannot use ClearDepthStencil. There is no Framebuffer bound.");
+                }
+                Throw();
             }
+
             if (_framebuffer.DepthTarget == null)
             {
-                throw new VeldridException(
+                static void Throw()
+                {
+                    throw new VeldridException(
                     "The current Framebuffer has no depth target, so ClearDepthStencil cannot be used.");
+                }
+                Throw();
             }
 #endif
 
@@ -455,11 +517,13 @@ namespace Veldrid
         /// </summary>
         public void SetFullViewports()
         {
-            SetViewport(0, new Viewport(0, 0, _framebuffer.Width, _framebuffer.Height, 0, 1));
+            Viewport viewport = new(0, 0, _framebuffer!.Width, _framebuffer.Height, 0, 1);
+            SetViewport(0, viewport);
 
-            for (uint index = 1; index < _framebuffer.ColorTargets.Count; index++)
+            int length = _framebuffer.ColorTargets.Length;
+            for (uint index = 1; index < length; index++)
             {
-                SetViewport(index, new Viewport(0, 0, _framebuffer.Width, _framebuffer.Height, 0, 1));
+                SetViewport(index, viewport);
             }
         }
 
@@ -469,7 +533,7 @@ namespace Veldrid
         /// <param name="index">The color target index.</param>
         public void SetFullViewport(uint index)
         {
-            SetViewport(index, new Viewport(0, 0, _framebuffer.Width, _framebuffer.Height, 0, 1));
+            SetViewport(index, new Viewport(0, 0, _framebuffer!.Width, _framebuffer.Height, 0, 1));
         }
 
         /// <summary>
@@ -478,26 +542,21 @@ namespace Veldrid
         /// </summary>
         /// <param name="index">The color target index.</param>
         /// <param name="viewport">The new <see cref="Viewport"/>.</param>
-        public void SetViewport(uint index, Viewport viewport) => SetViewport(index, ref viewport);
-
-        /// <summary>
-        /// Sets the active <see cref="Viewport"/> at the given index.
-        /// The index given must be less than the number of color attachments in the active <see cref="Framebuffer"/>.
-        /// </summary>
-        /// <param name="index">The color target index.</param>
-        /// <param name="viewport">The new <see cref="Viewport"/>.</param>
-        public abstract void SetViewport(uint index, ref Viewport viewport);
+        public abstract void SetViewport(uint index, in Viewport viewport);
 
         /// <summary>
         /// Sets all active scissor rectangles to cover the active <see cref="Framebuffer"/>.
         /// </summary>
         public void SetFullScissorRects()
         {
-            SetScissorRect(0, 0, 0, _framebuffer.Width, _framebuffer.Height);
+            uint width = _framebuffer!.Width;
+            uint height = _framebuffer.Height;
+            SetScissorRect(0, 0, 0, width, height);
 
-            for (uint index = 1; index < _framebuffer.ColorTargets.Count; index++)
+            int length = _framebuffer.ColorTargets.Length;
+            for (uint index = 1; index < length; index++)
             {
-                SetScissorRect(index, 0, 0, _framebuffer.Width, _framebuffer.Height);
+                SetScissorRect(index, 0, 0, width, height);
             }
         }
 
@@ -507,7 +566,7 @@ namespace Veldrid
         /// <param name="index">The color target index.</param>
         public void SetFullScissorRect(uint index)
         {
-            SetScissorRect(index, 0, 0, _framebuffer.Width, _framebuffer.Height);
+            SetScissorRect(index, 0, 0, _framebuffer!.Width, _framebuffer.Height);
         }
 
         /// <summary>
@@ -522,13 +581,13 @@ namespace Veldrid
         public abstract void SetScissorRect(uint index, uint x, uint y, uint width, uint height);
 
         /// <summary>
-        /// Draws primitives from the currently-bound state in this CommandList. An index Buffer is not used.
+        /// Draws primitives from the currently-bound state in this <see cref="CommandList"/>. An index Buffer is not used.
         /// </summary>
         /// <param name="vertexCount">The number of vertices.</param>
         public void Draw(uint vertexCount) => Draw(vertexCount, 1, 0, 0);
 
         /// <summary>
-        /// Draws primitives from the currently-bound state in this CommandList. An index Buffer is not used.
+        /// Draws primitives from the currently-bound state in this <see cref="CommandList"/>. An index Buffer is not used.
         /// </summary>
         /// <param name="vertexCount">The number of vertices.</param>
         /// <param name="instanceCount">The number of instances.</param>
@@ -564,11 +623,19 @@ namespace Veldrid
 #if VALIDATE_USAGE
             if (!_features.DrawBaseVertex && vertexOffset != 0)
             {
-                throw new VeldridException("Drawing with a non-zero base vertex is not supported on this device.");
+                static void Throw()
+                {
+                    throw new VeldridException("Drawing with a non-zero base vertex is not supported on this device.");
+                }
+                Throw();
             }
             if (!_features.DrawBaseInstance && instanceStart != 0)
             {
-                throw new VeldridException("Drawing with a non-zero base instance is not supported on this device.");
+                static void Throw()
+                {
+                    throw new VeldridException("Drawing with a non-zero base instance is not supported on this device.");
+                }
+                Throw();
             }
 #endif
 
@@ -576,25 +643,32 @@ namespace Veldrid
             DrawIndexedCore(indexCount, instanceCount, indexStart, vertexOffset, instanceStart);
         }
 
-        private protected abstract void DrawIndexedCore(uint indexCount, uint instanceCount, uint indexStart, int vertexOffset, uint instanceStart);
+        private protected abstract void DrawIndexedCore(
+            uint indexCount, uint instanceCount, uint indexStart, int vertexOffset, uint instanceStart);
 
         /// <summary>
         /// Issues indirect draw commands based on the information contained in the given indirect <see cref="DeviceBuffer"/>.
-        /// The information stored in the indirect Buffer should conform to the structure of <see cref="IndirectDrawArguments"/>.
+        /// The information stored in the indirect buffer should conform to the structure of <see cref="IndirectDrawArguments"/>.
         /// </summary>
-        /// <param name="indirectBuffer">The indirect Buffer to read from. Must have been created with the
-        /// <see cref="BufferUsage.IndirectBuffer"/> flag.</param>
-        /// <param name="offset">An offset, in bytes, from the start of the indirect buffer from which the draw commands will be
-        /// read. This value must be a multiple of 4.</param>
-        /// <param name="drawCount">The number of draw commands to read and issue from the indirect Buffer.</param>
-        /// <param name="stride">The stride, in bytes, between consecutive draw commands in the indirect Buffer. This value must
-        /// be a multiple of four, and must be larger than the size of <see cref="IndirectDrawArguments"/>.</param>
+        /// <param name="indirectBuffer">
+        /// The indirect buffer to read from. Must have been created with the
+        /// <see cref="BufferUsage.IndirectBuffer"/> flag.
+        /// </param>
+        /// <param name="offset">
+        /// An offset, in bytes, from the start of the indirect buffer from which the draw commands will be
+        /// read. This value must be a multiple of 4.
+        /// </param>
+        /// <param name="drawCount">The number of draw commands to read and issue from the indirect buffer.</param>
+        /// <param name="stride">
+        /// The stride, in bytes, between consecutive draw commands in the indirect buffer. This value must
+        /// be a multiple of four, and must be larger than the size of <see cref="IndirectDrawArguments"/>.
+        /// </param>
         public unsafe void DrawIndirect(DeviceBuffer indirectBuffer, uint offset, uint drawCount, uint stride)
         {
             ValidateDrawIndirectSupport();
             ValidateIndirectBuffer(indirectBuffer);
             ValidateIndirectOffset(offset);
-            ValidateIndirectStride(stride, sizeof(IndirectDrawArguments));
+            ValidateIndirectStride<IndirectDrawArguments>(stride);
             PreDrawValidation();
 
             DrawIndirectCore(indirectBuffer, offset, drawCount, stride);
@@ -607,26 +681,32 @@ namespace Veldrid
         /// <param name="offset"></param>
         /// <param name="drawCount"></param>
         /// <param name="stride"></param>
-        protected abstract void DrawIndirectCore(DeviceBuffer indirectBuffer, uint offset, uint drawCount, uint stride);
+        protected abstract void DrawIndirectCore(
+            DeviceBuffer indirectBuffer, uint offset, uint drawCount, uint stride);
 
         /// <summary>
-        /// Issues indirect, indexed draw commands based on the information contained in the given indirect <see cref="DeviceBuffer"/>.
-        /// The information stored in the indirect Buffer should conform to the structure of
+        /// Issues indirect, indexed draw commands based on the information contained in
+        /// the given indirect <see cref="DeviceBuffer"/>.
+        /// The information stored in the indirect buffer should conform to the structure of
         /// <see cref="IndirectDrawIndexedArguments"/>.
         /// </summary>
-        /// <param name="indirectBuffer">The indirect Buffer to read from. Must have been created with the
+        /// <param name="indirectBuffer">The indirect buffer to read from. Must have been created with the
         /// <see cref="BufferUsage.IndirectBuffer"/> flag.</param>
-        /// <param name="offset">An offset, in bytes, from the start of the indirect buffer from which the draw commands will be
-        /// read. This value must be a multiple of 4.</param>
-        /// <param name="drawCount">The number of draw commands to read and issue from the indirect Buffer.</param>
-        /// <param name="stride">The stride, in bytes, between consecutive draw commands in the indirect Buffer. This value must
-        /// be a multiple of four, and must be larger than the size of <see cref="IndirectDrawIndexedArguments"/>.</param>
+        /// <param name="offset">
+        /// An offset, in bytes, from the start of the indirect buffer from which the draw commands will be
+        /// read. This value must be a multiple of 4.
+        /// </param>
+        /// <param name="drawCount">The number of draw commands to read and issue from the indirect buffer.</param>
+        /// <param name="stride">
+        /// The stride, in bytes, between consecutive draw commands in the indirect buffer. This value must
+        /// be a multiple of four, and must be larger than the size of <see cref="IndirectDrawIndexedArguments"/>.
+        /// </param>
         public unsafe void DrawIndexedIndirect(DeviceBuffer indirectBuffer, uint offset, uint drawCount, uint stride)
         {
             ValidateDrawIndirectSupport();
             ValidateIndirectBuffer(indirectBuffer);
             ValidateIndirectOffset(offset);
-            ValidateIndirectStride(stride, sizeof(IndirectDrawIndexedArguments));
+            ValidateIndirectStride<IndirectDrawIndexedArguments>(stride);
             PreDrawValidation();
 
             DrawIndexedIndirectCore(indirectBuffer, offset, drawCount, stride);
@@ -639,14 +719,21 @@ namespace Veldrid
         /// <param name="offset"></param>
         /// <param name="drawCount"></param>
         /// <param name="stride"></param>
-        protected abstract void DrawIndexedIndirectCore(DeviceBuffer indirectBuffer, uint offset, uint drawCount, uint stride);
+        protected abstract void DrawIndexedIndirectCore(
+            DeviceBuffer indirectBuffer, uint offset, uint drawCount, uint stride);
 
         [Conditional("VALIDATE_USAGE")]
-        private static void ValidateIndirectOffset(uint offset)
+        private static void ValidateIndirectOffset(
+            uint offset,
+            [CallerArgumentExpression("offset")] string? argExpression = null)
         {
             if ((offset % 4) != 0)
             {
-                throw new VeldridException($"{nameof(offset)} must be a multiple of 4.");
+                void Throw()
+                {
+                    throw new VeldridException($"The {argExpression} ({offset}) must be a multiple of 4.");
+                }
+                Throw();
             }
         }
 
@@ -655,27 +742,46 @@ namespace Veldrid
         {
             if (!_features.DrawIndirect)
             {
-                throw new VeldridException($"Indirect drawing is not supported by this device.");
+                static void Throw()
+                {
+                    throw new VeldridException($"Indirect drawing is not supported by this device.");
+                }
+                Throw();
             }
         }
 
         [Conditional("VALIDATE_USAGE")]
-        private static void ValidateIndirectBuffer(DeviceBuffer indirectBuffer)
+        private static void ValidateIndirectBuffer(
+            DeviceBuffer indirectBuffer,
+            [CallerArgumentExpression("indirectBuffer")] string? argExpression = null)
         {
             if ((indirectBuffer.Usage & BufferUsage.IndirectBuffer) != BufferUsage.IndirectBuffer)
             {
-                throw new VeldridException(
-                    $"{nameof(indirectBuffer)} parameter must have been created with BufferUsage.IndirectBuffer. Instead, it was {indirectBuffer.Usage}.");
+                void Throw()
+                {
+                    throw new VeldridException(
+                        $"The {argExpression} ({indirectBuffer}) must have been created with the " +
+                        $"{nameof(BufferUsage)}.{nameof(BufferUsage.IndirectBuffer)} flag. ");
+                }
+                Throw();
             }
         }
 
         [Conditional("VALIDATE_USAGE")]
-        private static void ValidateIndirectStride(uint stride, int argumentSize)
+        private static void ValidateIndirectStride<T>(
+            uint stride,
+            [CallerArgumentExpression("stride")] string? argExpression = null)
+            where T : unmanaged
         {
-            if (stride < argumentSize || ((stride % 4) != 0))
+            if (stride < Unsafe.SizeOf<T>() || ((stride % 4) != 0))
             {
-                throw new VeldridException(
-                    $"{nameof(stride)} parameter must be a multiple of 4, and must be larger than the size of the corresponding argument structure.");
+                void Throw()
+                {
+                    throw new VeldridException(
+                        $"The {argExpression} ({stride}) must be a multiple of 4, " +
+                        $"and must be larger than the size of the {typeof(T)} structure.");
+                }
+                Throw();
             }
         }
 
@@ -689,46 +795,64 @@ namespace Veldrid
 
         /// <summary>
         /// Issues an indirect compute dispatch command based on the information contained in the given indirect
-        /// <see cref="DeviceBuffer"/>. The information stored in the indirect Buffer should conform to the structure of
-        /// <see cref="IndirectDispatchArguments"/>.
+        /// <see cref="DeviceBuffer"/>.
         /// </summary>
-        /// <param name="indirectBuffer">The indirect Buffer to read from. Must have been created with the
-        /// <see cref="BufferUsage.IndirectBuffer"/> flag.</param>
-        /// <param name="offset">An offset, in bytes, from the start of the indirect buffer from which the draw commands will be
-        /// read. This value must be a multiple of 4.</param>
+        /// <remarks>
+        /// The information stored in the indirect guffer should conform to the structure of
+        /// <see cref="IndirectDispatchArguments"/>.
+        /// </remarks>
+        /// <param name="indirectBuffer">
+        /// The indirect buffer to read from.
+        /// Must have been created with the <see cref="BufferUsage.IndirectBuffer"/> flag.
+        /// </param>
+        /// <param name="offset">
+        /// An offset, in bytes, from the start of the indirect buffer from which the draw commands will be read.
+        /// This value must be a multiple of 4.
+        /// </param>
         public void DispatchIndirect(DeviceBuffer indirectBuffer, uint offset)
         {
             ValidateIndirectBuffer(indirectBuffer);
             ValidateIndirectOffset(offset);
+
             DispatchIndirectCore(indirectBuffer, offset);
         }
 
         // TODO: private protected
-        /// <summary>
-        /// </summary>
-        /// <param name="indirectBuffer"></param>
-        /// <param name="offset"></param>
         protected abstract void DispatchIndirectCore(DeviceBuffer indirectBuffer, uint offset);
 
         /// <summary>
         /// Resolves a multisampled source <see cref="Texture"/> into a non-multisampled destination <see cref="Texture"/>.
         /// </summary>
-        /// <param name="source">The source of the resolve operation. Must be a multisampled <see cref="Texture"/>
-        /// (<see cref="Texture.SampleCount"/> > 1).</param>
-        /// <param name="destination">The destination of the resolve operation. Must be a non-multisampled <see cref="Texture"/>
-        /// (<see cref="Texture.SampleCount"/> == 1).</param>
+        /// <param name="source">
+        /// The source of the resolve operation. Must be a multisampled <see cref="Texture"/>
+        /// (<see cref="Texture.SampleCount"/> > 1).
+        /// </param>
+        /// <param name="destination">
+        /// The destination of the resolve operation. Must be a non-multisampled <see cref="Texture"/>
+        /// (<see cref="Texture.SampleCount"/> == 1).
+        /// </param>
         public void ResolveTexture(Texture source, Texture destination)
         {
 #if VALIDATE_USAGE
             if (source.SampleCount == TextureSampleCount.Count1)
             {
-                throw new VeldridException(
-                    $"The {nameof(source)} parameter of {nameof(ResolveTexture)} must be a multisample texture.");
+                void Throw()
+                {
+                    throw new VeldridException(
+                        $"The {nameof(source)} ({source}) must be a multisample texture.");
+                }
+                Throw();
             }
+
             if (destination.SampleCount != TextureSampleCount.Count1)
             {
-                throw new VeldridException(
-                    $"The {nameof(destination)} parameter of {nameof(ResolveTexture)} must be a non-multisample texture. Instead, it is a texture with {FormatHelpers.GetSampleCountUInt32(source.SampleCount)} samples.");
+                void Throw()
+                {
+                    throw new VeldridException(
+                        $"The {nameof(destination)} ({destination}) must be a non-multisample texture. " +
+                        $"Instead, it is a texture with {FormatHelpers.GetSampleCountUInt32(source.SampleCount)} samples.");
+                }
+                Throw();
             }
 #endif
 
@@ -738,10 +862,14 @@ namespace Veldrid
         /// <summary>
         /// Resolves a multisampled source <see cref="Texture"/> into a non-multisampled destination <see cref="Texture"/>.
         /// </summary>
-        /// <param name="source">The source of the resolve operation. Must be a multisampled <see cref="Texture"/>
-        /// (<see cref="Texture.SampleCount"/> > 1).</param>
-        /// <param name="destination">The destination of the resolve operation. Must be a non-multisampled <see cref="Texture"/>
-        /// (<see cref="Texture.SampleCount"/> == 1).</param>
+        /// <param name="source">
+        /// The source of the resolve operation. Must be a multisampled <see cref="Texture"/>
+        /// (<see cref="Texture.SampleCount"/> > 1).
+        /// </param>
+        /// <param name="destination">
+        /// The destination of the resolve operation. Must be a non-multisampled <see cref="Texture"/>
+        /// (<see cref="Texture.SampleCount"/> == 1).
+        /// </param>
         protected abstract void ResolveTextureCore(Texture source, Texture destination);
 
         /// <summary>
@@ -750,19 +878,17 @@ namespace Veldrid
         /// </summary>
         /// <typeparam name="T">The type of data to upload.</typeparam>
         /// <param name="buffer">The resource to update.</param>
-        /// <param name="bufferOffsetInBytes">An offset, in bytes, from the beginning of the <see cref="DeviceBuffer"/> storage, at
-        /// which new data will be uploaded.</param>
+        /// <param name="bufferOffsetInBytes">
+        /// An offset, in bytes, from the beginning of the <see cref="DeviceBuffer"/> storage, at
+        /// which new data will be uploaded.
+        /// </param>
         /// <param name="source">The value to upload.</param>
         public unsafe void UpdateBuffer<T>(
             DeviceBuffer buffer,
             uint bufferOffsetInBytes,
             T source) where T : unmanaged
         {
-            ref byte sourceByteRef = ref Unsafe.AsRef<byte>(Unsafe.AsPointer(ref source));
-            fixed (byte* ptr = &sourceByteRef)
-            {
-                UpdateBuffer(buffer, bufferOffsetInBytes, (IntPtr)ptr, (uint)sizeof(T));
-            }
+            UpdateBuffer(buffer, bufferOffsetInBytes, (IntPtr)(&source), (uint)sizeof(T));
         }
 
         /// <summary>
@@ -771,18 +897,19 @@ namespace Veldrid
         /// </summary>
         /// <typeparam name="T">The type of data to upload.</typeparam>
         /// <param name="buffer">The resource to update.</param>
-        /// <param name="bufferOffsetInBytes">An offset, in bytes, from the beginning of the <see cref="DeviceBuffer"/>'s storage, at
-        /// which new data will be uploaded.</param>
+        /// <param name="bufferOffsetInBytes">
+        /// An offset, in bytes, from the beginning of the <see cref="DeviceBuffer"/>'s storage, at
+        /// which new data will be uploaded.
+        /// </param>
         /// <param name="source">A reference to the single value to upload.</param>
         public unsafe void UpdateBuffer<T>(
             DeviceBuffer buffer,
             uint bufferOffsetInBytes,
             ref T source) where T : unmanaged
         {
-            ref byte sourceByteRef = ref Unsafe.AsRef<byte>(Unsafe.AsPointer(ref source));
-            fixed (byte* ptr = &sourceByteRef)
+            fixed (T* ptr = &source)
             {
-                UpdateBuffer(buffer, bufferOffsetInBytes, (IntPtr)ptr, Util.USizeOf<T>());
+                UpdateBuffer(buffer, bufferOffsetInBytes, (IntPtr)ptr, (uint)Unsafe.SizeOf<T>());
             }
         }
 
@@ -792,8 +919,10 @@ namespace Veldrid
         /// </summary>
         /// <typeparam name="T">The type of data to upload.</typeparam>
         /// <param name="buffer">The resource to update.</param>
-        /// <param name="bufferOffsetInBytes">An offset, in bytes, from the beginning of the <see cref="DeviceBuffer"/>'s storage, at
-        /// which new data will be uploaded.</param>
+        /// <param name="bufferOffsetInBytes">
+        /// An offset, in bytes, from the beginning of the <see cref="DeviceBuffer"/>'s storage, at
+        /// which new data will be uploaded.
+        /// </param>
         /// <param name="source">A reference to the first of a series of values to upload.</param>
         /// <param name="sizeInBytes">The total size of the uploaded data, in bytes.</param>
         public unsafe void UpdateBuffer<T>(
@@ -802,8 +931,7 @@ namespace Veldrid
             ref T source,
             uint sizeInBytes) where T : unmanaged
         {
-            ref byte sourceByteRef = ref Unsafe.AsRef<byte>(Unsafe.AsPointer(ref source));
-            fixed (byte* ptr = &sourceByteRef)
+            fixed (T* ptr = &source)
             {
                 UpdateBuffer(buffer, bufferOffsetInBytes, (IntPtr)ptr, sizeInBytes);
             }
@@ -815,8 +943,10 @@ namespace Veldrid
         /// </summary>
         /// <typeparam name="T">The type of data to upload.</typeparam>
         /// <param name="buffer">The resource to update.</param>
-        /// <param name="bufferOffsetInBytes">An offset, in bytes, from the beginning of the <see cref="DeviceBuffer"/>'s storage, at
-        /// which new data will be uploaded.</param>
+        /// <param name="bufferOffsetInBytes">
+        /// An offset, in bytes, from the beginning of the <see cref="DeviceBuffer"/>'s storage, at
+        /// which new data will be uploaded.
+        /// </param>
         /// <param name="source">An array containing the data to upload.</param>
         public void UpdateBuffer<T>(
             DeviceBuffer buffer,
@@ -832,15 +962,17 @@ namespace Veldrid
         /// </summary>
         /// <typeparam name="T">The type of data to upload.</typeparam>
         /// <param name="buffer">The resource to update.</param>
-        /// <param name="bufferOffsetInBytes">An offset, in bytes, from the beginning of the <see cref="DeviceBuffer"/>'s storage, at
-        /// which new data will be uploaded.</param>
+        /// <param name="bufferOffsetInBytes">
+        /// An offset, in bytes, from the beginning of the <see cref="DeviceBuffer"/>'s storage, at
+        /// which new data will be uploaded.
+        /// </param>
         /// <param name="source">An readonly span containing the data to upload.</param>
         public unsafe void UpdateBuffer<T>(
             DeviceBuffer buffer,
             uint bufferOffsetInBytes,
             ReadOnlySpan<T> source) where T : unmanaged
         {
-            fixed (void* pin = &MemoryMarshal.GetReference(source))
+            fixed (T* pin = source)
             {
                 UpdateBuffer(buffer, bufferOffsetInBytes, (IntPtr)pin, (uint)(sizeof(T) * source.Length));
             }
@@ -852,8 +984,10 @@ namespace Veldrid
         /// </summary>
         /// <typeparam name="T">The type of data to upload.</typeparam>
         /// <param name="buffer">The resource to update.</param>
-        /// <param name="bufferOffsetInBytes">An offset, in bytes, from the beginning of the <see cref="DeviceBuffer"/>'s storage, at
-        /// which new data will be uploaded.</param>
+        /// <param name="bufferOffsetInBytes">
+        /// An offset, in bytes, from the beginning of the <see cref="DeviceBuffer"/>'s storage, at
+        /// which new data will be uploaded.
+        /// </param>
         /// <param name="source">An span containing the data to upload.</param>
         public void UpdateBuffer<T>(
             DeviceBuffer buffer,
@@ -867,8 +1001,10 @@ namespace Veldrid
         /// Updates a <see cref="DeviceBuffer"/> region with new data.
         /// </summary>
         /// <param name="buffer">The resource to update.</param>
-        /// <param name="bufferOffsetInBytes">An offset, in bytes, from the beginning of the <see cref="DeviceBuffer"/>'s storage, at
-        /// which new data will be uploaded.</param>
+        /// <param name="bufferOffsetInBytes">
+        /// An offset, in bytes, from the beginning of the <see cref="DeviceBuffer"/>'s storage, at
+        /// which new data will be uploaded.
+        /// </param>
         /// <param name="source">A pointer to the start of the data to upload.</param>
         /// <param name="sizeInBytes">The total size of the uploaded data, in bytes.</param>
         public void UpdateBuffer(
@@ -877,12 +1013,18 @@ namespace Veldrid
             IntPtr source,
             uint sizeInBytes)
         {
+#if VALIDATE_USAGE
             if (bufferOffsetInBytes + sizeInBytes > buffer.SizeInBytes)
             {
-                throw new VeldridException(
-                    $"The DeviceBuffer's capacity ({buffer.SizeInBytes}) is not large enough to store the amount of " +
-                    $"data specified ({sizeInBytes}) at the given offset ({bufferOffsetInBytes}).");
+                void Throw()
+                {
+                    throw new VeldridException(
+                        $"The {nameof(buffer)} ({buffer}) is not large enough to store the amount of " +
+                        $"data specified ({sizeInBytes}) at the given offset ({bufferOffsetInBytes}).");
+                }
+                Throw();
             }
+#endif
             if (sizeInBytes == 0)
             {
                 return;
@@ -898,34 +1040,75 @@ namespace Veldrid
             uint sizeInBytes);
 
         /// <summary>
-        /// Copies a region from the source <see cref="DeviceBuffer"/> to another region in the destination <see cref="DeviceBuffer"/>.
+        /// Copies a region from the source <see cref="DeviceBuffer"/> to
+        /// another region in the destination <see cref="DeviceBuffer"/>.
         /// </summary>
         /// <param name="source">The source <see cref="DeviceBuffer"/> from which data will be copied.</param>
         /// <param name="sourceOffset">An offset into <paramref name="source"/> at which the copy region begins.</param>
         /// <param name="destination">The destination <see cref="DeviceBuffer"/> into which data will be copied.</param>
-        /// <param name="destinationOffset">An offset into <paramref name="destination"/> at which the data will be copied.
-        /// </param>
+        /// <param name="destinationOffset">An offset into <paramref name="destination"/> at which the data will be copied.</param>
         /// <param name="sizeInBytes">The number of bytes to copy.</param>
-        public void CopyBuffer(DeviceBuffer source, uint sourceOffset, DeviceBuffer destination, uint destinationOffset, uint sizeInBytes)
+        public void CopyBuffer(
+            DeviceBuffer source, uint sourceOffset, DeviceBuffer destination, uint destinationOffset, uint sizeInBytes)
         {
-#if VALIDATE_USAGE
-#endif
-            if (sizeInBytes == 0)
+            ReadOnlySpan<BufferCopyCommand> commands = stackalloc[]
+            {
+                new BufferCopyCommand(sourceOffset, destinationOffset, sizeInBytes)
+            };
+            CopyBufferCore(source, destination, commands);
+        }
+
+        /// <summary>
+        /// Copies regions from the source <see cref="DeviceBuffer"/> to
+        /// the destination <see cref="DeviceBuffer"/>.
+        /// </summary>
+        /// <param name="source">The source <see cref="DeviceBuffer"/> from which data will be copied.</param>
+        /// <param name="destination">The destination <see cref="DeviceBuffer"/> into which data will be copied.</param>
+        /// <param name="commands">
+        /// The commands that represent copies from <paramref name="source"/> to <paramref name="destination"/>.
+        /// </param>
+        public void CopyBuffer(
+            DeviceBuffer source, DeviceBuffer destination, ReadOnlySpan<BufferCopyCommand> commands)
+        {
+            if (commands.Length == 0)
             {
                 return;
             }
 
-            CopyBufferCore(source, sourceOffset, destination, destinationOffset, sizeInBytes);
+#if VALIDATE_USAGE
+            foreach (ref readonly BufferCopyCommand command in commands)
+            {
+                if (command.ReadOffset + command.Length > source.SizeInBytes)
+                {
+                    void Throw(ulong length, ulong readOffset)
+                    {
+                        throw new VeldridException(
+                            $"The {nameof(source)} ({source}) is not large enough to read the amount of " +
+                            $"data specified ({length}) at the given offset ({readOffset}).");
+                    }
+                    Throw(command.Length, command.ReadOffset);
+                }
+
+                if (command.WriteOffset + command.Length > destination.SizeInBytes)
+                {
+                    void Throw(ulong length)
+                    {
+                        throw new VeldridException(
+                            $"The {nameof(destination)} ({destination}) is not large enough to write the amount of " +
+                            $"data specified ({length}) at the given offset ({destination}).");
+                    }
+                    Throw(command.Length);
+                }
+
+                // TODO: check if length exceeds maximum backend length
+            }
+#endif
+
+            CopyBufferCore(source, destination, commands);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceOffset"></param>
-        /// <param name="destination"></param>
-        /// <param name="destinationOffset"></param>
-        /// <param name="sizeInBytes"></param>
-        protected abstract void CopyBufferCore(DeviceBuffer source, uint sourceOffset, DeviceBuffer destination, uint destinationOffset, uint sizeInBytes);
+        protected abstract void CopyBufferCore(
+            DeviceBuffer source, DeviceBuffer destination, ReadOnlySpan<BufferCopyCommand> commands);
 
         /// <summary>
         /// Copies all subresources from one <see cref="Texture"/> to another.
@@ -941,12 +1124,22 @@ namespace Veldrid
             uint effectiveDstArrayLayers = (destination.Usage & TextureUsage.Cubemap) != 0
                 ? destination.ArrayLayers * 6
                 : destination.ArrayLayers;
-            if (effectiveSrcArrayLayers != effectiveDstArrayLayers || source.MipLevels != destination.MipLevels
-                || source.SampleCount != destination.SampleCount || source.Width != destination.Width
-                || source.Height != destination.Height || source.Depth != destination.Depth
+
+            if (effectiveSrcArrayLayers != effectiveDstArrayLayers
+                || source.MipLevels != destination.MipLevels
+                || source.SampleCount != destination.SampleCount
+                || source.Width != destination.Width
+                || source.Height != destination.Height
+                || source.Depth != destination.Depth
                 || source.Format != destination.Format)
             {
-                throw new VeldridException("Source and destination Textures are not compatible to be copied.");
+                void Throw()
+                {
+                    throw new VeldridException(
+                        $"The {nameof(source)} ({source}) and {nameof(destination)} ({destination}) " +
+                        $"textures are not compatible to be copied.");
+                }
+                Throw();
             }
 #endif
 
@@ -974,19 +1167,37 @@ namespace Veldrid
             uint effectiveSrcArrayLayers = (source.Usage & TextureUsage.Cubemap) != 0
                 ? source.ArrayLayers * 6
                 : source.ArrayLayers;
+
             uint effectiveDstArrayLayers = (destination.Usage & TextureUsage.Cubemap) != 0
                 ? destination.ArrayLayers * 6
                 : destination.ArrayLayers;
-            if (source.SampleCount != destination.SampleCount || source.Width != destination.Width
-                || source.Height != destination.Height || source.Depth != destination.Depth
+            if (source.SampleCount != destination.SampleCount
+                || source.Width != destination.Width
+                || source.Height != destination.Height
+                || source.Depth != destination.Depth
                 || source.Format != destination.Format)
             {
-                throw new VeldridException("Source and destination Textures are not compatible to be copied.");
+                void Throw()
+                {
+                    throw new VeldridException(
+                        $"The {nameof(source)} ({source}) and {nameof(destination)} ({destination}) " +
+                        $"textures are not compatible to be copied.");
+                }
+                Throw();
             }
-            if (mipLevel >= source.MipLevels || mipLevel >= destination.MipLevels || arrayLayer >= effectiveSrcArrayLayers || arrayLayer >= effectiveDstArrayLayers)
+
+            if (mipLevel >= source.MipLevels ||
+                mipLevel >= destination.MipLevels ||
+                arrayLayer >= effectiveSrcArrayLayers ||
+                arrayLayer >= effectiveDstArrayLayers)
             {
-                throw new VeldridException(
-                    $"{nameof(mipLevel)} and {nameof(arrayLayer)} must be less than the given Textures' mip level count and array layer count.");
+                void Throw()
+                {
+                    throw new VeldridException(
+                    $"The {nameof(mipLevel)} ({mipLevel}) and {nameof(arrayLayer)} ({arrayLayer}) " +
+                    $"must be less than the given textures' mip level count and array layer count.");
+                }
+                Throw();
             }
 #endif
 
@@ -1032,49 +1243,90 @@ namespace Veldrid
 #if VALIDATE_USAGE
             if (width == 0 || height == 0 || depth == 0)
             {
-                throw new VeldridException($"The given copy region is empty.");
+                static void Throw()
+                {
+                    throw new VeldridException($"The given copy region is empty.");
+                }
+                Throw();
             }
+
             if (layerCount == 0)
             {
-                throw new VeldridException($"{nameof(layerCount)} must be greater than 0.");
+                static void Throw()
+                {
+                    throw new VeldridException($"{nameof(layerCount)} must be greater than 0.");
+                }
+                Throw();
             }
+
             Util.GetMipDimensions(source, srcMipLevel, out uint srcWidth, out uint srcHeight, out uint srcDepth);
             uint srcBlockSize = FormatHelpers.IsCompressedFormat(source.Format) ? 4u : 1u;
             uint roundedSrcWidth = (srcWidth + srcBlockSize - 1) / srcBlockSize * srcBlockSize;
             uint roundedSrcHeight = (srcHeight + srcBlockSize - 1) / srcBlockSize * srcBlockSize;
             if (srcX + width > roundedSrcWidth || srcY + height > roundedSrcHeight || srcZ + depth > srcDepth)
             {
-                throw new VeldridException($"The given copy region is not valid for the source Texture.");
+                static void Throw()
+                {
+                    throw new VeldridException($"The given copy region is not valid for the source Texture.");
+                }
+                Throw();
             }
+
             Util.GetMipDimensions(destination, dstMipLevel, out uint dstWidth, out uint dstHeight, out uint dstDepth);
             uint dstBlockSize = FormatHelpers.IsCompressedFormat(destination.Format) ? 4u : 1u;
             uint roundedDstWidth = (dstWidth + dstBlockSize - 1) / dstBlockSize * dstBlockSize;
             uint roundedDstHeight = (dstHeight + dstBlockSize - 1) / dstBlockSize * dstBlockSize;
             if (dstX + width > roundedDstWidth || dstY + height > roundedDstHeight || dstZ + depth > dstDepth)
             {
-                throw new VeldridException($"The given copy region is not valid for the destination Texture.");
+                static void Throw()
+                {
+                    throw new VeldridException($"The given copy region is not valid for the destination Texture.");
+                }
+                Throw();
             }
+
             if (srcMipLevel >= source.MipLevels)
             {
-                throw new VeldridException($"{nameof(srcMipLevel)} must be less than the number of mip levels in the source Texture.");
+                static void Throw()
+                {
+                    throw new VeldridException(
+                        $"{nameof(srcMipLevel)} must be less than the number of mip levels in the source Texture.");
+                }
+                Throw();
             }
+
             uint effectiveSrcArrayLayers = (source.Usage & TextureUsage.Cubemap) != 0
                 ? source.ArrayLayers * 6
                 : source.ArrayLayers;
             if (srcBaseArrayLayer + layerCount > effectiveSrcArrayLayers)
             {
-                throw new VeldridException($"An invalid mip range was given for the source Texture.");
+                static void Throw()
+                {
+                    throw new VeldridException($"An invalid mip range was given for the source Texture.");
+                }
+                Throw();
             }
+
             if (dstMipLevel >= destination.MipLevels)
             {
-                throw new VeldridException($"{nameof(dstMipLevel)} must be less than the number of mip levels in the destination Texture.");
+                static void Throw()
+                {
+                    throw new VeldridException(
+                    $"{nameof(dstMipLevel)} must be less than the number of mip levels in the destination Texture.");
+                }
+                Throw();
             }
+
             uint effectiveDstArrayLayers = (destination.Usage & TextureUsage.Cubemap) != 0
                 ? destination.ArrayLayers * 6
                 : destination.ArrayLayers;
             if (dstBaseArrayLayer + layerCount > effectiveDstArrayLayers)
             {
-                throw new VeldridException($"An invalid mip range was given for the destination Texture.");
+                static void Throw()
+                {
+                    throw new VeldridException($"An invalid mip range was given for the destination Texture.");
+                }
+                Throw();
             }
 #endif
             CopyTextureCore(
@@ -1090,24 +1342,6 @@ namespace Veldrid
                 layerCount);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="srcX"></param>
-        /// <param name="srcY"></param>
-        /// <param name="srcZ"></param>
-        /// <param name="srcMipLevel"></param>
-        /// <param name="srcBaseArrayLayer"></param>
-        /// <param name="destination"></param>
-        /// <param name="dstX"></param>
-        /// <param name="dstY"></param>
-        /// <param name="dstZ"></param>
-        /// <param name="dstMipLevel"></param>
-        /// <param name="dstBaseArrayLayer"></param>
-        /// <param name="width"></param>
-        /// <param name="height"></param>
-        /// <param name="depth"></param>
-        /// <param name="layerCount"></param>
         protected abstract void CopyTextureCore(
             Texture source,
             uint srcX, uint srcY, uint srcZ,
@@ -1131,8 +1365,13 @@ namespace Veldrid
         {
             if ((texture.Usage & TextureUsage.GenerateMipmaps) == 0)
             {
-                throw new VeldridException(
-                    $"{nameof(GenerateMipmaps)} requires a target Texture with {nameof(TextureUsage)}.{nameof(TextureUsage.GenerateMipmaps)}");
+                void Throw()
+                {
+                    throw new VeldridException(
+                        $"The {nameof(texture)} ({texture}) must have been created with the " +
+                        $"{nameof(TextureUsage)}.{nameof(TextureUsage.GenerateMipmaps)} flag.");
+                }
+                Throw();
             }
 
             if (texture.MipLevels > 1)
@@ -1143,24 +1382,72 @@ namespace Veldrid
 
         private protected abstract void GenerateMipmapsCore(Texture texture);
 
-        /// <summary>
-        /// Pushes a debug group at the current position in the <see cref="CommandList"/>. This allows subsequent commands to be
-        /// categorized and filtered when viewed in external debugging tools. This method can be called multiple times in order
-        /// to create nested debug groupings. Each call to PushDebugGroup must be followed by a matching call to
+        /// <inheritdoc cref="PushDebugGroupCore"/>
+        /// <remarks>
+        /// Each call to <see cref="PushDebugGroup(string)"/> must be followed by a matching call to
         /// <see cref="PopDebugGroup"/>.
-        /// </summary>
-        /// <param name="name">The name of the group. This is an opaque identifier used for display by graphics debuggers.</param>
+        /// </remarks>
         public void PushDebugGroup(string name)
         {
             PushDebugGroupCore(name);
         }
 
-        private protected abstract void PushDebugGroupCore(string name);
+        /// <inheritdoc cref="PushDebugGroupCore"/>
+        /// <remarks>
+        /// Each call to <see cref="PushDebugGroup(ReadOnlySpan{char})"/> must be followed by a matching call to
+        /// <see cref="PopDebugGroup"/>.
+        /// </remarks>
+        public void PushDebugGroup(ReadOnlySpan<char> name)
+        {
+            PushDebugGroupCore(name);
+        }
+
+        /// <inheritdoc cref="PushDebugGroupCore"/>
+        /// <remarks>
+        /// Each call to <see cref="PushDebugGroup(ref DebugMarkerInterpolatedStringHandler)"/>
+        /// must be followed by a matching call to <see cref="PopDebugGroup"/>.
+        /// </remarks>
+        public void PushDebugGroup([InterpolatedStringHandlerArgument("")] ref DebugMarkerInterpolatedStringHandler name)
+        {
+            if (name.HasValue)
+            {
+                PushDebugGroupCore(name.GetSpan());
+            }
+        }
+
+        /// <inheritdoc cref="PushDebugGroupCore"/>
+        /// <remarks>
+        /// Each call to <see cref="PushDebugGroup(IFormatProvider?, ref DebugMarkerInterpolatedStringHandler)"/>
+        /// must be followed by a matching call to <see cref="PopDebugGroup"/>.
+        /// </remarks>
+        public void PushDebugGroup(
+            IFormatProvider? provider,
+            [InterpolatedStringHandlerArgument("", "provider")] ref DebugMarkerInterpolatedStringHandler name)
+        {
+            if (name.HasValue)
+            {
+                PushDebugGroupCore(name.GetSpan());
+            }
+        }
 
         /// <summary>
-        /// Pops the current debug group. This method must only be called after <see cref="PushDebugGroup(string)"/> has been
-        /// called on this instance.
+        /// Pushes a debug group at the current position in the <see cref="CommandList"/>. This allows subsequent commands to be
+        /// categorized and filtered when viewed in external debugging tools. This method can be called multiple times in order
+        /// to create nested debug groupings. 
         /// </summary>
+        /// <param name="name">The name of the group. This is an opaque identifier used for display by graphics debuggers.</param>
+        private protected abstract void PushDebugGroupCore(ReadOnlySpan<char> name);
+
+        /// <summary>
+        /// Pops the current debug group.
+        /// </summary>
+        /// <remarks>
+        /// This method must only be called after either
+        /// <see cref="PushDebugGroup(string)"/>,
+        /// <see cref="PushDebugGroup(ReadOnlySpan{char})"/>, or
+        /// <see cref="PushDebugGroup(ref DebugMarkerInterpolatedStringHandler)"/>
+        /// has been called on this instance.
+        /// </remarks>
         public void PopDebugGroup()
         {
             PopDebugGroupCore();
@@ -1168,23 +1455,48 @@ namespace Veldrid
 
         private protected abstract void PopDebugGroupCore();
 
-        /// <summary>
-        /// Inserts a debug marker into the CommandList at the current position. This is used by graphics debuggers to identify
-        /// points of interest in a command stream.
-        /// </summary>
-        /// <param name="name">The name of the marker. This is an opaque identifier used for display by graphics debuggers.</param>
+        /// <inheritdoc cref="InsertDebugMarkerCore"/>
         public void InsertDebugMarker(string name)
         {
             InsertDebugMarkerCore(name);
         }
 
-        private protected abstract void InsertDebugMarkerCore(string name);
+        /// <inheritdoc cref="InsertDebugMarkerCore"/>
+        public void InsertDebugMarker(ReadOnlySpan<char> name)
+        {
+            InsertDebugMarkerCore(name);
+        }
+
+        /// <inheritdoc cref="InsertDebugMarkerCore"/>
+        public void InsertDebugMarker([InterpolatedStringHandlerArgument("")] ref DebugMarkerInterpolatedStringHandler name)
+        {
+            if (name.HasValue)
+            {
+                InsertDebugMarkerCore(name.GetSpan());
+            }
+        }
+
+        /// <inheritdoc cref="InsertDebugMarkerCore"/>
+        /// <param name="provider">An object that supplies culture-specific formatting information.</param>
+        public void InsertDebugMarker(
+            IFormatProvider? provider,
+            [InterpolatedStringHandlerArgument("", "provider")] ref DebugMarkerInterpolatedStringHandler name)
+        {
+            if (name.HasValue)
+            {
+                InsertDebugMarkerCore(name.GetSpan());
+            }
+        }
 
         /// <summary>
-        /// A string identifying this instance. Can be used to differentiate between objects in graphics debuggers and other
-        /// tools.
+        /// Inserts a debug marker into the <see cref="CommandList"/> at the current position.
+        /// This is used by graphics debuggers to identify points of interest in a command stream.
         /// </summary>
-        public abstract string Name { get; set; }
+        /// <param name="name">The name of the marker. This is an opaque identifier used for display by graphics debuggers.</param>
+        private protected abstract void InsertDebugMarkerCore(ReadOnlySpan<char> name);
+
+        /// <inheritdoc/>
+        public abstract string? Name { get; set; }
 
         /// <summary>
         /// A bool indicating whether this instance has been disposed.
@@ -1199,40 +1511,202 @@ namespace Veldrid
         [Conditional("VALIDATE_USAGE")]
         private void ValidateIndexBuffer(uint indexCount)
         {
-#if VALIDATE_USAGE
             if (_indexBuffer == null)
             {
-                throw new VeldridException($"An index buffer must be bound before {nameof(CommandList)}.{nameof(DrawIndexed)} can be called.");
+                [DoesNotReturn]
+                static void Throw()
+                {
+                    throw new VeldridException(
+                        $"An index buffer must be bound before {nameof(CommandList)}.{nameof(DrawIndexed)} can be called.");
+                }
+                Throw();
             }
 
             uint indexFormatSize = _indexFormat == IndexFormat.UInt16 ? 2u : 4u;
             uint bytesNeeded = indexCount * indexFormatSize;
             if (_indexBuffer.SizeInBytes < bytesNeeded)
             {
-                throw new VeldridException(
-                    $"The active index buffer does not contain enough data to satisfy the given draw command. {bytesNeeded} bytes are needed, but the buffer only contains {_indexBuffer.SizeInBytes}.");
+                void Throw()
+                {
+                    throw new VeldridException(
+                        $"The active index buffer does not contain enough data to satisfy the given draw command. " +
+                        $"{bytesNeeded} bytes are needed, but the buffer ({_indexBuffer}) only contains {_indexBuffer.SizeInBytes}.");
+                }
+                Throw();
             }
-#endif
         }
 
         [Conditional("VALIDATE_USAGE")]
         private void PreDrawValidation()
         {
-#if VALIDATE_USAGE
-
             if (_graphicsPipeline == null)
             {
-                throw new VeldridException($"A graphics {nameof(Pipeline)} must be set in order to issue draw commands.");
+                [DoesNotReturn]
+                static void Throw()
+                {
+                    throw new VeldridException($"A graphics {nameof(Pipeline)} must be set in order to issue draw commands.");
+                }
+                Throw();
             }
+
             if (_framebuffer == null)
             {
-                throw new VeldridException($"A {nameof(Framebuffer)} must be set in order to issue draw commands.");
+                [DoesNotReturn]
+                static void Throw()
+                {
+                    throw new VeldridException($"A {nameof(Framebuffer)} must be set in order to issue draw commands.");
+                }
+                Throw();
             }
+
             if (!_graphicsPipeline.GraphicsOutputDescription.Equals(_framebuffer.OutputDescription))
             {
-                throw new VeldridException($"The {nameof(OutputDescription)} of the current graphics {nameof(Pipeline)} is not compatible with the current {nameof(Framebuffer)}.");
+                static void Throw()
+                {
+                    throw new VeldridException(
+                        $"The {nameof(OutputDescription)} of the current graphics {nameof(Pipeline)} " +
+                        $"is not compatible with the current {nameof(Framebuffer)}.");
+                }
+                Throw();
             }
-#endif
+        }
+
+        /// <summary>
+        /// Provides a handler used by the language compiler to
+        /// conditionally build interpolated strings for debug markers when they are supported.
+        /// </summary>
+        [InterpolatedStringHandler]
+        public unsafe ref struct DebugMarkerInterpolatedStringHandler
+        {
+            private StringBuilder.AppendInterpolatedStringHandler _innerHandler;
+
+            private StringBuilder _builder;
+
+            /// <summary>
+            /// Whether this handler can currently build a string.
+            /// </summary>
+            public bool HasValue => _builder != null;
+
+#pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
+            // CS1573 is bugged because of inheritdoc
+
+            /// <inheritdoc cref="StringBuilder.AppendInterpolatedStringHandler(int, int, StringBuilder, IFormatProvider)"/>
+            /// <param name="commandList">The command list used for the building the debug marker string.</param>
+            /// <param name="shouldAppend">Whether the interpolated string handler should build a string.</param>
+            public DebugMarkerInterpolatedStringHandler(
+                int literalLength,
+                int formattedCount,
+                CommandList commandList,
+                IFormatProvider? provider,
+                out bool shouldAppend)
+            {
+                if (commandList._features.CommandListDebugMarkers)
+                {
+                    _builder = commandList.GetDebugStringBuilder();
+                    _innerHandler = new StringBuilder.AppendInterpolatedStringHandler(
+                        literalLength, formattedCount, _builder, provider);
+                    shouldAppend = true;
+                }
+                else
+                {
+                    _builder = null!;
+                    _innerHandler = default;
+                    shouldAppend = false;
+                }
+            }
+
+            /// <inheritdoc cref="DebugMarkerInterpolatedStringHandler(int, int, CommandList, IFormatProvider, out bool)"/>
+            public DebugMarkerInterpolatedStringHandler(
+                int literalLength,
+                int formattedCount,
+                CommandList commandList,
+                out bool shouldAppend)
+                : this(literalLength, formattedCount, commandList, null, out shouldAppend)
+            {
+            }
+#pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
+
+            /// <summary>
+            /// Gets a span of the resulting built string.
+            /// </summary>
+            /// <remarks>
+            /// The span lifetime is only valid for the lifetime of the handler.
+            /// </remarks>
+            /// <returns>The span of the resulting string.</returns>
+            public ReadOnlySpan<char> GetSpan()
+            {
+                StringBuilder.ChunkEnumerator chunks = _builder.GetChunks();
+                if (chunks.MoveNext())
+                {
+                    ReadOnlyMemory<char> first = chunks.Current;
+                    if (chunks.MoveNext())
+                    {
+                        return _builder.ToString();
+                    }
+                    return first.Span;
+                }
+                return ReadOnlySpan<char>.Empty;
+            }
+
+            /// <inheritdoc cref="StringBuilder.AppendInterpolatedStringHandler.AppendLiteral(string)"/>
+            public void AppendLiteral(string value)
+            {
+                _innerHandler.AppendLiteral(value);
+            }
+
+            /// <inheritdoc cref="StringBuilder.AppendInterpolatedStringHandler.AppendFormatted{T}(T)"/>
+            public void AppendFormatted<T>(T value)
+            {
+                _innerHandler.AppendFormatted(value);
+            }
+
+            /// <inheritdoc cref="StringBuilder.AppendInterpolatedStringHandler.AppendFormatted{T}(T, string?)"/>
+            public void AppendFormatted<T>(T value, string? format)
+            {
+                _innerHandler.AppendFormatted(value, format);
+            }
+
+            /// <inheritdoc cref="StringBuilder.AppendInterpolatedStringHandler.AppendFormatted{T}(T, int)"/>
+            public void AppendFormatted<T>(T value, int alignment)
+            {
+                _innerHandler.AppendFormatted(value, alignment);
+            }
+
+            /// <inheritdoc cref="StringBuilder.AppendInterpolatedStringHandler.AppendFormatted{T}(T, int, string?)"/>
+            public void AppendFormatted<T>(T value, int alignment, string? format)
+            {
+                _innerHandler.AppendFormatted(value, alignment, format);
+            }
+
+            /// <inheritdoc cref="StringBuilder.AppendInterpolatedStringHandler.AppendFormatted(ReadOnlySpan{char})"/>
+            public void AppendFormatted(ReadOnlySpan<char> value)
+            {
+                _innerHandler.AppendFormatted(value);
+            }
+
+            /// <inheritdoc cref="StringBuilder.AppendInterpolatedStringHandler.AppendFormatted(ReadOnlySpan{char}, int, string?)"/>
+            public void AppendFormatted(ReadOnlySpan<char> value, int alignment = 0, string? format = null)
+            {
+                _innerHandler.AppendFormatted(value, alignment, format);
+            }
+
+            /// <inheritdoc cref="StringBuilder.AppendInterpolatedStringHandler.AppendFormatted(string?)"/>
+            public void AppendFormatted(string? value)
+            {
+                _innerHandler.AppendFormatted(value);
+            }
+
+            /// <inheritdoc cref="StringBuilder.AppendInterpolatedStringHandler.AppendFormatted(string?, int, string?)"/>
+            public void AppendFormatted(string? value, int alignment = 0, string? format = null)
+            {
+                _innerHandler.AppendFormatted(value, alignment, format);
+            }
+
+            /// <inheritdoc cref="StringBuilder.AppendInterpolatedStringHandler.AppendFormatted(object?, int, string?)"/>
+            public void AppendFormatted(object? value, int alignment = 0, string? format = null)
+            {
+                _innerHandler.AppendFormatted(value, alignment, format);
+            }
         }
     }
 }

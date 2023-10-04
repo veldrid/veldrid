@@ -1,15 +1,14 @@
-﻿using Vulkan;
-using static Veldrid.Vk.VulkanUtil;
-using static Vulkan.VulkanNative;
+﻿using TerraFX.Interop.Vulkan;
+using static TerraFX.Interop.Vulkan.Vulkan;
 
-namespace Veldrid.Vk
+namespace Veldrid.Vulkan
 {
-    internal unsafe class VkTextureView : TextureView
+    internal sealed unsafe class VkTextureView : TextureView, IResourceRefCountTarget
     {
         private readonly VkGraphicsDevice _gd;
         private readonly VkImageView _imageView;
         private bool _destroyed;
-        private string _name;
+        private string? _name;
 
         public VkImageView ImageView => _imageView;
 
@@ -19,35 +18,42 @@ namespace Veldrid.Vk
 
         public override bool IsDisposed => _destroyed;
 
-        public VkTextureView(VkGraphicsDevice gd, ref TextureViewDescription description)
-            : base(ref description)
+        public VkTextureView(VkGraphicsDevice gd, in TextureViewDescription description)
+            : base(description)
         {
             _gd = gd;
-            VkImageViewCreateInfo imageViewCI = VkImageViewCreateInfo.New();
             VkTexture tex = Util.AssertSubtype<Texture, VkTexture>(description.Target);
-            imageViewCI.image = tex.OptimalDeviceImage;
-            imageViewCI.format = VkFormats.VdToVkPixelFormat(Format, (Target.Usage & TextureUsage.DepthStencil) != 0);
 
             VkImageAspectFlags aspectFlags;
             if ((description.Target.Usage & TextureUsage.DepthStencil) == TextureUsage.DepthStencil)
             {
-                aspectFlags = VkImageAspectFlags.Depth;
+                aspectFlags = VkImageAspectFlags.VK_IMAGE_ASPECT_DEPTH_BIT;
             }
             else
             {
-                aspectFlags = VkImageAspectFlags.Color;
+                aspectFlags = VkImageAspectFlags.VK_IMAGE_ASPECT_COLOR_BIT;
             }
 
-            imageViewCI.subresourceRange = new VkImageSubresourceRange(
-                aspectFlags,
-                description.BaseMipLevel,
-                description.MipLevels,
-                description.BaseArrayLayer,
-                description.ArrayLayers);
+            VkImageViewCreateInfo imageViewCI = new()
+            {
+                sType = VkStructureType.VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+                image = tex.OptimalDeviceImage,
+                format = VkFormats.VdToVkPixelFormat(Format, (tex.Usage & TextureUsage.DepthStencil) != 0),
+                subresourceRange = new VkImageSubresourceRange()
+                {
+                    aspectMask = aspectFlags,
+                    baseMipLevel = description.BaseMipLevel,
+                    levelCount = description.MipLevels,
+                    baseArrayLayer = description.BaseArrayLayer,
+                    layerCount = description.ArrayLayers
+                }
+            };
 
             if ((tex.Usage & TextureUsage.Cubemap) == TextureUsage.Cubemap)
             {
-                imageViewCI.viewType = description.ArrayLayers == 1 ? VkImageViewType.ImageCube : VkImageViewType.ImageCubeArray;
+                imageViewCI.viewType = description.ArrayLayers == 1
+                    ? VkImageViewType.VK_IMAGE_VIEW_TYPE_CUBE
+                    : VkImageViewType.VK_IMAGE_VIEW_TYPE_CUBE_ARRAY;
                 imageViewCI.subresourceRange.layerCount *= 6;
             }
             else
@@ -56,25 +62,27 @@ namespace Veldrid.Vk
                 {
                     case TextureType.Texture1D:
                         imageViewCI.viewType = description.ArrayLayers == 1
-                            ? VkImageViewType.Image1D
-                            : VkImageViewType.Image1DArray;
+                            ? VkImageViewType.VK_IMAGE_VIEW_TYPE_1D
+                            : VkImageViewType.VK_IMAGE_VIEW_TYPE_1D_ARRAY;
                         break;
                     case TextureType.Texture2D:
                         imageViewCI.viewType = description.ArrayLayers == 1
-                            ? VkImageViewType.Image2D
-                            : VkImageViewType.Image2DArray;
+                            ? VkImageViewType.VK_IMAGE_VIEW_TYPE_2D
+                            : VkImageViewType.VK_IMAGE_VIEW_TYPE_2D_ARRAY;
                         break;
                     case TextureType.Texture3D:
-                        imageViewCI.viewType = VkImageViewType.Image3D;
+                        imageViewCI.viewType = VkImageViewType.VK_IMAGE_VIEW_TYPE_3D;
                         break;
                 }
             }
 
-            vkCreateImageView(_gd.Device, ref imageViewCI, null, out _imageView);
-            RefCount = new ResourceRefCount(DisposeCore);
+            VkImageView imageView;
+            vkCreateImageView(_gd.Device, &imageViewCI, null, &imageView);
+            _imageView = imageView;
+            RefCount = new ResourceRefCount(this);
         }
 
-        public override string Name
+        public override string? Name
         {
             get => _name;
             set
@@ -86,10 +94,10 @@ namespace Veldrid.Vk
 
         public override void Dispose()
         {
-            RefCount.Decrement();
+            RefCount.DecrementDispose();
         }
 
-        private void DisposeCore()
+        void IResourceRefCountTarget.RefZeroed()
         {
             if (!_destroyed)
             {

@@ -23,6 +23,7 @@ namespace Veldrid.OpenGL.EGL
         public const int EGL_NONE = 0x3038;
         public const int EGL_NATIVE_VISUAL_ID = 0x302E;
         public const int EGL_CONTEXT_CLIENT_VERSION = 0x3098;
+        public const int EGL_CONTEXT_OPENGL_DEBUG = 0x31B0;
 
         [DllImport(LibName)]
         public static extern EGLError eglGetError();
@@ -30,6 +31,10 @@ namespace Veldrid.OpenGL.EGL
         public static extern IntPtr eglGetCurrentContext();
         [DllImport(LibName)]
         public static extern int eglDestroyContext(IntPtr display, IntPtr context);
+        [DllImport(LibName)]
+        public static extern int eglDestroySurface(IntPtr display, IntPtr surface);
+        [DllImport(LibName)]
+        public static extern int eglTerminate(IntPtr display);
         [DllImport(LibName)]
         public static extern int eglMakeCurrent(IntPtr display, IntPtr draw, IntPtr read, IntPtr context);
         [DllImport(LibName)]

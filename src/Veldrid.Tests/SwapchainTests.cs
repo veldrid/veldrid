@@ -15,10 +15,10 @@ namespace Veldrid.Tests
         [InlineData(null, true)]
         public void Ctor_SetsProperties(PixelFormat? depthFormat, bool syncToVerticalBlank)
         {
-            Sdl2Window window = new Sdl2Window("SwapchainTestWindow", 0, 0, 100, 100, SDL_WindowFlags.Hidden, false);
+            Sdl2Window window = new("SwapchainTestWindow", 0, 0, 100, 100, SDL_WindowFlags.Hidden, false);
             SwapchainSource source = VeldridStartup.GetSwapchainSource(window);
-            SwapchainDescription swapchainDesc = new SwapchainDescription(source, 100, 100, depthFormat, syncToVerticalBlank);
-            Swapchain swapchain = RF.CreateSwapchain(ref swapchainDesc);
+            SwapchainDescription swapchainDesc = new(source, 100, 100, depthFormat, syncToVerticalBlank);
+            Swapchain swapchain = RF.CreateSwapchain(swapchainDesc);
 
             if (depthFormat == null)
             {

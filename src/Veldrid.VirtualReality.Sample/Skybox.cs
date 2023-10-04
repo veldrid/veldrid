@@ -25,7 +25,7 @@ namespace Veldrid.VirtualReality.Sample
         private Pipeline _pipeline;
         private DeviceBuffer _ubo;
         private ResourceSet _resourceSet;
-        private readonly List<IDisposable> _disposables = new List<IDisposable>();
+        private readonly List<IDisposable> _disposables = new();
 
         public Skybox(
             Image<Rgba32> front, Image<Rgba32> back, Image<Rgba32> left,
@@ -49,7 +49,7 @@ namespace Veldrid.VirtualReality.Sample
             _ib = factory.CreateBuffer(new BufferDescription((uint)(s_indices.Length * 2), BufferUsage.IndexBuffer));
             gd.UpdateBuffer(_ib, 0, s_indices);
 
-            ImageSharpCubemapTexture imageSharpCubemapTexture = new ImageSharpCubemapTexture(_front, _back, _top, _bottom, _right, _left, true);
+            ImageSharpCubemapTexture imageSharpCubemapTexture = new(_front, _back, _top, _bottom, _right, _left, true);
 
             Texture textureCube = imageSharpCubemapTexture.CreateDeviceTexture(gd, factory);
             TextureView textureView = factory.CreateTextureView(new TextureViewDescription(textureCube));
@@ -71,7 +71,7 @@ namespace Veldrid.VirtualReality.Sample
                 new ResourceLayoutElementDescription("CubeTexture", ResourceKind.TextureReadOnly, ShaderStages.Fragment),
                 new ResourceLayoutElementDescription("CubeSampler", ResourceKind.Sampler, ShaderStages.Fragment)));
 
-            GraphicsPipelineDescription pd = new GraphicsPipelineDescription(
+            GraphicsPipelineDescription pd = new(
                 BlendStateDescription.SingleAlphaBlend,
                 DepthStencilStateDescription.DepthOnlyLessEqual,
                 new RasterizerStateDescription(FaceCullMode.None, PolygonFillMode.Solid, FrontFace.Clockwise, true, true),
@@ -80,9 +80,9 @@ namespace Veldrid.VirtualReality.Sample
                 new ResourceLayout[] { _layout },
                 outputs);
 
-            _pipeline = factory.CreateGraphicsPipeline(ref pd);
+            _pipeline = factory.CreateGraphicsPipeline(pd);
 
-            _ubo = factory.CreateBuffer(new BufferDescription(64 * 3, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
+            _ubo = factory.CreateBuffer(new BufferDescription(64 * 3, BufferUsage.UniformBuffer | BufferUsage.DynamicWrite));
 
             _resourceSet = factory.CreateResourceSet(new ResourceSetDescription(
                 _layout,

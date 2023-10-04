@@ -1,18 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Numerics;
-
+using TerraFX.Interop.Vulkan;
 using static Veldrid.VirtualReality.Oculus.LibOvrNative;
 
 namespace Veldrid.VirtualReality.Oculus
 {
     internal class OculusMirrorTexture : IDisposable
     {
-        public static readonly Guid s_d3d11Tex2DGuid = new Guid("6f15aaf2-d208-4e89-9ab4-489535d34f9c");
+        public static readonly Guid s_d3d11Tex2DGuid = new("6f15aaf2-d208-4e89-9ab4-489535d34f9c");
 
         private readonly OculusContext _context;
-        private readonly Dictionary<OutputDescription, TextureBlitter> _blitters
-            = new Dictionary<OutputDescription, TextureBlitter>();
+        private readonly Dictionary<OutputDescription, TextureBlitter> _blitters = new();
 
         private (uint width, uint height, MirrorTextureEyeSource source) _texProperties;
         private ovrMirrorTexture _ovrMirrorTex;
@@ -79,9 +78,9 @@ namespace Veldrid.VirtualReality.Oculus
             gd.GetOpenGLInfo().ExecuteOnGLThread(() =>
             {
                 ovrMirrorTextureDesc localDesc = desc;
-                localDesc.MiscFlags = localDesc.MiscFlags & ~(ovrTextureMiscFlags.DX_Typeless | ovrTextureMiscFlags.AllowGenerateMips);
+                localDesc.MiscFlags &= ~(ovrTextureMiscFlags.DX_Typeless | ovrTextureMiscFlags.AllowGenerateMips);
                 ovrMirrorTexture localTex;
-                var result = ovr_CreateMirrorTextureWithOptionsGL(_context.Session, &localDesc, &localTex);
+                ovrResult result = ovr_CreateMirrorTextureWithOptionsGL(_context.Session, &localDesc, &localTex);
                 if (result != ovrResult.Success)
                 {
                     return;
@@ -123,7 +122,7 @@ namespace Veldrid.VirtualReality.Oculus
                     ? ovrMirrorOptions.RightEyeOnly
                     : ovrMirrorOptions.Default;
 
-            desc.MiscFlags = desc.MiscFlags & ~(ovrTextureMiscFlags.DX_Typeless);
+            desc.MiscFlags &= ~(ovrTextureMiscFlags.DX_Typeless);
 
             ovrMirrorTexture mirrorTex;
             ovrResult result = ovr_CreateMirrorTextureWithOptionsVk(
@@ -149,7 +148,7 @@ namespace Veldrid.VirtualReality.Oculus
                 OculusUtil.GetVeldridTextureDescription(desc));
             gd.GetVulkanInfo().OverrideImageLayout(
                 _vkTrueMirrorTex,
-                (uint)Vulkan.VkImageLayout.TransferSrcOptimal);
+                (uint)VkImageLayout.VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
 
             _vdMirrorTex = gd.ResourceFactory.CreateTexture(
                 TextureDescription.Texture2D(

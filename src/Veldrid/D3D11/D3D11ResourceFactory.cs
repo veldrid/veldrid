@@ -3,7 +3,7 @@ using System;
 
 namespace Veldrid.D3D11
 {
-    internal class D3D11ResourceFactory : ResourceFactory, IDisposable
+    internal sealed class D3D11ResourceFactory : ResourceFactory, IDisposable
     {
         private readonly D3D11GraphicsDevice _gd;
         private readonly ID3D11Device _device;
@@ -19,71 +19,72 @@ namespace Veldrid.D3D11
             _cache = new D3D11ResourceCache(_device);
         }
 
-        public override CommandList CreateCommandList(ref CommandListDescription description)
+        public override CommandList CreateCommandList(in CommandListDescription description)
         {
-            return new D3D11CommandList(_gd, ref description);
+            return new D3D11CommandList(_gd, description);
         }
 
-        public override Framebuffer CreateFramebuffer(ref FramebufferDescription description)
+        public override Framebuffer CreateFramebuffer(in FramebufferDescription description)
         {
-            return new D3D11Framebuffer(_device, ref description);
+            return new D3D11Framebuffer(_device, description);
         }
 
-        protected override Pipeline CreateGraphicsPipelineCore(ref GraphicsPipelineDescription description)
+        public override Pipeline CreateGraphicsPipeline(in GraphicsPipelineDescription description)
         {
-            return new D3D11Pipeline(_cache, ref description);
+            ValidateGraphicsPipeline(description);
+            return new D3D11Pipeline(_cache, description);
         }
 
-        public override Pipeline CreateComputePipeline(ref ComputePipelineDescription description)
+        public override Pipeline CreateComputePipeline(in ComputePipelineDescription description)
         {
-            return new D3D11Pipeline(_cache, ref description);
+            return new D3D11Pipeline(_cache, description);
         }
 
-        public override ResourceLayout CreateResourceLayout(ref ResourceLayoutDescription description)
+        public override ResourceLayout CreateResourceLayout(in ResourceLayoutDescription description)
         {
-            return new D3D11ResourceLayout(ref description);
+            return new D3D11ResourceLayout(description);
         }
 
-        public override ResourceSet CreateResourceSet(ref ResourceSetDescription description)
+        public override ResourceSet CreateResourceSet(in ResourceSetDescription description)
         {
-            ValidationHelpers.ValidateResourceSet(_gd, ref description);
-            return new D3D11ResourceSet(ref description);
+            ValidationHelpers.ValidateResourceSet(_gd, description);
+            return new D3D11ResourceSet(description);
         }
 
-        protected override Sampler CreateSamplerCore(ref SamplerDescription description)
+        public override Sampler CreateSampler(in SamplerDescription description)
         {
-            return new D3D11Sampler(_device, ref description);
+            ValidateSampler(description);
+            return new D3D11Sampler(_device, description);
         }
 
-        protected override Shader CreateShaderCore(ref ShaderDescription description)
+        public override Shader CreateShader(in ShaderDescription description)
         {
+            ValidateShader(description);
             return new D3D11Shader(_device, description);
         }
 
-        protected override Texture CreateTextureCore(ref TextureDescription description)
+        public override Texture CreateTexture(in TextureDescription description)
         {
-            return new D3D11Texture(_device, ref description);
+            ValidateTexture(description);
+            return new D3D11Texture(_device, description);
         }
 
-        protected override Texture CreateTextureCore(ulong nativeTexture, ref TextureDescription description)
+        public override Texture CreateTexture(ulong nativeTexture, in TextureDescription description)
         {
-            ID3D11Texture2D existingTexture = new ID3D11Texture2D((IntPtr)nativeTexture);
+            ID3D11Texture2D existingTexture = new((IntPtr)nativeTexture);
             return new D3D11Texture(existingTexture, description.Type, description.Format);
         }
 
-        protected override TextureView CreateTextureViewCore(ref TextureViewDescription description)
+        public override TextureView CreateTextureView(in TextureViewDescription description)
         {
-            return new D3D11TextureView(_gd, ref description);
+            ValidateTextureView(description);
+            return new D3D11TextureView(_gd, description);
         }
 
-        protected override DeviceBuffer CreateBufferCore(ref BufferDescription description)
+        public override DeviceBuffer CreateBuffer(in BufferDescription description)
         {
-            return new D3D11Buffer(
-                _device,
-                description.SizeInBytes,
-                description.Usage,
-                description.StructureByteStride,
-                description.RawBuffer);
+            ValidateBuffer(description);
+            return new D3D11Buffer(_device, description);
         }
 
         public override Fence CreateFence(bool signaled)
@@ -91,9 +92,9 @@ namespace Veldrid.D3D11
             return new D3D11Fence(signaled);
         }
 
-        public override Swapchain CreateSwapchain(ref SwapchainDescription description)
+        public override Swapchain CreateSwapchain(in SwapchainDescription description)
         {
-            return new D3D11Swapchain(_gd, ref description);
+            return new D3D11Swapchain(_gd, description);
         }
 
         public void Dispose()

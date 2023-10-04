@@ -3,13 +3,13 @@ using Veldrid.MetalBindings;
 
 namespace Veldrid.MTL
 {
-    internal class MTLSampler : Sampler
+    internal sealed class MTLSampler : Sampler
     {
         private bool _disposed;
 
         public MTLSamplerState DeviceSampler { get; }
 
-        public MTLSampler(ref SamplerDescription description, MTLGraphicsDevice gd)
+        public MTLSampler(in SamplerDescription description, MTLGraphicsDevice gd)
         {
             MTLFormats.GetMinMagMipFilter(
                 description.Filter,
@@ -39,7 +39,7 @@ namespace Veldrid.MTL
             ObjectiveCRuntime.release(mtlDesc.NativePtr);
         }
 
-        public override string Name { get; set; }
+        public override string? Name { get; set; }
 
         public override bool IsDisposed => _disposed;
 

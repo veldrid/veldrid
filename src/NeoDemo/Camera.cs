@@ -76,10 +76,10 @@ namespace Veldrid.NeoDemo
 
         public void Update(float deltaSeconds)
         {
-            float sprintFactor = InputTracker.GetKey(Key.ControlLeft)
+            float sprintFactor = InputTracker.GetKey(Key.LeftControl)
                 ? 0.1f
-                : InputTracker.GetKey(Key.ShiftLeft)
-                    ? 5f
+                : InputTracker.GetKey(Key.LeftShift)
+                    ? 2.5f
                     : 1f;
             Vector3 motionDir = Vector3.Zero;
             if (InputTracker.GetKey(Key.A))
@@ -208,7 +208,7 @@ namespace Veldrid.NeoDemo
             ViewChanged?.Invoke(_viewMatrix);
         }
 
-        public CameraInfo GetCameraInfo() => new CameraInfo
+        public CameraInfo GetCameraInfo() => new()
         {
             CameraPosition_WorldSpace = _position,
             CameraLookDirection = _lookDirection

@@ -1,41 +1,46 @@
-﻿using System.Collections.Generic;
-using Vulkan;
+﻿using System;
+using TerraFX.Interop.Vulkan;
 
-namespace Veldrid.Vk
+namespace Veldrid.Vulkan
 {
-    internal abstract class VkFramebufferBase : Framebuffer
+    internal abstract class VkFramebufferBase : Framebuffer, IResourceRefCountTarget
     {
         public VkFramebufferBase(
             FramebufferAttachmentDescription? depthTexture,
-            IReadOnlyList<FramebufferAttachmentDescription> colorTextures)
+            ReadOnlySpan<FramebufferAttachmentDescription> colorTextures)
             : base(depthTexture, colorTextures)
         {
-            RefCount = new ResourceRefCount(DisposeCore);
+            RefCount = new ResourceRefCount(this);
         }
 
         public VkFramebufferBase()
         {
-            RefCount = new ResourceRefCount(DisposeCore);
+            RefCount = new ResourceRefCount(this);
         }
 
         public ResourceRefCount RefCount { get; }
 
-        public abstract uint RenderableWidth { get; }
-        public abstract uint RenderableHeight { get; }
+        public abstract VkExtent2D RenderableExtent { get; }
 
         public override void Dispose()
         {
-            RefCount.Decrement();
+            RefCount.DecrementDispose();
         }
 
         protected abstract void DisposeCore();
 
-        public abstract Vulkan.VkFramebuffer CurrentFramebuffer { get; }
+        public abstract TerraFX.Interop.Vulkan.VkFramebuffer CurrentFramebuffer { get; }
         public abstract VkRenderPass RenderPassNoClear_Init { get; }
         public abstract VkRenderPass RenderPassNoClear_Load { get; }
         public abstract VkRenderPass RenderPassClear { get; }
-        public abstract uint AttachmentCount { get; }
+        public uint AttachmentCount { get; protected set; }
+
         public abstract void TransitionToIntermediateLayout(VkCommandBuffer cb);
-        public abstract void TransitionToFinalLayout(VkCommandBuffer cb);
+        public abstract void TransitionToFinalLayout(VkCommandBuffer cb, bool attachment);
+
+        void IResourceRefCountTarget.RefZeroed()
+        {
+            DisposeCore();
+        }
     }
 }

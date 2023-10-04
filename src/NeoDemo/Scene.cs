@@ -15,13 +15,13 @@ namespace Veldrid.NeoDemo
     public class Scene
     {
         private readonly Octree<CullRenderable> _octree
-            = new Octree<CullRenderable>(new BoundingBox(Vector3.One * -50, Vector3.One * 50), 2);
+            = new(new BoundingBox(Vector3.One * -50, Vector3.One * 50), 2);
 
-        private readonly List<Renderable> _freeRenderables = new List<Renderable>();
-        private readonly List<IUpdateable> _updateables = new List<IUpdateable>();
+        private readonly List<Renderable> _freeRenderables = new();
+        private readonly List<IUpdateable> _updateables = new();
 
         private readonly ConcurrentDictionary<RenderPasses, Func<CullRenderable, bool>> _filters
-            = new ConcurrentDictionary<RenderPasses, Func<CullRenderable, bool>>(new RenderPassesComparer());
+            = new(new RenderPassesComparer());
 
         internal MirrorMesh MirrorMesh { get; set; } = new MirrorMesh();
 
@@ -168,7 +168,7 @@ namespace Veldrid.NeoDemo
 
             // Render reflected scene.
             Matrix4x4 planeReflectionMatrix = Matrix4x4.CreateReflection(MirrorMesh.Plane);
-            CameraInfo camInfo = new CameraInfo();
+            CameraInfo camInfo = new();
             camInfo.CameraLookDirection = Vector3.Normalize(Vector3.Reflect(_camera.LookDirection, MirrorMesh.Plane.Normal));
             camInfo.CameraPosition_WorldSpace = Vector3.Transform(_camera.Position, planeReflectionMatrix);
             cl.UpdateBuffer(sc.CameraInfoBuffer, 0, ref camInfo);
@@ -180,7 +180,7 @@ namespace Veldrid.NeoDemo
             Matrix4x4 projection = _camera.ProjectionMatrix;
             cl.UpdateBuffer(sc.ReflectionViewProjBuffer, 0, view * projection);
 
-            BoundingFrustum cameraFrustum = new BoundingFrustum(view * projection);
+            BoundingFrustum cameraFrustum = new(view * projection);
             Render(gd, cl, sc, RenderPasses.ReflectionMap, cameraFrustum, _camera.Position, _renderQueues[0], _cullableStage[0], _renderableStage[0], null, false);
 
             cl.GenerateMipmaps(sc.ReflectionColorTexture);
@@ -252,7 +252,8 @@ namespace Veldrid.NeoDemo
 
             _resourceUpdateCL.Begin();
             CommandList[] cls = new CommandList[5];
-            for (int i = 0; i < cls.Length; i++) { cls[i] = gd.ResourceFactory.CreateCommandList(); cls[i].Begin(); }
+            for (int i = 0; i < cls.Length; i++)
+            { cls[i] = gd.ResourceFactory.CreateCommandList(); cls[i].Begin(); }
 
             _resourceUpdateCL.UpdateBuffer(sc.DepthLimitsBuffer, 0, new DepthCascadeLimits
             {
@@ -292,7 +293,7 @@ namespace Veldrid.NeoDemo
                     _nearCascadeLimit,
                     _midCascadeLimit,
                     sc.ShadowMapTexture.Width,
-                    out var lightFrustum1);
+                    out BoundingFrustum lightFrustum1);
                 cls[2].UpdateBuffer(sc.LightViewProjectionBuffer1, 0, ref viewProj1);
 
                 cls[2].SetFramebuffer(sc.MidShadowMapFramebuffer);
@@ -311,7 +312,7 @@ namespace Veldrid.NeoDemo
                     _midCascadeLimit,
                     _farCascadeLimit,
                     sc.ShadowMapTexture.Width,
-                    out var lightFrustum2);
+                    out BoundingFrustum lightFrustum2);
                 cls[3].UpdateBuffer(sc.LightViewProjectionBuffer2, 0, ref viewProj2);
 
                 cls[3].SetFramebuffer(sc.FarShadowMapFramebuffer);
@@ -335,7 +336,7 @@ namespace Veldrid.NeoDemo
 
                 // Render reflected scene.
                 Matrix4x4 planeReflectionMatrix = Matrix4x4.CreateReflection(MirrorMesh.Plane);
-                CameraInfo camInfo = new CameraInfo();
+                CameraInfo camInfo = new();
                 camInfo.CameraLookDirection = Vector3.Normalize(Vector3.Reflect(_camera.LookDirection, MirrorMesh.Plane.Normal));
                 camInfo.CameraPosition_WorldSpace = Vector3.Transform(_camera.Position, planeReflectionMatrix);
                 cls[4].UpdateBuffer(sc.CameraInfoBuffer, 0, ref camInfo);
@@ -347,7 +348,7 @@ namespace Veldrid.NeoDemo
                 Matrix4x4 projection = _camera.ProjectionMatrix;
                 cls[4].UpdateBuffer(sc.ReflectionViewProjBuffer, 0, view * projection);
 
-                BoundingFrustum cameraFrustum = new BoundingFrustum(view * projection);
+                BoundingFrustum cameraFrustum = new(view * projection);
                 Render(gd, cls[4], sc, RenderPasses.ReflectionMap, cameraFrustum, _camera.Position, _renderQueues[3], _cullableStage[3], _renderableStage[3], null, true);
 
                 cl.GenerateMipmaps(sc.ReflectionColorTexture);
@@ -376,7 +377,8 @@ namespace Veldrid.NeoDemo
             _resourceUpdateCL.End();
             gd.SubmitCommands(_resourceUpdateCL);
 
-            for (int i = 0; i < cls.Length; i++) { cls[i].End(); gd.SubmitCommands(cls[i]); cls[i].Dispose(); }
+            for (int i = 0; i < cls.Length; i++)
+            { cls[i].End(); gd.SubmitCommands(cls[i]); cls[i].Dispose(); }
 
             if (sc.MainSceneColorTexture.SampleCount != TextureSampleCount.Count1)
             {
@@ -420,9 +422,9 @@ namespace Veldrid.NeoDemo
             if (gd.IsDepthRangeZeroToOne)
             {
                 FrustumHelpers.ComputePerspectiveFrustumCorners(
-                    ref viewPos,
-                    ref viewDir,
-                    ref unitY,
+                    viewPos,
+                    viewDir,
+                    unitY,
                     sc.Camera.FieldOfView,
                     far,
                     near,
@@ -432,9 +434,9 @@ namespace Veldrid.NeoDemo
             else
             {
                 FrustumHelpers.ComputePerspectiveFrustumCorners(
-                    ref viewPos,
-                    ref viewDir,
-                    ref unitY,
+                    viewPos,
+                    viewDir,
+                    unitY,
                     sc.Camera.FieldOfView,
                     near,
                     far,
@@ -532,18 +534,22 @@ namespace Veldrid.NeoDemo
             {
                 lock (_allPerFrameRenderablesSet)
                 {
-                    foreach (CullRenderable thing in cullRenderableList) { _allPerFrameRenderablesSet.Add(thing); }
-                    foreach (Renderable thing in renderableList) { _allPerFrameRenderablesSet.Add(thing); }
+                    foreach (CullRenderable thing in cullRenderableList)
+                    { _allPerFrameRenderablesSet.Add(thing); }
+                    foreach (Renderable thing in renderableList)
+                    { _allPerFrameRenderablesSet.Add(thing); }
                 }
             }
             else
             {
-                foreach (CullRenderable thing in cullRenderableList) { _allPerFrameRenderablesSet.Add(thing); }
-                foreach (Renderable thing in renderableList) { _allPerFrameRenderablesSet.Add(thing); }
+                foreach (CullRenderable thing in cullRenderableList)
+                { _allPerFrameRenderablesSet.Add(thing); }
+                foreach (Renderable thing in renderableList)
+                { _allPerFrameRenderablesSet.Add(thing); }
             }
         }
 
-        private readonly HashSet<Renderable> _allPerFrameRenderablesSet = new HashSet<Renderable>();
+        private readonly HashSet<Renderable> _allPerFrameRenderablesSet = new();
         private readonly RenderQueue[] _renderQueues = Enumerable.Range(0, 4).Select(i => new RenderQueue()).ToArray();
         private readonly List<CullRenderable>[] _cullableStage = Enumerable.Range(0, 4).Select(i => new List<CullRenderable>()).ToArray();
         private readonly List<Renderable>[] _renderableStage = Enumerable.Range(0, 4).Select(i => new List<Renderable>()).ToArray();

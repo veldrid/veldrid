@@ -9,7 +9,7 @@ namespace Veldrid
     /// </summary>
     public abstract class Pipeline : DeviceResource, IDisposable
     {
-        internal Pipeline(ref GraphicsPipelineDescription graphicsDescription)
+        internal Pipeline(in GraphicsPipelineDescription graphicsDescription)
             : this(graphicsDescription.ResourceLayouts)
         {
 #if VALIDATE_USAGE
@@ -17,9 +17,10 @@ namespace Veldrid
 #endif
         }
 
-        internal Pipeline(ref ComputePipelineDescription computeDescription)
+        internal Pipeline(in ComputePipelineDescription computeDescription)
             : this(computeDescription.ResourceLayouts)
-        { }
+        {
+        }
 
         internal Pipeline(ResourceLayout[] resourceLayouts)
         {
@@ -34,11 +35,8 @@ namespace Veldrid
         /// </summary>
         public abstract bool IsComputePipeline { get; }
 
-        /// <summary>
-        /// A string identifying this instance. Can be used to differentiate between objects in graphics debuggers and other
-        /// tools.
-        /// </summary>
-        public abstract string Name { get; set; }
+        /// <inheritdoc/>
+        public abstract string? Name { get; set; }
 
         /// <summary>
         /// A bool indicating whether this instance has been disposed.

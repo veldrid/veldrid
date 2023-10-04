@@ -1,20 +1,20 @@
 ﻿namespace Veldrid.D3D11
 {
-    internal class D3D11ResourceSet : ResourceSet
+    internal sealed class D3D11ResourceSet : ResourceSet
     {
-        private string _name;
+        private string? _name;
         private bool _disposed;
 
         public new BindableResource[] Resources { get; }
         public new D3D11ResourceLayout Layout { get; }
 
-        public D3D11ResourceSet(ref ResourceSetDescription description) : base(ref description)
+        public D3D11ResourceSet(in ResourceSetDescription description) : base(description)
         {
             Resources = Util.ShallowClone(description.BoundResources);
             Layout = Util.AssertSubtype<ResourceLayout, D3D11ResourceLayout>(description.Layout);
         }
 
-        public override string Name
+        public override string? Name
         {
             get => _name;
             set => _name = value;

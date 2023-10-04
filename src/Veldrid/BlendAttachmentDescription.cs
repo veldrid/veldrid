@@ -11,31 +11,38 @@ namespace Veldrid
         /// Controls whether blending is enabled for the color attachment.
         /// </summary>
         public bool BlendEnabled;
+
         /// <summary>
         /// Controls which components of the color will be written to the framebuffer.
-        /// If <c>null</c>, the mask will be set to <see cref="Veldrid.ColorWriteMask.All"/>.
+        /// If <c>null</c>, the mask will be set to <see cref="ColorWriteMask.All"/>.
         /// </summary>
         public ColorWriteMask? ColorWriteMask;
+
         /// <summary>
         /// Controls the source color's influence on the blend result.
         /// </summary>
         public BlendFactor SourceColorFactor;
+
         /// <summary>
         /// Controls the destination color's influence on the blend result.
         /// </summary>
         public BlendFactor DestinationColorFactor;
+
         /// <summary>
         /// Controls the function used to combine the source and destination color factors.
         /// </summary>
         public BlendFunction ColorFunction;
+
         /// <summary>
         /// Controls the source alpha's influence on the blend result.
         /// </summary>
         public BlendFactor SourceAlphaFactor;
+
         /// <summary>
         /// Controls the destination alpha's influence on the blend result.
         /// </summary>
         public BlendFactor DestinationAlphaFactor;
+
         /// <summary>
         /// Controls the function used to combine the source and destination alpha factors.
         /// </summary>
@@ -113,7 +120,7 @@ namespace Veldrid
         ///     DestinationAlphaFactor = BlendFactor.Zero
         ///     AlphaFunction = BlendFunction.Add
         /// </summary>
-        public static readonly BlendAttachmentDescription OverrideBlend = new BlendAttachmentDescription
+        public static readonly BlendAttachmentDescription OverrideBlend = new()
         {
             BlendEnabled = true,
             SourceColorFactor = BlendFactor.One,
@@ -136,7 +143,7 @@ namespace Veldrid
         ///     DestinationAlphaFactor = BlendFactor.InverseSourceAlpha
         ///     AlphaFunction = BlendFunction.Add
         /// </summary>
-        public static readonly BlendAttachmentDescription AlphaBlend = new BlendAttachmentDescription
+        public static readonly BlendAttachmentDescription AlphaBlend = new()
         {
             BlendEnabled = true,
             SourceColorFactor = BlendFactor.SourceAlpha,
@@ -159,7 +166,7 @@ namespace Veldrid
         ///     DestinationAlphaFactor = BlendFactor.One
         ///     AlphaFunction = BlendFunction.Add
         /// </summary>
-        public static readonly BlendAttachmentDescription AdditiveBlend = new BlendAttachmentDescription
+        public static readonly BlendAttachmentDescription AdditiveBlend = new()
         {
             BlendEnabled = true,
             SourceColorFactor = BlendFactor.SourceAlpha,
@@ -182,7 +189,7 @@ namespace Veldrid
         ///     DestinationAlphaFactor = BlendFactor.Zero
         ///     AlphaFunction = BlendFunction.Add
         /// </summary>
-        public static readonly BlendAttachmentDescription Disabled = new BlendAttachmentDescription
+        public static readonly BlendAttachmentDescription Disabled = new()
         {
             BlendEnabled = false,
             SourceColorFactor = BlendFactor.One,

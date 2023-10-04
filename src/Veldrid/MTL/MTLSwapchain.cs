@@ -1,10 +1,9 @@
 ﻿using System;
-using System.Diagnostics;
 using Veldrid.MetalBindings;
 
 namespace Veldrid.MTL
 {
-    internal class MTLSwapchain : Swapchain
+    internal sealed class MTLSwapchain : Swapchain
     {
         private readonly MTLSwapchainFramebuffer _framebuffer;
         private CAMetalLayer _metalLayer;
@@ -28,13 +27,13 @@ namespace Veldrid.MTL
             }
         }
 
-        public override string Name { get; set; }
+        public override string? Name { get; set; }
 
         public override bool IsDisposed => _disposed;
 
         public CAMetalDrawable CurrentDrawable => _drawable;
 
-        public MTLSwapchain(MTLGraphicsDevice gd, ref SwapchainDescription description)
+        public MTLSwapchain(MTLGraphicsDevice gd, in SwapchainDescription description)
         {
             _gd = gd;
             _syncToVerticalBlank = description.SyncToVerticalBlank;
@@ -45,7 +44,7 @@ namespace Veldrid.MTL
             SwapchainSource source = description.Source;
             if (source is NSWindowSwapchainSource nsWindowSource)
             {
-                NSWindow nswindow = new NSWindow(nsWindowSource.NSWindow);
+                NSWindow nswindow = new(nsWindowSource.NSWindow);
                 NSView contentView = nswindow.contentView;
                 CGSize windowContentSize = contentView.frame.size;
                 width = (uint)windowContentSize.width;
@@ -60,7 +59,7 @@ namespace Veldrid.MTL
             }
             else if (source is NSViewSwapchainSource nsViewSource)
             {
-                NSView contentView = new NSView(nsViewSource.NSView);
+                NSView contentView = new(nsViewSource.NSView);
                 CGSize windowContentSize = contentView.frame.size;
                 width = (uint)windowContentSize.width;
                 height = (uint)windowContentSize.height;

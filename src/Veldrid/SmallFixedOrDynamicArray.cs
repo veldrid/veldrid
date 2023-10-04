@@ -1,41 +1,48 @@
 ﻿using System;
 using System.Buffers;
-using System.Runtime.CompilerServices;
 
 namespace Veldrid
 {
     internal unsafe struct SmallFixedOrDynamicArray : IDisposable
     {
-        private const int MaxFixedValues = 5;
+        public const int MaxFixedValues = 5;
+
+        private static ArrayPool<uint> _arrayPool = ArrayPool<uint>.Create();
 
         public readonly uint Count;
         private fixed uint FixedData[MaxFixedValues];
-        public readonly uint[] Data;
+        public uint[]? Data;
 
-        public uint Get(uint i) => Count > MaxFixedValues ? Data[i] : FixedData[i];
-
-        public SmallFixedOrDynamicArray(uint count, ref uint data)
+        public uint Get(uint i)
         {
-            if (count > MaxFixedValues)
+            return Count > MaxFixedValues ? Data![i] : FixedData[i];
+        }
+
+        public SmallFixedOrDynamicArray(ReadOnlySpan<uint> offsets)
+        {
+            if (offsets.Length > MaxFixedValues)
             {
-                Data = ArrayPool<uint>.Shared.Rent((int)count);
+                Data = _arrayPool.Rent(offsets.Length);
             }
             else
             {
-                for (int i = 0; i < count; i++)
+                for (int i = 0; i < offsets.Length; i++)
                 {
-                    FixedData[i] = Unsafe.Add(ref data, i);
+                    FixedData[i] = offsets[i];
                 }
-
                 Data = null;
             }
 
-            Count = count;
+            Count = (uint)offsets.Length;
         }
 
         public void Dispose()
         {
-            if (Data != null) { ArrayPool<uint>.Shared.Return(Data); }
+            if (Data != null)
+            {
+                _arrayPool.Return(Data);
+                Data = null;
+            }
         }
     }
 }

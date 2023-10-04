@@ -1,5 +1,5 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using Vortice.Direct3D11;
 using Vortice.DXGI;
 
@@ -149,6 +149,7 @@ namespace Veldrid.D3D11
             }
         }
 
+        [SuppressMessage("Style", "IDE0066:Convert switch statement to expression", Justification = "<Pending>")]
         internal static Format GetTypelessFormat(Format format)
         {
             switch (format)
@@ -327,237 +328,133 @@ namespace Veldrid.D3D11
 
         internal static Format GetViewFormat(Format format)
         {
-            switch (format)
+            return format switch
             {
-                case Format.R16_Typeless:
-                    return Format.R16_UNorm;
-                case Format.R32_Typeless:
-                    return Format.R32_Float;
-                case Format.R32G8X24_Typeless:
-                    return Format.R32_Float_X8X24_Typeless;
-                case Format.R24G8_Typeless:
-                    return Format.R24_UNorm_X8_Typeless;
-                default:
-                    return format;
-            }
+                Format.R16_Typeless => Format.R16_UNorm,
+                Format.R32_Typeless => Format.R32_Float,
+                Format.R32G8X24_Typeless => Format.R32_Float_X8X24_Typeless,
+                Format.R24G8_Typeless => Format.R24_UNorm_X8_Typeless,
+                _ => format,
+            };
         }
 
         internal static Blend VdToD3D11Blend(BlendFactor factor)
         {
-            switch (factor)
+            return factor switch
             {
-                case BlendFactor.Zero:
-                    return Blend.Zero;
-                case BlendFactor.One:
-                    return Blend.One;
-                case BlendFactor.SourceAlpha:
-                    return Blend.SourceAlpha;
-                case BlendFactor.InverseSourceAlpha:
-                    return Blend.InverseSourceAlpha;
-                case BlendFactor.DestinationAlpha:
-                    return Blend.DestinationAlpha;
-                case BlendFactor.InverseDestinationAlpha:
-                    return Blend.InverseDestinationAlpha;
-                case BlendFactor.SourceColor:
-                    return Blend.SourceColor;
-                case BlendFactor.InverseSourceColor:
-                    return Blend.InverseSourceColor;
-                case BlendFactor.DestinationColor:
-                    return Blend.DestinationColor;
-                case BlendFactor.InverseDestinationColor:
-                    return Blend.InverseDestinationColor;
-                case BlendFactor.BlendFactor:
-                    return Blend.BlendFactor;
-                case BlendFactor.InverseBlendFactor:
-                    return Blend.InverseBlendFactor;
-                default:
-                    throw Illegal.Value<BlendFactor>();
-            }
+                BlendFactor.Zero => Blend.Zero,
+                BlendFactor.One => Blend.One,
+                BlendFactor.SourceAlpha => Blend.SourceAlpha,
+                BlendFactor.InverseSourceAlpha => Blend.InverseSourceAlpha,
+                BlendFactor.DestinationAlpha => Blend.DestinationAlpha,
+                BlendFactor.InverseDestinationAlpha => Blend.InverseDestinationAlpha,
+                BlendFactor.SourceColor => Blend.SourceColor,
+                BlendFactor.InverseSourceColor => Blend.InverseSourceColor,
+                BlendFactor.DestinationColor => Blend.DestinationColor,
+                BlendFactor.InverseDestinationColor => Blend.InverseDestinationColor,
+                BlendFactor.BlendFactor => Blend.BlendFactor,
+                BlendFactor.InverseBlendFactor => Blend.InverseBlendFactor,
+                _ => throw Illegal.Value<BlendFactor>(),
+            };
         }
 
         internal static Format ToDxgiFormat(IndexFormat format)
         {
-            switch (format)
+            return format switch
             {
-                case IndexFormat.UInt16:
-                    return Format.R16_UInt;
-                case IndexFormat.UInt32:
-                    return Format.R32_UInt;
-                default:
-                    throw Illegal.Value<IndexFormat>();
-            }
+                IndexFormat.UInt16 => Format.R16_UInt,
+                IndexFormat.UInt32 => Format.R32_UInt,
+                _ => throw Illegal.Value<IndexFormat>(),
+            };
         }
 
         internal static Vortice.Direct3D11.StencilOperation VdToD3D11StencilOperation(StencilOperation op)
         {
-            switch (op)
+            return op switch
             {
-                case StencilOperation.Keep:
-                    return Vortice.Direct3D11.StencilOperation.Keep;
-                case StencilOperation.Zero:
-                    return Vortice.Direct3D11.StencilOperation.Zero;
-                case StencilOperation.Replace:
-                    return Vortice.Direct3D11.StencilOperation.Replace;
-                case StencilOperation.IncrementAndClamp:
-                    return Vortice.Direct3D11.StencilOperation.IncrementSaturate;
-                case StencilOperation.DecrementAndClamp:
-                    return Vortice.Direct3D11.StencilOperation.DecrementSaturate;
-                case StencilOperation.Invert:
-                    return Vortice.Direct3D11.StencilOperation.Invert;
-                case StencilOperation.IncrementAndWrap:
-                    return Vortice.Direct3D11.StencilOperation.Increment;
-                case StencilOperation.DecrementAndWrap:
-                    return Vortice.Direct3D11.StencilOperation.Decrement;
-                default:
-                    throw Illegal.Value<StencilOperation>();
-            }
+                StencilOperation.Keep => Vortice.Direct3D11.StencilOperation.Keep,
+                StencilOperation.Zero => Vortice.Direct3D11.StencilOperation.Zero,
+                StencilOperation.Replace => Vortice.Direct3D11.StencilOperation.Replace,
+                StencilOperation.IncrementAndClamp => Vortice.Direct3D11.StencilOperation.IncrementSaturate,
+                StencilOperation.DecrementAndClamp => Vortice.Direct3D11.StencilOperation.DecrementSaturate,
+                StencilOperation.Invert => Vortice.Direct3D11.StencilOperation.Invert,
+                StencilOperation.IncrementAndWrap => Vortice.Direct3D11.StencilOperation.Increment,
+                StencilOperation.DecrementAndWrap => Vortice.Direct3D11.StencilOperation.Decrement,
+                _ => throw Illegal.Value<StencilOperation>(),
+            };
         }
 
         internal static PixelFormat ToVdFormat(Format format)
         {
-            switch (format)
+            return format switch
             {
-                case Format.R8_UNorm:
-                    return PixelFormat.R8_UNorm;
-                case Format.R8_SNorm:
-                    return PixelFormat.R8_SNorm;
-                case Format.R8_UInt:
-                    return PixelFormat.R8_UInt;
-                case Format.R8_SInt:
-                    return PixelFormat.R8_SInt;
-
-                case Format.R16_UNorm:
-                case Format.D16_UNorm:
-                    return PixelFormat.R16_UNorm;
-                case Format.R16_SNorm:
-                    return PixelFormat.R16_SNorm;
-                case Format.R16_UInt:
-                    return PixelFormat.R16_UInt;
-                case Format.R16_SInt:
-                    return PixelFormat.R16_SInt;
-                case Format.R16_Float:
-                    return PixelFormat.R16_Float;
-
-                case Format.R32_UInt:
-                    return PixelFormat.R32_UInt;
-                case Format.R32_SInt:
-                    return PixelFormat.R32_SInt;
-                case Format.R32_Float:
-                case Format.D32_Float:
-                    return PixelFormat.R32_Float;
-
-                case Format.R8G8_UNorm:
-                    return PixelFormat.R8_G8_UNorm;
-                case Format.R8G8_SNorm:
-                    return PixelFormat.R8_G8_SNorm;
-                case Format.R8G8_UInt:
-                    return PixelFormat.R8_G8_UInt;
-                case Format.R8G8_SInt:
-                    return PixelFormat.R8_G8_SInt;
-
-                case Format.R16G16_UNorm:
-                    return PixelFormat.R16_G16_UNorm;
-                case Format.R16G16_SNorm:
-                    return PixelFormat.R16_G16_SNorm;
-                case Format.R16G16_UInt:
-                    return PixelFormat.R16_G16_UInt;
-                case Format.R16G16_SInt:
-                    return PixelFormat.R16_G16_SInt;
-                case Format.R16G16_Float:
-                    return PixelFormat.R16_G16_Float;
-
-                case Format.R32G32_UInt:
-                    return PixelFormat.R32_G32_UInt;
-                case Format.R32G32_SInt:
-                    return PixelFormat.R32_G32_SInt;
-                case Format.R32G32_Float:
-                    return PixelFormat.R32_G32_Float;
-
-                case Format.R8G8B8A8_UNorm:
-                    return PixelFormat.R8_G8_B8_A8_UNorm;
-                case Format.R8G8B8A8_UNorm_SRgb:
-                    return PixelFormat.R8_G8_B8_A8_UNorm_SRgb;
-
-                case Format.B8G8R8A8_UNorm:
-                    return PixelFormat.B8_G8_R8_A8_UNorm;
-                case Format.B8G8R8A8_UNorm_SRgb:
-                    return PixelFormat.B8_G8_R8_A8_UNorm_SRgb;
-                case Format.R8G8B8A8_SNorm:
-                    return PixelFormat.R8_G8_B8_A8_SNorm;
-                case Format.R8G8B8A8_UInt:
-                    return PixelFormat.R8_G8_B8_A8_UInt;
-                case Format.R8G8B8A8_SInt:
-                    return PixelFormat.R8_G8_B8_A8_SInt;
-
-                case Format.R16G16B16A16_UNorm:
-                    return PixelFormat.R16_G16_B16_A16_UNorm;
-                case Format.R16G16B16A16_SNorm:
-                    return PixelFormat.R16_G16_B16_A16_SNorm;
-                case Format.R16G16B16A16_UInt:
-                    return PixelFormat.R16_G16_B16_A16_UInt;
-                case Format.R16G16B16A16_SInt:
-                    return PixelFormat.R16_G16_B16_A16_SInt;
-                case Format.R16G16B16A16_Float:
-                    return PixelFormat.R16_G16_B16_A16_Float;
-
-                case Format.R32G32B32A32_UInt:
-                    return PixelFormat.R32_G32_B32_A32_UInt;
-                case Format.R32G32B32A32_SInt:
-                    return PixelFormat.R32_G32_B32_A32_SInt;
-                case Format.R32G32B32A32_Float:
-                    return PixelFormat.R32_G32_B32_A32_Float;
-
-                case Format.BC1_UNorm:
-                case Format.BC1_Typeless:
-                    return PixelFormat.BC1_Rgba_UNorm;
-                case Format.BC2_UNorm:
-                    return PixelFormat.BC2_UNorm;
-                case Format.BC3_UNorm:
-                    return PixelFormat.BC3_UNorm;
-                case Format.BC4_UNorm:
-                    return PixelFormat.BC4_UNorm;
-                case Format.BC4_SNorm:
-                    return PixelFormat.BC4_SNorm;
-                case Format.BC5_UNorm:
-                    return PixelFormat.BC5_UNorm;
-                case Format.BC5_SNorm:
-                    return PixelFormat.BC5_SNorm;
-                case Format.BC7_UNorm:
-                    return PixelFormat.BC7_UNorm;
-
-                case Format.D24_UNorm_S8_UInt:
-                    return PixelFormat.D24_UNorm_S8_UInt;
-                case Format.D32_Float_S8X24_UInt:
-                    return PixelFormat.D32_Float_S8_UInt;
-
-                case Format.R10G10B10A2_UInt:
-                    return PixelFormat.R10_G10_B10_A2_UInt;
-                case Format.R10G10B10A2_UNorm:
-                    return PixelFormat.R10_G10_B10_A2_UNorm;
-                case Format.R11G11B10_Float:
-                    return PixelFormat.R11_G11_B10_Float;
-                default:
-                    throw Illegal.Value<PixelFormat>();
-            }
+                Format.R8_UNorm => PixelFormat.R8_UNorm,
+                Format.R8_SNorm => PixelFormat.R8_SNorm,
+                Format.R8_UInt => PixelFormat.R8_UInt,
+                Format.R8_SInt => PixelFormat.R8_SInt,
+                Format.R16_UNorm or Format.D16_UNorm => PixelFormat.R16_UNorm,
+                Format.R16_SNorm => PixelFormat.R16_SNorm,
+                Format.R16_UInt => PixelFormat.R16_UInt,
+                Format.R16_SInt => PixelFormat.R16_SInt,
+                Format.R16_Float => PixelFormat.R16_Float,
+                Format.R32_UInt => PixelFormat.R32_UInt,
+                Format.R32_SInt => PixelFormat.R32_SInt,
+                Format.R32_Float or Format.D32_Float => PixelFormat.R32_Float,
+                Format.R8G8_UNorm => PixelFormat.R8_G8_UNorm,
+                Format.R8G8_SNorm => PixelFormat.R8_G8_SNorm,
+                Format.R8G8_UInt => PixelFormat.R8_G8_UInt,
+                Format.R8G8_SInt => PixelFormat.R8_G8_SInt,
+                Format.R16G16_UNorm => PixelFormat.R16_G16_UNorm,
+                Format.R16G16_SNorm => PixelFormat.R16_G16_SNorm,
+                Format.R16G16_UInt => PixelFormat.R16_G16_UInt,
+                Format.R16G16_SInt => PixelFormat.R16_G16_SInt,
+                Format.R16G16_Float => PixelFormat.R16_G16_Float,
+                Format.R32G32_UInt => PixelFormat.R32_G32_UInt,
+                Format.R32G32_SInt => PixelFormat.R32_G32_SInt,
+                Format.R32G32_Float => PixelFormat.R32_G32_Float,
+                Format.R8G8B8A8_UNorm => PixelFormat.R8_G8_B8_A8_UNorm,
+                Format.R8G8B8A8_UNorm_SRgb => PixelFormat.R8_G8_B8_A8_UNorm_SRgb,
+                Format.B8G8R8A8_UNorm => PixelFormat.B8_G8_R8_A8_UNorm,
+                Format.B8G8R8A8_UNorm_SRgb => PixelFormat.B8_G8_R8_A8_UNorm_SRgb,
+                Format.R8G8B8A8_SNorm => PixelFormat.R8_G8_B8_A8_SNorm,
+                Format.R8G8B8A8_UInt => PixelFormat.R8_G8_B8_A8_UInt,
+                Format.R8G8B8A8_SInt => PixelFormat.R8_G8_B8_A8_SInt,
+                Format.R16G16B16A16_UNorm => PixelFormat.R16_G16_B16_A16_UNorm,
+                Format.R16G16B16A16_SNorm => PixelFormat.R16_G16_B16_A16_SNorm,
+                Format.R16G16B16A16_UInt => PixelFormat.R16_G16_B16_A16_UInt,
+                Format.R16G16B16A16_SInt => PixelFormat.R16_G16_B16_A16_SInt,
+                Format.R16G16B16A16_Float => PixelFormat.R16_G16_B16_A16_Float,
+                Format.R32G32B32A32_UInt => PixelFormat.R32_G32_B32_A32_UInt,
+                Format.R32G32B32A32_SInt => PixelFormat.R32_G32_B32_A32_SInt,
+                Format.R32G32B32A32_Float => PixelFormat.R32_G32_B32_A32_Float,
+                Format.BC1_UNorm or Format.BC1_Typeless => PixelFormat.BC1_Rgba_UNorm,
+                Format.BC2_UNorm => PixelFormat.BC2_UNorm,
+                Format.BC3_UNorm => PixelFormat.BC3_UNorm,
+                Format.BC4_UNorm => PixelFormat.BC4_UNorm,
+                Format.BC4_SNorm => PixelFormat.BC4_SNorm,
+                Format.BC5_UNorm => PixelFormat.BC5_UNorm,
+                Format.BC5_SNorm => PixelFormat.BC5_SNorm,
+                Format.BC7_UNorm => PixelFormat.BC7_UNorm,
+                Format.D24_UNorm_S8_UInt => PixelFormat.D24_UNorm_S8_UInt,
+                Format.D32_Float_S8X24_UInt => PixelFormat.D32_Float_S8_UInt,
+                Format.R10G10B10A2_UInt => PixelFormat.R10_G10_B10_A2_UInt,
+                Format.R10G10B10A2_UNorm => PixelFormat.R10_G10_B10_A2_UNorm,
+                Format.R11G11B10_Float => PixelFormat.R11_G11_B10_Float,
+                _ => throw Illegal.Value<PixelFormat>(),
+            };
         }
 
         internal static BlendOperation VdToD3D11BlendOperation(BlendFunction function)
         {
-            switch (function)
+            return function switch
             {
-                case BlendFunction.Add:
-                    return BlendOperation.Add;
-                case BlendFunction.Subtract:
-                    return BlendOperation.Subtract;
-                case BlendFunction.ReverseSubtract:
-                    return BlendOperation.ReverseSubtract;
-                case BlendFunction.Minimum:
-                    return BlendOperation.Min;
-                case BlendFunction.Maximum:
-                    return BlendOperation.Max;
-                default:
-                    throw Illegal.Value<BlendFunction>();
-            }
+                BlendFunction.Add => BlendOperation.Add,
+                BlendFunction.Subtract => BlendOperation.Subtract,
+                BlendFunction.ReverseSubtract => BlendOperation.ReverseSubtract,
+                BlendFunction.Minimum => BlendOperation.Min,
+                BlendFunction.Maximum => BlendOperation.Max,
+                _ => throw Illegal.Value<BlendFunction>(),
+            };
         }
 
         internal static ColorWriteEnable VdToD3D11ColorWriteEnable(ColorWriteMask mask)
@@ -578,222 +475,162 @@ namespace Veldrid.D3D11
 
         internal static Filter ToD3D11Filter(SamplerFilter filter, bool isComparison)
         {
-            switch (filter)
+            if (isComparison)
             {
-                case SamplerFilter.MinPoint_MagPoint_MipPoint:
-                    return isComparison ? Filter.ComparisonMinMagMipPoint : Filter.MinMagMipPoint;
-                case SamplerFilter.MinPoint_MagPoint_MipLinear:
-                    return isComparison ? Filter.ComparisonMinMagPointMipLinear : Filter.MinMagPointMipLinear;
-                case SamplerFilter.MinPoint_MagLinear_MipPoint:
-                    return isComparison ? Filter.ComparisonMinPointMagLinearMipPoint : Filter.MinPointMagLinearMipPoint;
-                case SamplerFilter.MinPoint_MagLinear_MipLinear:
-                    return isComparison ? Filter.ComparisonMinPointMagMipLinear : Filter.MinPointMagMipLinear;
-                case SamplerFilter.MinLinear_MagPoint_MipPoint:
-                    return isComparison ? Filter.ComparisonMinLinearMagMipPoint : Filter.MinLinearMagMipPoint;
-                case SamplerFilter.MinLinear_MagPoint_MipLinear:
-                    return isComparison ? Filter.ComparisonMinLinearMagPointMipLinear : Filter.MinLinearMagPointMipLinear;
-                case SamplerFilter.MinLinear_MagLinear_MipPoint:
-                    return isComparison ? Filter.ComparisonMinMagLinearMipPoint : Filter.MinMagLinearMipPoint;
-                case SamplerFilter.MinLinear_MagLinear_MipLinear:
-                    return isComparison ? Filter.ComparisonMinMagMipLinear : Filter.MinMagMipLinear;
-                case SamplerFilter.Anisotropic:
-                    return isComparison ? Filter.ComparisonAnisotropic : Filter.Anisotropic;
-                default:
-                    throw Illegal.Value<SamplerFilter>();
+                return filter switch
+                {
+                    SamplerFilter.MinPoint_MagPoint_MipPoint => Filter.ComparisonMinMagMipPoint,
+                    SamplerFilter.MinPoint_MagPoint_MipLinear => Filter.ComparisonMinMagPointMipLinear,
+                    SamplerFilter.MinPoint_MagLinear_MipPoint => Filter.ComparisonMinPointMagLinearMipPoint,
+                    SamplerFilter.MinPoint_MagLinear_MipLinear => Filter.ComparisonMinPointMagMipLinear,
+                    SamplerFilter.MinLinear_MagPoint_MipPoint => Filter.ComparisonMinLinearMagMipPoint,
+                    SamplerFilter.MinLinear_MagPoint_MipLinear => Filter.ComparisonMinLinearMagPointMipLinear,
+                    SamplerFilter.MinLinear_MagLinear_MipPoint => Filter.ComparisonMinMagLinearMipPoint,
+                    SamplerFilter.MinLinear_MagLinear_MipLinear => Filter.ComparisonMinMagMipLinear,
+                    SamplerFilter.Anisotropic => Filter.ComparisonAnisotropic,
+                    _ => throw Illegal.Value<SamplerFilter>(),
+                };
+            }
+            else
+            {
+                return filter switch
+                {
+                    SamplerFilter.MinPoint_MagPoint_MipPoint => Filter.MinMagMipPoint,
+                    SamplerFilter.MinPoint_MagPoint_MipLinear => Filter.MinMagPointMipLinear,
+                    SamplerFilter.MinPoint_MagLinear_MipPoint => Filter.MinPointMagLinearMipPoint,
+                    SamplerFilter.MinPoint_MagLinear_MipLinear => Filter.MinPointMagMipLinear,
+                    SamplerFilter.MinLinear_MagPoint_MipPoint => Filter.MinLinearMagMipPoint,
+                    SamplerFilter.MinLinear_MagPoint_MipLinear => Filter.MinLinearMagPointMipLinear,
+                    SamplerFilter.MinLinear_MagLinear_MipPoint => Filter.MinMagLinearMipPoint,
+                    SamplerFilter.MinLinear_MagLinear_MipLinear => Filter.MinMagMipLinear,
+                    SamplerFilter.Anisotropic => Filter.Anisotropic,
+                    _ => throw Illegal.Value<SamplerFilter>(),
+                };
             }
         }
 
         internal static Vortice.Direct3D11.MapMode VdToD3D11MapMode(bool isDynamic, MapMode mode)
         {
-            switch (mode)
+            return mode switch
             {
-                case MapMode.Read:
-                    return Vortice.Direct3D11.MapMode.Read;
-                case MapMode.Write:
-                    return isDynamic ? Vortice.Direct3D11.MapMode.WriteDiscard : Vortice.Direct3D11.MapMode.Write;
-                case MapMode.ReadWrite:
-                    return Vortice.Direct3D11.MapMode.ReadWrite;
-                default:
-                    throw Illegal.Value<MapMode>();
-            }
+                MapMode.Read => Vortice.Direct3D11.MapMode.Read,
+                MapMode.Write => isDynamic ? Vortice.Direct3D11.MapMode.WriteDiscard : Vortice.Direct3D11.MapMode.Write,
+                MapMode.ReadWrite => Vortice.Direct3D11.MapMode.ReadWrite,
+                _ => throw Illegal.Value<MapMode>(),
+            };
         }
 
         internal static Vortice.Direct3D.PrimitiveTopology VdToD3D11PrimitiveTopology(PrimitiveTopology primitiveTopology)
         {
-            switch (primitiveTopology)
+            return primitiveTopology switch
             {
-                case PrimitiveTopology.TriangleList:
-                    return Vortice.Direct3D.PrimitiveTopology.TriangleList;
-                case PrimitiveTopology.TriangleStrip:
-                    return Vortice.Direct3D.PrimitiveTopology.TriangleStrip;
-                case PrimitiveTopology.LineList:
-                    return Vortice.Direct3D.PrimitiveTopology.LineList;
-                case PrimitiveTopology.LineStrip:
-                    return Vortice.Direct3D.PrimitiveTopology.LineStrip;
-                case PrimitiveTopology.PointList:
-                    return Vortice.Direct3D.PrimitiveTopology.PointList;
-                default:
-                    throw Illegal.Value<PrimitiveTopology>();
-            }
+                PrimitiveTopology.TriangleList => Vortice.Direct3D.PrimitiveTopology.TriangleList,
+                PrimitiveTopology.TriangleStrip => Vortice.Direct3D.PrimitiveTopology.TriangleStrip,
+                PrimitiveTopology.LineList => Vortice.Direct3D.PrimitiveTopology.LineList,
+                PrimitiveTopology.LineStrip => Vortice.Direct3D.PrimitiveTopology.LineStrip,
+                PrimitiveTopology.PointList => Vortice.Direct3D.PrimitiveTopology.PointList,
+                _ => throw Illegal.Value<PrimitiveTopology>(),
+            };
         }
 
         internal static FillMode VdToD3D11FillMode(PolygonFillMode fillMode)
         {
-            switch (fillMode)
+            return fillMode switch
             {
-                case PolygonFillMode.Solid:
-                    return FillMode.Solid;
-                case PolygonFillMode.Wireframe:
-                    return FillMode.Wireframe;
-                default:
-                    throw Illegal.Value<PolygonFillMode>();
-            }
+                PolygonFillMode.Solid => FillMode.Solid,
+                PolygonFillMode.Wireframe => FillMode.Wireframe,
+                _ => throw Illegal.Value<PolygonFillMode>(),
+            };
         }
 
         internal static CullMode VdToD3D11CullMode(FaceCullMode cullingMode)
         {
-            switch (cullingMode)
+            return cullingMode switch
             {
-                case FaceCullMode.Back:
-                    return CullMode.Back;
-                case FaceCullMode.Front:
-                    return CullMode.Front;
-                case FaceCullMode.None:
-                    return CullMode.None;
-                default:
-                    throw Illegal.Value<FaceCullMode>();
-            }
+                FaceCullMode.Back => CullMode.Back,
+                FaceCullMode.Front => CullMode.Front,
+                FaceCullMode.None => CullMode.None,
+                _ => throw Illegal.Value<FaceCullMode>(),
+            };
         }
 
         internal static Format ToDxgiFormat(VertexElementFormat format)
         {
-            switch (format)
+            return format switch
             {
-                case VertexElementFormat.Float1:
-                    return Format.R32_Float;
-                case VertexElementFormat.Float2:
-                    return Format.R32G32_Float;
-                case VertexElementFormat.Float3:
-                    return Format.R32G32B32_Float;
-                case VertexElementFormat.Float4:
-                    return Format.R32G32B32A32_Float;
-                case VertexElementFormat.Byte2_Norm:
-                    return Format.R8G8_UNorm;
-                case VertexElementFormat.Byte2:
-                    return Format.R8G8_UInt;
-                case VertexElementFormat.Byte4_Norm:
-                    return Format.R8G8B8A8_UNorm;
-                case VertexElementFormat.Byte4:
-                    return Format.R8G8B8A8_UInt;
-                case VertexElementFormat.SByte2_Norm:
-                    return Format.R8G8_SNorm;
-                case VertexElementFormat.SByte2:
-                    return Format.R8G8_SInt;
-                case VertexElementFormat.SByte4_Norm:
-                    return Format.R8G8B8A8_SNorm;
-                case VertexElementFormat.SByte4:
-                    return Format.R8G8B8A8_SInt;
-                case VertexElementFormat.UShort2_Norm:
-                    return Format.R16G16_UNorm;
-                case VertexElementFormat.UShort2:
-                    return Format.R16G16_UInt;
-                case VertexElementFormat.UShort4_Norm:
-                    return Format.R16G16B16A16_UNorm;
-                case VertexElementFormat.UShort4:
-                    return Format.R16G16B16A16_UInt;
-                case VertexElementFormat.Short2_Norm:
-                    return Format.R16G16_SNorm;
-                case VertexElementFormat.Short2:
-                    return Format.R16G16_SInt;
-                case VertexElementFormat.Short4_Norm:
-                    return Format.R16G16B16A16_SNorm;
-                case VertexElementFormat.Short4:
-                    return Format.R16G16B16A16_SInt;
-                case VertexElementFormat.UInt1:
-                    return Format.R32_UInt;
-                case VertexElementFormat.UInt2:
-                    return Format.R32G32_UInt;
-                case VertexElementFormat.UInt3:
-                    return Format.R32G32B32_UInt;
-                case VertexElementFormat.UInt4:
-                    return Format.R32G32B32A32_UInt;
-                case VertexElementFormat.Int1:
-                    return Format.R32_SInt;
-                case VertexElementFormat.Int2:
-                    return Format.R32G32_SInt;
-                case VertexElementFormat.Int3:
-                    return Format.R32G32B32_SInt;
-                case VertexElementFormat.Int4:
-                    return Format.R32G32B32A32_SInt;
-                case VertexElementFormat.Half1:
-                    return Format.R16_Float;
-                case VertexElementFormat.Half2:
-                    return Format.R16G16_Float;
-                case VertexElementFormat.Half4:
-                    return Format.R16G16B16A16_Float;
-
-                default:
-                    throw Illegal.Value<VertexElementFormat>();
-            }
+                VertexElementFormat.Float1 => Format.R32_Float,
+                VertexElementFormat.Float2 => Format.R32G32_Float,
+                VertexElementFormat.Float3 => Format.R32G32B32_Float,
+                VertexElementFormat.Float4 => Format.R32G32B32A32_Float,
+                VertexElementFormat.Byte2_Norm => Format.R8G8_UNorm,
+                VertexElementFormat.Byte2 => Format.R8G8_UInt,
+                VertexElementFormat.Byte4_Norm => Format.R8G8B8A8_UNorm,
+                VertexElementFormat.Byte4 => Format.R8G8B8A8_UInt,
+                VertexElementFormat.SByte2_Norm => Format.R8G8_SNorm,
+                VertexElementFormat.SByte2 => Format.R8G8_SInt,
+                VertexElementFormat.SByte4_Norm => Format.R8G8B8A8_SNorm,
+                VertexElementFormat.SByte4 => Format.R8G8B8A8_SInt,
+                VertexElementFormat.UShort2_Norm => Format.R16G16_UNorm,
+                VertexElementFormat.UShort2 => Format.R16G16_UInt,
+                VertexElementFormat.UShort4_Norm => Format.R16G16B16A16_UNorm,
+                VertexElementFormat.UShort4 => Format.R16G16B16A16_UInt,
+                VertexElementFormat.Short2_Norm => Format.R16G16_SNorm,
+                VertexElementFormat.Short2 => Format.R16G16_SInt,
+                VertexElementFormat.Short4_Norm => Format.R16G16B16A16_SNorm,
+                VertexElementFormat.Short4 => Format.R16G16B16A16_SInt,
+                VertexElementFormat.UInt1 => Format.R32_UInt,
+                VertexElementFormat.UInt2 => Format.R32G32_UInt,
+                VertexElementFormat.UInt3 => Format.R32G32B32_UInt,
+                VertexElementFormat.UInt4 => Format.R32G32B32A32_UInt,
+                VertexElementFormat.Int1 => Format.R32_SInt,
+                VertexElementFormat.Int2 => Format.R32G32_SInt,
+                VertexElementFormat.Int3 => Format.R32G32B32_SInt,
+                VertexElementFormat.Int4 => Format.R32G32B32A32_SInt,
+                VertexElementFormat.Half1 => Format.R16_Float,
+                VertexElementFormat.Half2 => Format.R16G16_Float,
+                VertexElementFormat.Half4 => Format.R16G16B16A16_Float,
+                _ => throw Illegal.Value<VertexElementFormat>(),
+            };
         }
 
         internal static ComparisonFunction VdToD3D11ComparisonFunc(ComparisonKind comparisonKind)
         {
-            switch (comparisonKind)
+            return comparisonKind switch
             {
-                case ComparisonKind.Never:
-                    return ComparisonFunction.Never;
-                case ComparisonKind.Less:
-                    return ComparisonFunction.Less;
-                case ComparisonKind.Equal:
-                    return ComparisonFunction.Equal;
-                case ComparisonKind.LessEqual:
-                    return ComparisonFunction.LessEqual;
-                case ComparisonKind.Greater:
-                    return ComparisonFunction.Greater;
-                case ComparisonKind.NotEqual:
-                    return ComparisonFunction.NotEqual;
-                case ComparisonKind.GreaterEqual:
-                    return ComparisonFunction.GreaterEqual;
-                case ComparisonKind.Always:
-                    return ComparisonFunction.Always;
-                default:
-                    throw Illegal.Value<ComparisonKind>();
-            }
+                ComparisonKind.Never => ComparisonFunction.Never,
+                ComparisonKind.Less => ComparisonFunction.Less,
+                ComparisonKind.Equal => ComparisonFunction.Equal,
+                ComparisonKind.LessEqual => ComparisonFunction.LessEqual,
+                ComparisonKind.Greater => ComparisonFunction.Greater,
+                ComparisonKind.NotEqual => ComparisonFunction.NotEqual,
+                ComparisonKind.GreaterEqual => ComparisonFunction.GreaterEqual,
+                ComparisonKind.Always => ComparisonFunction.Always,
+                _ => throw Illegal.Value<ComparisonKind>(),
+            };
         }
 
         internal static TextureAddressMode VdToD3D11AddressMode(SamplerAddressMode mode)
         {
-            switch (mode)
+            return mode switch
             {
-                case SamplerAddressMode.Wrap:
-                    return TextureAddressMode.Wrap;
-                case SamplerAddressMode.Mirror:
-                    return TextureAddressMode.Mirror;
-                case SamplerAddressMode.Clamp:
-                    return TextureAddressMode.Clamp;
-                case SamplerAddressMode.Border:
-                    return TextureAddressMode.Border;
-                default:
-                    throw Illegal.Value<SamplerAddressMode>();
-            }
+                SamplerAddressMode.Wrap => TextureAddressMode.Wrap,
+                SamplerAddressMode.Mirror => TextureAddressMode.Mirror,
+                SamplerAddressMode.Clamp => TextureAddressMode.Clamp,
+                SamplerAddressMode.Border => TextureAddressMode.Border,
+                _ => throw Illegal.Value<SamplerAddressMode>(),
+            };
         }
 
         internal static Format GetDepthFormat(PixelFormat format)
         {
-            switch (format)
+            return format switch
             {
-                case PixelFormat.R32_Float:
-                    return Format.D32_Float;
-                case PixelFormat.R16_UNorm:
-                    return Format.D16_UNorm;
-                case PixelFormat.D24_UNorm_S8_UInt:
-                    return Format.D24_UNorm_S8_UInt;
-                case PixelFormat.D32_Float_S8_UInt:
-                    return Format.D32_Float_S8X24_UInt;
-                default:
-                    throw new VeldridException("Invalid depth texture format: " + format);
-            }
+                PixelFormat.R32_Float => Format.D32_Float,
+                PixelFormat.R16_UNorm => Format.D16_UNorm,
+                PixelFormat.D24_UNorm_S8_UInt => Format.D24_UNorm_S8_UInt,
+                PixelFormat.D32_Float_S8_UInt => Format.D32_Float_S8X24_UInt,
+                _ => throw new VeldridException("Invalid depth texture format: " + format),
+            };
         }
     }
 }

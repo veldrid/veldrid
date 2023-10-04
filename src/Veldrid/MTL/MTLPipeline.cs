@@ -5,10 +5,10 @@ using Veldrid.MetalBindings;
 
 namespace Veldrid.MTL
 {
-    internal class MTLPipeline : Pipeline
+    internal sealed class MTLPipeline : Pipeline
     {
         private bool _disposed;
-        private List<MTLFunction> _specializedFunctions;
+        private List<MTLFunction> _specializedFunctions = new();
 
         public MTLRenderPipelineState RenderPipelineState { get; }
         public MTLComputePipelineState ComputePipelineState { get; }
@@ -26,13 +26,13 @@ namespace Veldrid.MTL
         public bool ScissorTestEnabled { get; }
         public MTLSize ThreadsPerThreadgroup { get; } = new MTLSize(1, 1, 1);
         public bool HasStencil { get; }
-        public override string Name { get; set; }
+        public override string? Name { get; set; }
         public uint StencilReference { get; }
         public RgbaFloat BlendColor { get; }
         public override bool IsDisposed => _disposed;
 
-        public MTLPipeline(ref GraphicsPipelineDescription description, MTLGraphicsDevice gd)
-            : base(ref description)
+        public MTLPipeline(in GraphicsPipelineDescription description, MTLGraphicsDevice gd)
+            : base(description)
         {
             PrimitiveType = MTLFormats.VdToMTLPrimitiveTopology(description.PrimitiveTopology);
             ResourceLayouts = new MTLResourceLayout[description.ResourceLayouts.Length];
@@ -81,7 +81,7 @@ namespace Veldrid.MTL
             }
 
             // Vertex layouts
-            VertexLayoutDescription[] vdVertexLayouts = description.ShaderSet.VertexLayouts;
+            VertexLayoutDescription[] vdVertexLayouts = description.ShaderSet.VertexLayouts ?? Array.Empty<VertexLayoutDescription>();
             MTLVertexDescriptor vertexDescriptor = mtlDesc.vertexDescriptor;
 
             for (uint i = 0; i < vdVertexLayouts.Length; i++)
@@ -101,7 +101,7 @@ namespace Veldrid.MTL
             {
                 uint offset = 0;
                 VertexLayoutDescription vdDesc = vdVertexLayouts[i];
-                for (uint j = 0; j < vdDesc.Elements.Length; j++)
+                for (int j = 0; j < vdDesc.Elements.Length; j++)
                 {
                     VertexElementDescription elementDesc = vdDesc.Elements[j];
                     MTLVertexAttributeDescriptor mtlAttribute = vertexDescriptor.attributes[element];
@@ -138,11 +138,13 @@ namespace Veldrid.MTL
                     mtlDesc.stencilAttachmentPixelFormat = mtlDepthFormat;
                 }
             }
-            for (uint i = 0; i < outputs.ColorAttachments.Length; i++)
+
+            ReadOnlySpan<OutputAttachmentDescription> outputColorAttachments = outputs.ColorAttachments;
+            for (int i = 0; i < outputColorAttachments.Length; i++)
             {
                 BlendAttachmentDescription attachmentBlendDesc = blendStateDesc.AttachmentStates[i];
-                MTLRenderPipelineColorAttachmentDescriptor colorDesc = mtlDesc.colorAttachments[i];
-                colorDesc.pixelFormat = MTLFormats.VdToMTLPixelFormat(outputs.ColorAttachments[i].Format, false);
+                MTLRenderPipelineColorAttachmentDescriptor colorDesc = mtlDesc.colorAttachments[(uint)i];
+                colorDesc.pixelFormat = MTLFormats.VdToMTLPixelFormat(outputColorAttachments[i].Format, false);
                 colorDesc.blendingEnabled = attachmentBlendDesc.BlendEnabled;
                 colorDesc.writeMask = MTLFormats.VdToMTLColorWriteMask(attachmentBlendDesc.ColorWriteMask.GetOrDefault());
                 colorDesc.alphaBlendOperation = MTLFormats.VdToMTLBlendOp(attachmentBlendDesc.AlphaFunction);
@@ -203,8 +205,8 @@ namespace Veldrid.MTL
             DepthClipMode = description.DepthStencilState.DepthTestEnabled ? MTLDepthClipMode.Clip : MTLDepthClipMode.Clamp;
         }
 
-        public MTLPipeline(ref ComputePipelineDescription description, MTLGraphicsDevice gd)
-            : base(ref description)
+        public MTLPipeline(in ComputePipelineDescription description, MTLGraphicsDevice gd)
+            : base(description)
         {
             IsComputePipeline = true;
             ResourceLayouts = new MTLResourceLayout[description.ResourceLayouts.Length];
@@ -266,7 +268,7 @@ namespace Veldrid.MTL
             ObjectiveCRuntime.release(mtlDesc.NativePtr);
         }
 
-        private unsafe MTLFunctionConstantValues CreateConstantValues(SpecializationConstant[] specializations)
+        private static unsafe MTLFunctionConstantValues CreateConstantValues(SpecializationConstant[]? specializations)
         {
             MTLFunctionConstantValues ret = MTLFunctionConstantValues.New();
             if (specializations != null)
@@ -283,7 +285,6 @@ namespace Veldrid.MTL
 
         private void AddSpecializedFunction(MTLFunction function)
         {
-            if (_specializedFunctions == null) { _specializedFunctions = new List<MTLFunction>(); }
             _specializedFunctions.Add(function);
         }
 

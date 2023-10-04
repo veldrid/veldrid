@@ -7,7 +7,6 @@ namespace Veldrid.VirtualReality
 {
     internal class TextureBlitter : IDisposable
     {
-        private readonly GraphicsDevice _gd;
         private readonly ResourceLayout _rl;
         private readonly ResourceLayout _sampleRegionLayout;
         private readonly Pipeline _pipeline;
@@ -23,8 +22,6 @@ namespace Veldrid.VirtualReality
             OutputDescription outputDesc,
             bool srgbOutput)
         {
-            _gd = gd;
-
             SpecializationConstant[] specConstants = new[]
             {
                 new SpecializationConstant(0, srgbOutput),
@@ -64,7 +61,7 @@ namespace Veldrid.VirtualReality
 
         public void Render(CommandList cl, ResourceSet rs, Vector2 minUV, Vector2 maxUV)
         {
-            Vector4 newVal = new Vector4(minUV.X, minUV.Y, maxUV.X, maxUV.Y);
+            Vector4 newVal = new(minUV.X, minUV.Y, maxUV.X, maxUV.Y);
             if (_lastMinMaxUV != newVal)
             {
                 _lastMinMaxUV = newVal;

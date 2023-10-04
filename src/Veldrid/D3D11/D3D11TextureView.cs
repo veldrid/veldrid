@@ -3,16 +3,16 @@ using System;
 
 namespace Veldrid.D3D11
 {
-    internal class D3D11TextureView : TextureView
+    internal sealed class D3D11TextureView : TextureView
     {
-        private string _name;
+        private string? _name;
         private bool _disposed;
 
         public ID3D11ShaderResourceView ShaderResourceView { get; }
-        public ID3D11UnorderedAccessView UnorderedAccessView { get; }
+        public ID3D11UnorderedAccessView? UnorderedAccessView { get; }
 
-        public D3D11TextureView(D3D11GraphicsDevice gd, ref TextureViewDescription description)
-            : base(ref description)
+        public D3D11TextureView(D3D11GraphicsDevice gd, in TextureViewDescription description)
+            : base(description)
         {
             ID3D11Device device = gd.Device;
             D3D11Texture d3dTex = Util.AssertSubtype<Texture, D3D11Texture>(description.Target);
@@ -27,7 +27,7 @@ namespace Veldrid.D3D11
 
             if ((d3dTex.Usage & TextureUsage.Storage) == TextureUsage.Storage)
             {
-                UnorderedAccessViewDescription uavDesc = new UnorderedAccessViewDescription();
+                UnorderedAccessViewDescription uavDesc = new();
                 uavDesc.Format = D3D11Formats.GetViewFormat(d3dTex.DxgiFormat);
 
                 if ((d3dTex.Usage & TextureUsage.Cubemap) == TextureUsage.Cubemap)
@@ -81,7 +81,7 @@ namespace Veldrid.D3D11
             }
         }
 
-        public override string Name
+        public override string? Name
         {
             get => _name;
             set

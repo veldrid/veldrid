@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace Veldrid.Utilities
 {
@@ -15,7 +16,7 @@ namespace Veldrid.Utilities
             Max = max;
         }
 
-        public ContainmentType Contains(ref BoundingBox other)
+        public readonly ContainmentType Contains(BoundingBox other)
         {
             if (Max.X < other.Min.X || Min.X > other.Max.X
                 || Max.Y < other.Min.Y || Min.Y > other.Max.Y
@@ -35,12 +36,12 @@ namespace Veldrid.Utilities
             }
         }
 
-        public Vector3 GetCenter()
+        public readonly Vector3 GetCenter()
         {
             return (Max + Min) / 2f;
         }
 
-        public Vector3 GetDimensions()
+        public readonly Vector3 GetDimensions()
         {
             return Max - Min;
         }
@@ -62,30 +63,23 @@ namespace Veldrid.Utilities
             return new BoundingBox(min, max);
         }
 
-        public static unsafe BoundingBox CreateFromVertices(
-            Vector3* vertices,
-            int numVertices,
-            Quaternion rotation,
-            Vector3 offset,
-            Vector3 scale)
-            => CreateFromPoints(vertices, Unsafe.SizeOf<Vector3>(), numVertices, rotation, offset, scale);
-        public static unsafe BoundingBox CreateFromPoints(
-            Vector3* vertexPtr,
-            int numVertices,
-            int vertexStride,
+        public static BoundingBox CreateFromPoints(
+            ReadOnlySpan<Vector3> points,
             Quaternion rotation,
             Vector3 offset,
             Vector3 scale)
         {
-            byte* bytePtr = (byte*)vertexPtr;
-            Vector3 min = Vector3.Transform(*vertexPtr, rotation);
-            Vector3 max = Vector3.Transform(*vertexPtr, rotation);
-
-            for (int i = 1; i < numVertices; i++)
+            if (points.Length == 0)
             {
-                bytePtr = bytePtr + vertexStride;
-                vertexPtr = (Vector3*)bytePtr;
-                Vector3 pos = Vector3.Transform(*vertexPtr, rotation);
+                return new BoundingBox(offset, offset);
+            }
+
+            Vector3 min = Vector3.Transform(points[0], rotation);
+            Vector3 max = Vector3.Transform(points[0], rotation);
+
+            for (int i = 1; i < points.Length; i++)
+            {
+                Vector3 pos = Vector3.Transform(points[i], rotation);
 
                 if (min.X > pos.X) min.X = pos.X;
                 if (max.X < pos.X) max.X = pos.X;
@@ -100,31 +94,55 @@ namespace Veldrid.Utilities
             return new BoundingBox((min * scale) + offset, (max * scale) + offset);
         }
 
-        public static unsafe BoundingBox CreateFromVertices(Vector3[] vertices)
+        public static BoundingBox CreateFromPoints(
+            ReadOnlySpan<byte> pointBytes,
+            int pointStride,
+            Quaternion rotation,
+            Vector3 offset,
+            Vector3 scale)
         {
-            return CreateFromVertices(vertices, Quaternion.Identity, Vector3.Zero, Vector3.One);
-        }
-
-        public static unsafe BoundingBox CreateFromVertices(Vector3[] vertices, Quaternion rotation, Vector3 offset, Vector3 scale)
-        {
-            Vector3 min = Vector3.Transform(vertices[0], rotation);
-            Vector3 max = Vector3.Transform(vertices[0], rotation);
-
-            for (int i = 1; i < vertices.Length; i++)
+            nuint stride = (nuint)pointStride;
+            nuint pointCount = (nuint)pointBytes.Length / stride;
+            if (pointCount < 1)
             {
-                Vector3 pos = Vector3.Transform(vertices[i], rotation);
-
-                if (min.X > pos.X) min.X = pos.X;
-                if (max.X < pos.X) max.X = pos.X;
-
-                if (min.Y > pos.Y) min.Y = pos.Y;
-                if (max.Y < pos.Y) max.Y = pos.Y;
-
-                if (min.Z > pos.Z) min.Z = pos.Z;
-                if (max.Z < pos.Z) max.Z = pos.Z;
+                return new BoundingBox(offset, offset);
             }
 
-            return new BoundingBox((min * scale) + offset, (max * scale) + offset);
+            ref byte ptr = ref MemoryMarshal.GetReference(pointBytes);
+            ref byte endPtr = ref Unsafe.Add(ref ptr, pointCount * stride);
+
+            Vector3 first = Unsafe.ReadUnaligned<Vector3>(ref ptr);
+            ptr = ref Unsafe.Add(ref ptr, stride);
+
+            Vector3 min = Vector3.Transform(first, rotation);
+            Vector3 max = Vector3.Transform(first, rotation);
+
+            while (Unsafe.IsAddressLessThan(ref ptr, ref endPtr))
+            {
+                Vector3 point = Unsafe.ReadUnaligned<Vector3>(ref ptr);
+                ptr = ref Unsafe.Add(ref ptr, stride);
+
+                Vector3 pos = Vector3.Transform(point, rotation);
+
+                if (min.X > pos.X)
+                    min.X = pos.X;
+                if (max.X < pos.X)
+                    max.X = pos.X;
+
+                if (min.Y > pos.Y)
+                    min.Y = pos.Y;
+                if (max.Y < pos.Y)
+                    max.Y = pos.Y;
+
+                if (min.Z > pos.Z)
+                    min.Z = pos.Z;
+                if (max.Z < pos.Z)
+                    max.Z = pos.Z;
+            }
+
+            return new BoundingBox(
+                (min * scale) + offset,
+                (max * scale) + offset);
         }
 
         public static BoundingBox Combine(BoundingBox box1, BoundingBox box2)
@@ -144,22 +162,22 @@ namespace Veldrid.Utilities
             return !first.Equals(second);
         }
 
-        public bool Equals(BoundingBox other)
+        public readonly bool Equals(BoundingBox other)
         {
             return Min == other.Min && Max == other.Max;
         }
 
-        public override string ToString()
+        public override readonly string ToString()
         {
             return string.Format("Min:{0}, Max:{1}", Min, Max);
         }
 
-        public override bool Equals(object obj)
+        public override readonly bool Equals(object? obj)
         {
-            return obj is BoundingBox && ((BoundingBox)obj).Equals(this);
+            return obj is BoundingBox box && Equals(box);
         }
 
-        public override int GetHashCode()
+        public override readonly int GetHashCode()
         {
             int h1 = Min.GetHashCode();
             int h2 = Max.GetHashCode();
@@ -167,9 +185,14 @@ namespace Veldrid.Utilities
             return ((int)shift5 + h1) ^ h2;
         }
 
-        public AlignedBoxCorners GetCorners()
+        public readonly AlignedBoxCorners GetCorners()
         {
-            AlignedBoxCorners corners;
+            GetCorners(out AlignedBoxCorners corners);
+            return corners;
+        }
+
+        public readonly void GetCorners(out AlignedBoxCorners corners)
+        {
             corners.NearBottomLeft = new Vector3(Min.X, Min.Y, Max.Z);
             corners.NearBottomRight = new Vector3(Max.X, Min.Y, Max.Z);
             corners.NearTopLeft = new Vector3(Min.X, Max.Y, Max.Z);
@@ -179,15 +202,12 @@ namespace Veldrid.Utilities
             corners.FarBottomRight = new Vector3(Max.X, Min.Y, Min.Z);
             corners.FarTopLeft = new Vector3(Min.X, Max.Y, Min.Z);
             corners.FarTopRight = new Vector3(Max.X, Max.Y, Min.Z);
-
-            return corners;
         }
 
-        public bool ContainsNaN()
+        public readonly bool ContainsNaN()
         {
             return float.IsNaN(Min.X) || float.IsNaN(Min.Y) || float.IsNaN(Min.Z)
                 || float.IsNaN(Max.X) || float.IsNaN(Max.Y) || float.IsNaN(Max.Z);
         }
-
     }
 }

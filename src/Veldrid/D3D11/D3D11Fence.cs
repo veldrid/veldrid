@@ -3,7 +3,7 @@ using System.Threading;
 
 namespace Veldrid.D3D11
 {
-    internal class D3D11Fence : Fence
+    internal sealed class D3D11Fence : Fence
     {
         private readonly ManualResetEvent _mre;
         private bool _disposed;
@@ -13,7 +13,7 @@ namespace Veldrid.D3D11
             _mre = new ManualResetEvent(signaled);
         }
 
-        public override string Name { get; set; }
+        public override string? Name { get; set; }
         public ManualResetEvent ResetEvent => _mre;
 
         public void Set() => _mre.Set();

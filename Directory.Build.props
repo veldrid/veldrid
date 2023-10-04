@@ -10,9 +10,8 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <VeldridSpirvVersion>1.0.14</VeldridSpirvVersion>
-    <NativeLibraryLoaderVersion>1.0.12</NativeLibraryLoaderVersion>
-    <VorticeWindowsVersion>2.1.0</VorticeWindowsVersion>
+    <NativeLibraryLoaderVersion>1.0.13</NativeLibraryLoaderVersion>
+    <VorticeWindowsVersion>2.3.0</VorticeWindowsVersion>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -40,7 +39,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
   </ItemGroup>
-
+  
   <PropertyGroup>
     <NerdbankGitVersioningVersion>3.4.255</NerdbankGitVersioningVersion>
   </PropertyGroup>

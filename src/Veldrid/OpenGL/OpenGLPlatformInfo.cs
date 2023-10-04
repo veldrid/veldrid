@@ -52,13 +52,13 @@ namespace Veldrid.OpenGL
         /// A delegate which can be used to set the framebuffer used to render to the application Swapchain.
         /// If this is null, the default FBO (0) will be bound.
         /// </summary>
-        public Action SetSwapchainFramebuffer { get; }
+        public Action? SetSwapchainFramebuffer { get; }
 
         /// <summary>
         /// A delegate which is invoked when the main Swapchain is resized. This may be null, in which case
         /// no special action is taken when the Swapchain is resized.
         /// </summary>
-        public Action<uint, uint> ResizeSwapchain { get; }
+        public Action<uint, uint>? ResizeSwapchain { get; }
 
         /// <summary>
         /// Constructs a new OpenGLPlatformInfo.
@@ -121,8 +121,8 @@ namespace Veldrid.OpenGL
             Action<IntPtr> deleteContext,
             Action swapBuffers,
             Action<bool> setSyncToVerticalBlank,
-            Action setSwapchainFramebuffer,
-            Action<uint, uint> resizeSwapchain)
+            Action? setSwapchainFramebuffer,
+            Action<uint, uint>? resizeSwapchain)
         {
             OpenGLContextHandle = openGLContextHandle;
             GetProcAddress = getProcAddress;

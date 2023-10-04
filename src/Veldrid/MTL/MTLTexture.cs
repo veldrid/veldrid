@@ -3,7 +3,7 @@ using Veldrid.MetalBindings;
 
 namespace Veldrid.MTL
 {
-    internal class MTLTexture : Texture
+    internal sealed class MTLTexture : Texture
     {
         private bool _disposed;
 
@@ -16,29 +16,14 @@ namespace Veldrid.MTL
         /// </summary>
         public MetalBindings.MTLBuffer StagingBuffer { get; }
 
-        public override PixelFormat Format { get; }
+        public override string? Name { get; set; }
 
-        public override uint Width { get; }
-
-        public override uint Height { get; }
-
-        public override uint Depth { get; }
-
-        public override uint MipLevels { get; }
-
-        public override uint ArrayLayers { get; }
-
-        public override TextureUsage Usage { get; }
-
-        public override TextureType Type { get; }
-
-        public override TextureSampleCount SampleCount { get; }
-        public override string Name { get; set; }
         public override bool IsDisposed => _disposed;
+
         public MTLPixelFormat MTLPixelFormat { get; }
         public MTLTextureType MTLTextureType { get; }
 
-        public MTLTexture(ref TextureDescription description, MTLGraphicsDevice _gd)
+        public MTLTexture(in TextureDescription description, MTLGraphicsDevice _gd)
         {
             Width = description.Width;
             Height = description.Height;
@@ -96,7 +81,7 @@ namespace Veldrid.MTL
             }
         }
 
-        public MTLTexture(ulong nativeTexture, ref TextureDescription description)
+        public MTLTexture(ulong nativeTexture, in TextureDescription description)
         {
             DeviceTexture = new MetalBindings.MTLTexture((IntPtr)nativeTexture);
             Width = description.Width;
@@ -116,28 +101,6 @@ namespace Veldrid.MTL
                     ArrayLayers,
                     SampleCount != TextureSampleCount.Count1,
                     (Usage & TextureUsage.Cubemap) != 0);
-        }
-
-        internal uint GetSubresourceSize(uint mipLevel, uint arrayLayer)
-        {
-            uint blockSize = FormatHelpers.IsCompressedFormat(Format) ? 4u : 1u;
-            Util.GetMipDimensions(this, mipLevel, out uint width, out uint height, out uint depth);
-            uint storageWidth = Math.Max(blockSize, width);
-            uint storageHeight = Math.Max(blockSize, height);
-            return depth * FormatHelpers.GetDepthPitch(
-                FormatHelpers.GetRowPitch(storageWidth, Format),
-                storageHeight,
-                Format);
-        }
-
-        internal void GetSubresourceLayout(uint mipLevel, uint arrayLayer, out uint rowPitch, out uint depthPitch)
-        {
-            uint blockSize = FormatHelpers.IsCompressedFormat(Format) ? 4u : 1u;
-            Util.GetMipDimensions(this, mipLevel, out uint mipWidth, out uint mipHeight, out uint mipDepth);
-            uint storageWidth = Math.Max(blockSize, mipWidth);
-            uint storageHeight = Math.Max(blockSize, mipHeight);
-            rowPitch = FormatHelpers.GetRowPitch(storageWidth, Format);
-            depthPitch = FormatHelpers.GetDepthPitch(rowPitch, storageHeight, Format);
         }
 
         private protected override void DisposeCore()

@@ -88,9 +88,9 @@ namespace Veldrid.Tests
         internal WidePixel GetTestPixel(uint x, uint y, uint z)
         {
             ulong? r = x % RMaxValue;
-            ulong? g = GreenBits != 0 ? (y % GMaxValue) : (ulong?)null;
-            ulong? b = BlueBits != 0 ? (z % BMaxValue) : (ulong?)null;
-            ulong? a = AlphaBits != 0 ? 1 : (ulong?)null;
+            ulong? g = GreenBits != 0 ? (y % GMaxValue) : null;
+            ulong? b = BlueBits != 0 ? (z % BMaxValue) : null;
+            ulong? a = AlphaBits != 0 ? 1 : null;
             return new WidePixel(r, g, b, a);
         }
 

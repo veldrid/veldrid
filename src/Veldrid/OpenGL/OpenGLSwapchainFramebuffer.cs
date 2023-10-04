@@ -1,33 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
-
+﻿
 namespace Veldrid.OpenGL
 {
-    internal class OpenGLSwapchainFramebuffer : Framebuffer
+    internal sealed class OpenGLSwapchainFramebuffer : Framebuffer
     {
         private readonly PixelFormat? _depthFormat;
         private bool _disposed;
 
-        public override uint Width => _colorTexture.Width;
-        public override uint Height => _colorTexture.Height;
+        public override string? Name { get; set; }
 
-        public override OutputDescription OutputDescription { get; }
-        public override string Name { get; set; }
         public override bool IsDisposed => _disposed;
 
         private readonly OpenGLPlaceholderTexture _colorTexture;
-        private readonly OpenGLPlaceholderTexture _depthTexture;
-
-        private readonly FramebufferAttachment[] _colorTargets;
-        private readonly FramebufferAttachment? _depthTarget;
-
-        public override IReadOnlyList<FramebufferAttachment> ColorTargets => _colorTargets;
-        public override FramebufferAttachment? DepthTarget => _depthTarget;
+        private readonly OpenGLPlaceholderTexture? _depthTexture;
 
         public bool DisableSrgbConversion { get; }
 
         internal OpenGLSwapchainFramebuffer(
-            uint width, uint height,
+            uint width,
+            uint height,
             PixelFormat colorFormat,
             PixelFormat? depthFormat,
             bool disableSrgbConversion)
@@ -36,7 +26,7 @@ namespace Veldrid.OpenGL
             // This is wrong, but it's not really used.
             OutputAttachmentDescription? depthDesc = _depthFormat != null
                 ? new OutputAttachmentDescription(_depthFormat.Value)
-                : (OutputAttachmentDescription?)null;
+                : null;
             OutputDescription = new OutputDescription(
                 depthDesc,
                 new OutputAttachmentDescription(colorFormat));
@@ -54,13 +44,15 @@ namespace Veldrid.OpenGL
                 _depthTexture = new OpenGLPlaceholderTexture(
                     width,
                     height,
-                    depthFormat.Value,
+                    _depthFormat.Value,
                     TextureUsage.DepthStencil,
                     TextureSampleCount.Count1);
                 _depthTarget = new FramebufferAttachment(_depthTexture, 0);
             }
 
             OutputDescription = OutputDescription.CreateFromFramebuffer(this);
+            Width = width;
+            Height = height;
 
             DisableSrgbConversion = disableSrgbConversion;
         }
@@ -69,6 +61,8 @@ namespace Veldrid.OpenGL
         {
             _colorTexture.Resize(width, height);
             _depthTexture?.Resize(width, height);
+            Width = width;
+            Height = height;
         }
 
         public override void Dispose()

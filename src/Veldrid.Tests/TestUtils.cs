@@ -40,14 +40,14 @@ namespace Veldrid.Tests
                 return;
             }
 
-            WindowCreateInfo wci = new WindowCreateInfo
+            WindowCreateInfo wci = new()
             {
                 WindowWidth = 200,
                 WindowHeight = 200,
                 WindowInitialState = WindowState.Hidden,
             };
 
-            GraphicsDeviceOptions options = new GraphicsDeviceOptions(true, PixelFormat.R16_UNorm, false);
+            GraphicsDeviceOptions options = new(true, PixelFormat.R16_UNorm, false);
 
             VeldridStartup.CreateWindowAndGraphicsDevice(wci, options, GraphicsBackend.Vulkan, out window, out gd);
         }
@@ -66,14 +66,14 @@ namespace Veldrid.Tests
                 return;
             }
 
-            WindowCreateInfo wci = new WindowCreateInfo
+            WindowCreateInfo wci = new()
             {
                 WindowWidth = 200,
                 WindowHeight = 200,
                 WindowInitialState = WindowState.Hidden,
             };
 
-            GraphicsDeviceOptions options = new GraphicsDeviceOptions(true, PixelFormat.R16_UNorm, false);
+            GraphicsDeviceOptions options = new(true, PixelFormat.R16_UNorm, false);
 
             VeldridStartup.CreateWindowAndGraphicsDevice(wci, options, GraphicsBackend.Direct3D11, out window, out gd);
         }
@@ -87,14 +87,14 @@ namespace Veldrid.Tests
                 return;
             }
 
-            WindowCreateInfo wci = new WindowCreateInfo
+            WindowCreateInfo wci = new()
             {
                 WindowWidth = 200,
                 WindowHeight = 200,
                 WindowInitialState = WindowState.Hidden,
             };
 
-            GraphicsDeviceOptions options = new GraphicsDeviceOptions(true, PixelFormat.R16_UNorm, false);
+            GraphicsDeviceOptions options = new(true, PixelFormat.R16_UNorm, false);
 
             VeldridStartup.CreateWindowAndGraphicsDevice(wci, options, GraphicsBackend.OpenGL, out window, out gd);
         }
@@ -108,14 +108,14 @@ namespace Veldrid.Tests
                 return;
             }
 
-            WindowCreateInfo wci = new WindowCreateInfo
+            WindowCreateInfo wci = new()
             {
                 WindowWidth = 200,
                 WindowHeight = 200,
                 WindowInitialState = WindowState.Hidden,
             };
 
-            GraphicsDeviceOptions options = new GraphicsDeviceOptions(true, PixelFormat.R16_UNorm, false);
+            GraphicsDeviceOptions options = new(true, PixelFormat.R16_UNorm, false);
 
             VeldridStartup.CreateWindowAndGraphicsDevice(wci, options, GraphicsBackend.OpenGLES, out window, out gd);
         }
@@ -139,14 +139,14 @@ namespace Veldrid.Tests
                 return;
             }
 
-            WindowCreateInfo wci = new WindowCreateInfo
+            WindowCreateInfo wci = new()
             {
                 WindowWidth = 200,
                 WindowHeight = 200,
                 WindowInitialState = WindowState.Hidden,
             };
 
-            GraphicsDeviceOptions options = new GraphicsDeviceOptions(true, PixelFormat.R16_UNorm, false, ResourceBindingModel.Improved);
+            GraphicsDeviceOptions options = new(true, PixelFormat.R16_UNorm, false, ResourceBindingModel.Improved);
 
             VeldridStartup.CreateWindowAndGraphicsDevice(wci, options, GraphicsBackend.Metal, out window, out gd);
         }
@@ -190,13 +190,13 @@ namespace Veldrid.Tests
         protected DeviceBuffer GetReadback(DeviceBuffer buffer)
         {
             DeviceBuffer readback;
-            if ((buffer.Usage & BufferUsage.Staging) != 0)
+            if ((buffer.Usage & BufferUsage.StagingRead) != 0)
             {
                 readback = buffer;
             }
             else
             {
-                readback = RF.CreateBuffer(new BufferDescription(buffer.SizeInBytes, BufferUsage.Staging));
+                readback = RF.CreateBuffer(new BufferDescription(buffer.SizeInBytes, BufferUsage.StagingRead));
                 Fence fence = RF.CreateFence(false);
                 CommandList cl = RF.CreateCommandList();
                 cl.Begin();
@@ -222,7 +222,7 @@ namespace Veldrid.Tests
                 {
                     layers *= 6;
                 }
-                TextureDescription desc = new TextureDescription(
+                TextureDescription desc = new(
                     texture.Width, texture.Height, texture.Depth,
                     texture.MipLevels, layers,
                     texture.Format,

@@ -1,6 +1,5 @@
 using System;
-﻿using System.Diagnostics;
-using System.Text;
+using System.Diagnostics;
 using Veldrid.OpenGLBinding;
 using static Veldrid.OpenGLBinding.OpenGLNative;
 
@@ -11,50 +10,62 @@ namespace Veldrid.OpenGL
         private static int? MaxLabelLength;
 
         [Conditional("DEBUG")]
-        [DebuggerNonUserCode]
         internal static void CheckLastError()
+        {
+            VerifyLastError();
+        }
+
+        internal static void VerifyLastError()
         {
             uint error = glGetError();
             if (error != 0)
             {
-                if (Debugger.IsAttached)
-                {
-                    Debugger.Break();
-                }
-
-                throw new VeldridException("glGetError indicated an error: " + (ErrorCode)error);
+                ThrowLastError(error);
             }
         }
 
-        internal static unsafe void SetObjectLabel(ObjectLabelIdentifier identifier, uint target, string name)
+        private static void ThrowLastError(uint error)
         {
-            if (HasGlObjectLabel)
+            throw new VeldridException("glGetError: " + (ErrorCode)error);
+        }
+
+        internal static unsafe void SetObjectLabel(ObjectLabelIdentifier identifier, uint target, ReadOnlySpan<char> name)
+        {
+            if (!HasGlObjectLabel)
             {
-                int byteCount = Encoding.UTF8.GetByteCount(name);
-                if (MaxLabelLength == null)
-                {
-                    int maxLabelLength = -1;
-                    glGetIntegerv(GetPName.MaxLabelLength, &maxLabelLength);
-                    CheckLastError();
-                    MaxLabelLength = maxLabelLength;
-                }
-                if (byteCount >= MaxLabelLength)
-                {
-                    name = name.Substring(0, MaxLabelLength.Value - 4) + "...";
-                    byteCount = Encoding.UTF8.GetByteCount(name);
-                }
+                return;
+            }
 
-                Span<byte> utf8bytes = stackalloc byte[128];
-                if(byteCount + 1 > 128) utf8bytes = new byte[byteCount + 1];
+            if (name.IsEmpty)
+            {
+                glObjectLabel(identifier, target, 0, null);
+                CheckLastError();
+                return;
+            }
 
-                fixed (char* namePtr = name)
-                fixed (byte* utf8bytePtr = utf8bytes)
-                {
-                    int written = Encoding.UTF8.GetBytes(namePtr, name.Length, utf8bytePtr, byteCount);
-                    utf8bytePtr[written] = 0;
-                    glObjectLabel(identifier, target, (uint)byteCount, utf8bytePtr);
-                    CheckLastError();
-                }
+            int maxLabelLength = 0;
+            if (!MaxLabelLength.HasValue)
+            {
+                glGetIntegerv(GetPName.MaxLabelLength, &maxLabelLength);
+                CheckLastError();
+                MaxLabelLength = maxLabelLength;
+            }
+            maxLabelLength = MaxLabelLength.GetValueOrDefault();
+            
+            int byteCount = Util.UTF8.GetByteCount(name);
+            if (byteCount >= maxLabelLength)
+            {
+                name = name[..(maxLabelLength - 4)].ToString() + "...";
+                byteCount = Util.UTF8.GetByteCount(name);
+            }
+
+            Span<byte> utf8bytes = stackalloc byte[1024];
+            byteCount = Util.GetNullTerminatedUtf8(name, ref utf8bytes);
+
+            fixed (byte* utf8bytePtr = utf8bytes)
+            {
+                glObjectLabel(identifier, target, (uint)byteCount, utf8bytePtr);
+                CheckLastError();
             }
         }
 

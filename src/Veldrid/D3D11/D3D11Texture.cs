@@ -4,29 +4,18 @@ using Vortice.Direct3D11;
 
 namespace Veldrid.D3D11
 {
-    internal class D3D11Texture : Texture
+    internal sealed class D3D11Texture : Texture
     {
-        private readonly ID3D11Device _device;
-        private string _name;
+        private string? _name;
 
-        public override uint Width { get; }
-        public override uint Height { get; }
-        public override uint Depth { get; }
-        public override uint MipLevels { get; }
-        public override uint ArrayLayers { get; }
-        public override PixelFormat Format { get; }
-        public override TextureUsage Usage { get; }
-        public override TextureType Type { get; }
-        public override TextureSampleCount SampleCount { get; }
         public override bool IsDisposed => DeviceTexture.NativePointer == IntPtr.Zero;
 
         public ID3D11Resource DeviceTexture { get; }
         public Vortice.DXGI.Format DxgiFormat { get; }
         public Vortice.DXGI.Format TypelessDxgiFormat { get; }
 
-        public D3D11Texture(ID3D11Device device, ref TextureDescription description)
+        public D3D11Texture(ID3D11Device device, in TextureDescription description)
         {
-            _device = device;
             Width = description.Width;
             Height = description.Height;
             Depth = description.Depth;
@@ -92,23 +81,23 @@ namespace Veldrid.D3D11
 
             if (Type == TextureType.Texture1D)
             {
-                Texture1DDescription desc1D = new Texture1DDescription()
+                Texture1DDescription desc1D = new()
                 {
                     Width = roundedWidth,
                     MipLevels = (int)description.MipLevels,
                     ArraySize = arraySize,
                     Format = TypelessDxgiFormat,
                     BindFlags = bindFlags,
-                    CpuAccessFlags = cpuFlags,
+                    CPUAccessFlags = cpuFlags,
                     Usage = resourceUsage,
-                    OptionFlags = optionFlags,
+                    MiscFlags= optionFlags,
                 };
 
                 DeviceTexture = device.CreateTexture1D(desc1D);
             }
             else if (Type == TextureType.Texture2D)
             {
-                Texture2DDescription deviceDescription = new Texture2DDescription()
+                Texture2DDescription deviceDescription = new()
                 {
                     Width = roundedWidth,
                     Height = roundedHeight,
@@ -116,10 +105,10 @@ namespace Veldrid.D3D11
                     ArraySize = arraySize,
                     Format = TypelessDxgiFormat,
                     BindFlags = bindFlags,
-                    CpuAccessFlags = cpuFlags,
+                    CPUAccessFlags = cpuFlags,
                     Usage = resourceUsage,
                     SampleDescription = new Vortice.DXGI.SampleDescription((int)FormatHelpers.GetSampleCountUInt32(SampleCount), 0),
-                    OptionFlags = optionFlags,
+                    MiscFlags = optionFlags,
                 };
 
                 DeviceTexture = device.CreateTexture2D(deviceDescription);
@@ -127,7 +116,7 @@ namespace Veldrid.D3D11
             else
             {
                 Debug.Assert(Type == TextureType.Texture3D);
-                Texture3DDescription desc3D = new Texture3DDescription()
+                Texture3DDescription desc3D = new()
                 {
                     Width = roundedWidth,
                     Height = roundedHeight,
@@ -135,9 +124,9 @@ namespace Veldrid.D3D11
                     MipLevels = (int)description.MipLevels,
                     Format = TypelessDxgiFormat,
                     BindFlags = bindFlags,
-                    CpuAccessFlags = cpuFlags,
+                    CPUAccessFlags = cpuFlags,
                     Usage = resourceUsage,
-                    OptionFlags = optionFlags,
+                    MiscFlags = optionFlags,
                 };
 
                 DeviceTexture = device.CreateTexture3D(desc3D);
@@ -146,7 +135,6 @@ namespace Veldrid.D3D11
 
         public D3D11Texture(ID3D11Texture2D existingTexture, TextureType type, PixelFormat format)
         {
-            _device = existingTexture.Device;
             DeviceTexture = existingTexture;
             Width = (uint)existingTexture.Description.Width;
             Height = (uint)existingTexture.Description.Height;
@@ -158,8 +146,8 @@ namespace Veldrid.D3D11
             Type = type;
             Usage = D3D11Formats.GetVdUsage(
                 existingTexture.Description.BindFlags,
-                existingTexture.Description.CpuAccessFlags,
-                existingTexture.Description.OptionFlags);
+                existingTexture.Description.CPUAccessFlags,
+                existingTexture.Description.MiscFlags);
 
             DxgiFormat = D3D11Formats.ToDxgiFormat(
                 format,
@@ -169,18 +157,18 @@ namespace Veldrid.D3D11
 
         private protected override TextureView CreateFullTextureView(GraphicsDevice gd)
         {
-            TextureViewDescription desc = new TextureViewDescription(this);
+            TextureViewDescription desc = new(this);
             D3D11GraphicsDevice d3d11GD = Util.AssertSubtype<GraphicsDevice, D3D11GraphicsDevice>(gd);
-            return new D3D11TextureView(d3d11GD, ref desc);
+            return new D3D11TextureView(d3d11GD, desc);
         }
 
-        public override string Name
+        public override string? Name
         {
             get => _name;
             set
             {
                 _name = value;
-                DeviceTexture.DebugName = value;
+                DeviceTexture.DebugName = value!;
             }
         }
 

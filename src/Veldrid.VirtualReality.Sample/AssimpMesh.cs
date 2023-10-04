@@ -15,8 +15,8 @@ namespace Veldrid.VirtualReality.Sample
     internal class AssimpMesh : IDisposable
     {
         private readonly GraphicsDevice _gd;
-        private readonly List<IDisposable> _disposables = new List<IDisposable>();
-        private readonly List<MeshPiece> _meshPieces = new List<MeshPiece>();
+        private readonly List<IDisposable> _disposables = new();
+        private readonly List<MeshPiece> _meshPieces = new();
         private readonly Pipeline _pipeline;
         private readonly DeviceBuffer _wvpBuffer;
         private readonly Texture _texture;
@@ -40,13 +40,13 @@ namespace Veldrid.VirtualReality.Sample
                 new ResourceLayoutElementDescription("InputSampler", ResourceKind.Sampler, ShaderStages.Fragment)));
             _disposables.Add(rl);
 
-            VertexLayoutDescription positionLayoutDesc = new VertexLayoutDescription(
+            VertexLayoutDescription positionLayoutDesc = new(
                 new VertexElementDescription[]
                 {
                     new VertexElementDescription("Position", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float3),
                 });
 
-            VertexLayoutDescription texCoordLayoutDesc = new VertexLayoutDescription(
+            VertexLayoutDescription texCoordLayoutDesc = new(
                 new VertexElementDescription[]
                 {
                     new VertexElementDescription("UV", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float2),
@@ -62,7 +62,7 @@ namespace Veldrid.VirtualReality.Sample
                 outputs));
             _disposables.Add(_pipeline);
 
-            _wvpBuffer = factory.CreateBuffer(new BufferDescription(64 * 3, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
+            _wvpBuffer = factory.CreateBuffer(new BufferDescription(64 * 3, BufferUsage.UniformBuffer | BufferUsage.DynamicWrite));
             _disposables.Add(_wvpBuffer);
 
             _texture = new ImageSharpTexture(texturePath, true, true).CreateDeviceTexture(gd, factory);
@@ -73,7 +73,7 @@ namespace Veldrid.VirtualReality.Sample
             _rs = factory.CreateResourceSet(new ResourceSetDescription(rl, _wvpBuffer, _view, gd.Aniso4xSampler));
             _disposables.Add(_rs);
 
-            AssimpContext ac = new AssimpContext();
+            AssimpContext ac = new();
             Scene scene = ac.ImportFile(meshPath);
 
             foreach (Mesh mesh in scene.Meshes)

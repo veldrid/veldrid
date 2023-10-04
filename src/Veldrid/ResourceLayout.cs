@@ -14,7 +14,7 @@ namespace Veldrid
         internal readonly uint DynamicBufferCount;
 #endif
 
-        internal ResourceLayout(ref ResourceLayoutDescription description)
+        internal ResourceLayout(in ResourceLayoutDescription description)
         {
 #if VALIDATE_USAGE
             Description = description;
@@ -28,11 +28,8 @@ namespace Veldrid
 #endif
         }
 
-        /// <summary>
-        /// A string identifying this instance. Can be used to differentiate between objects in graphics debuggers and other
-        /// tools.
-        /// </summary>
-        public abstract string Name { get; set; }
+        /// <inheritdoc/>
+        public abstract string? Name { get; set; }
 
         /// <summary>
         /// A bool indicating whether this instance has been disposed.

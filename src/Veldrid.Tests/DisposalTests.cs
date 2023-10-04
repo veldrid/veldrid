@@ -58,7 +58,7 @@ namespace Veldrid.Tests
         public void Dispose_Pipeline()
         {
             Shader[] shaders = TestShaders.LoadVertexFragment(RF, "UIntVertexAttribs");
-            ShaderSetDescription shaderSet = new ShaderSetDescription(
+            ShaderSetDescription shaderSet = new(
                 new VertexLayoutDescription[]
                 {
                     new VertexLayoutDescription(
@@ -71,7 +71,7 @@ namespace Veldrid.Tests
                 new ResourceLayoutElementDescription("InfoBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex),
                 new ResourceLayoutElementDescription("Ortho", ResourceKind.UniformBuffer, ShaderStages.Vertex)));
 
-            GraphicsPipelineDescription gpd = new GraphicsPipelineDescription(
+            GraphicsPipelineDescription gpd = new(
                 BlendStateDescription.SingleOverrideBlend,
                 DepthStencilStateDescription.Disabled,
                 RasterizerStateDescription.Default,
@@ -79,7 +79,7 @@ namespace Veldrid.Tests
                 shaderSet,
                 layout,
                 new OutputDescription(null, new OutputAttachmentDescription(PixelFormat.R32_G32_B32_A32_Float)));
-            Pipeline pipeline = RF.CreateGraphicsPipeline(ref gpd);
+            Pipeline pipeline = RF.CreateGraphicsPipeline(gpd);
             pipeline.Dispose();
             Assert.True(pipeline.IsDisposed);
             Assert.False(shaders[0].IsDisposed);

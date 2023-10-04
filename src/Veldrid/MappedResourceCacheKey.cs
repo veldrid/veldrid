@@ -2,14 +2,14 @@
 
 namespace Veldrid
 {
-    internal struct MappedResourceCacheKey : IEquatable<MappedResourceCacheKey>
+    internal readonly struct MappedResourceCacheKey : IEquatable<MappedResourceCacheKey>
     {
         public readonly MappableResource Resource;
         public readonly uint Subresource;
 
         public MappedResourceCacheKey(MappableResource resource, uint subresource)
         {
-            Resource = resource;
+            Resource = resource ?? throw new ArgumentNullException(nameof(resource));
             Subresource = subresource;
         }
 

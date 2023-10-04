@@ -1,23 +1,22 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace Veldrid
 {
     internal static class Util
     {
+        public static Encoding UTF8 { get; } = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
+
         [DebuggerNonUserCode]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static TDerived AssertSubtype<TBase, TDerived>(TBase value) where TDerived : class, TBase where TBase : class
         {
 #if DEBUG
-            if (value == null)
-            {
-                throw new VeldridException($"Expected object of type {typeof(TDerived).FullName} but received null instead.");
-            }
-
-            if (!(value is TDerived derived))
+            if (value is not TDerived derived)
             {
                 throw new VeldridException($"object {value} must be derived type {typeof(TDerived).FullName} to be used in this context.");
             }
@@ -31,30 +30,20 @@ namespace Veldrid
 
         internal static void EnsureArrayMinimumSize<T>(ref T[] array, uint size)
         {
-            if (array == null)
-            {
-                array = new T[size];
-            }
-            else if (array.Length < size)
+            if (array == null || array.Length < size)
             {
                 Array.Resize(ref array, (int)size);
             }
         }
 
-        internal static uint USizeOf<T>() where T : struct
-        {
-            return (uint)Unsafe.SizeOf<T>();
-        }
-
         internal static unsafe string GetString(byte* stringStart)
         {
-            int characters = 0;
-            while (stringStart[characters] != 0)
-            {
-                characters++;
-            }
+            return Marshal.PtrToStringUTF8((IntPtr)stringStart) ?? "";
+        }
 
-            return Encoding.UTF8.GetString(stringStart, characters);
+        internal static unsafe string GetString(sbyte* stringStart)
+        {
+            return GetString((byte*)stringStart);
         }
 
         internal static bool NullableEquals<T>(T? left, T? right) where T : struct, IEquatable<T>
@@ -67,50 +56,14 @@ namespace Veldrid
             return left.HasValue == right.HasValue;
         }
 
-        internal static bool ArrayEquals<T>(T[] left, T[] right) where T : class
+        internal static bool ArrayEquals<T>(T[]? left, T[]? right) where T : class
         {
-            if (left == null || right == null)
-            {
-                return left == right;
-            }
-
-            if (left.Length != right.Length)
-            {
-                return false;
-            }
-
-            for (int i = 0; i < left.Length; i++)
-            {
-                if (!ReferenceEquals(left[i], right[i]))
-                {
-                    return false;
-                }
-            }
-
-            return true;
+            return left.AsSpan().SequenceEqual(right.AsSpan());
         }
 
-        internal static bool ArrayEqualsEquatable<T>(T[] left, T[] right) where T : struct, IEquatable<T>
+        internal static bool ArrayEqualsEquatable<T>(T[]? left, T[]? right) where T : struct, IEquatable<T>
         {
-            if (left == null || right == null)
-            {
-                return left == right;
-            }
-
-            if (left.Length != right.Length)
-            {
-                return false;
-            }
-
-            for (int i = 0; i < left.Length; i++)
-            {
-                if (!left[i].Equals(right[i]))
-                {
-                    return false;
-                }
-            }
-
-            return true;
+            return left.AsSpan().SequenceEqual(right.AsSpan());
         }
 
         internal static void ClearArray<T>(T[] array)
@@ -148,6 +101,12 @@ namespace Veldrid
             width = GetDimension(tex.Width, mipLevel);
             height = GetDimension(tex.Height, mipLevel);
             depth = GetDimension(tex.Depth, mipLevel);
+        }
+
+        internal static void GetMipDimensions(Texture tex, uint mipLevel, out uint width, out uint height)
+        {
+            width = GetDimension(tex.Width, mipLevel);
+            height = GetDimension(tex.Height, mipLevel);
         }
 
         internal static uint GetDimension(uint largestLevelDimension, uint mipLevel)
@@ -254,8 +213,12 @@ namespace Veldrid
             }
         }
 
-        internal static T[] ShallowClone<T>(T[] array)
+        internal static T[] ShallowClone<T>(T[]? array)
         {
+            if (array == null)
+            {
+                return Array.Empty<T>();
+            }
             return (T[])array.Clone();
         }
 
@@ -272,7 +235,7 @@ namespace Veldrid
             }
         }
 
-        public static bool GetDeviceBuffer(BindableResource resource, out DeviceBuffer buffer)
+        public static bool GetDeviceBuffer(BindableResource resource, [MaybeNullWhen(false)] out DeviceBuffer buffer)
         {
             if (resource is DeviceBuffer db)
             {
@@ -317,6 +280,19 @@ namespace Veldrid
         {
             ulong src64 = low | ((ulong)high << 32);
             return (IntPtr)src64;
+        }
+
+        internal static int GetNullTerminatedUtf8(ReadOnlySpan<char> text, ref Span<byte> byteBuffer)
+        {
+            int byteCount = UTF8.GetByteCount(text) + 1;
+            if (byteBuffer.Length < byteCount)
+                byteBuffer = new byte[byteCount];
+
+            int bytesWritten = UTF8.GetBytes(text, byteBuffer);
+            Debug.Assert(bytesWritten == byteCount - 1);
+
+            byteBuffer[byteCount - 1] = 0; // Add null terminator.
+            return bytesWritten;
         }
     }
 }

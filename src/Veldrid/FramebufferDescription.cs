@@ -17,7 +17,7 @@ namespace Veldrid
         /// An array of color textures, all of which must have been created with <see cref="TextureUsage.RenderTarget"/>
         /// usage flags. May be null or empty.
         /// </summary>
-        public FramebufferAttachmentDescription[] ColorTargets;
+        public FramebufferAttachmentDescription[]? ColorTargets;
 
         /// <summary>
         /// Constructs a new <see cref="FramebufferDescription"/>.
@@ -26,7 +26,7 @@ namespace Veldrid
         /// <see cref="TextureUsage.DepthStencil"/> usage flags. May be null.</param>
         /// <param name="colorTargets">An array of color textures, all of which must have been created with
         /// <see cref="TextureUsage.RenderTarget"/> usage flags. May be null or empty.</param>
-        public FramebufferDescription(Texture depthTarget, params Texture[] colorTargets)
+        public FramebufferDescription(Texture? depthTarget, params Texture[]? colorTargets)
         {
             if (depthTarget != null)
             {
@@ -36,10 +36,18 @@ namespace Veldrid
             {
                 DepthTarget = null;
             }
-            ColorTargets = new FramebufferAttachmentDescription[colorTargets.Length];
-            for (int i = 0; i < colorTargets.Length; i++)
+
+            if (colorTargets != null)
             {
-                ColorTargets[i] = new FramebufferAttachmentDescription(colorTargets[i], 0);
+                ColorTargets = new FramebufferAttachmentDescription[colorTargets.Length];
+                for (int i = 0; i < colorTargets.Length; i++)
+                {
+                    ColorTargets[i] = new FramebufferAttachmentDescription(colorTargets[i], 0);
+                }
+            }
+            else
+            {
+                ColorTargets = null;
             }
         }
 
@@ -51,7 +59,7 @@ namespace Veldrid
         /// be used.</param>
         public FramebufferDescription(
             FramebufferAttachmentDescription? depthTarget,
-            FramebufferAttachmentDescription[] colorTargets)
+            FramebufferAttachmentDescription[]? colorTargets)
         {
             DepthTarget = depthTarget;
             ColorTargets = colorTargets;

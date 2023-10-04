@@ -1,6 +1,6 @@
 namespace Veldrid.MTL
 {
-    internal class MTLResourceLayout : ResourceLayout
+    internal sealed class MTLResourceLayout : ResourceLayout
     {
         private readonly ResourceBindingInfo[] _bindingInfosByVdIndex;
         private bool _disposed;
@@ -16,8 +16,8 @@ namespace Veldrid.MTL
         public ResourceLayoutDescription Description { get; }
 #endif
 
-        public MTLResourceLayout(ref ResourceLayoutDescription description, MTLGraphicsDevice gd)
-            : base(ref description)
+        public MTLResourceLayout(in ResourceLayoutDescription description, MTLGraphicsDevice gd)
+            : base(description)
         {
 #if !VALIDATE_USAGE
             Description = description;
@@ -40,30 +40,16 @@ namespace Veldrid.MTL
 
             for (int i = 0; i < _bindingInfosByVdIndex.Length; i++)
             {
-                uint slot;
-                switch (elements[i].Kind)
+                uint slot = elements[i].Kind switch
                 {
-                    case ResourceKind.UniformBuffer:
-                        slot = bufferIndex++;
-                        break;
-                    case ResourceKind.StructuredBufferReadOnly:
-                        slot = bufferIndex++;
-                        break;
-                    case ResourceKind.StructuredBufferReadWrite:
-                        slot = bufferIndex++;
-                        break;
-                    case ResourceKind.TextureReadOnly:
-                        slot = texIndex++;
-                        break;
-                    case ResourceKind.TextureReadWrite:
-                        slot = texIndex++;
-                        break;
-                    case ResourceKind.Sampler:
-                        slot = samplerIndex++;
-                        break;
-                    default: throw Illegal.Value<ResourceKind>();
-                }
-
+                    ResourceKind.UniformBuffer => bufferIndex++,
+                    ResourceKind.StructuredBufferReadOnly => bufferIndex++,
+                    ResourceKind.StructuredBufferReadWrite => bufferIndex++,
+                    ResourceKind.TextureReadOnly => texIndex++,
+                    ResourceKind.TextureReadWrite => texIndex++,
+                    ResourceKind.Sampler => samplerIndex++,
+                    _ => throw Illegal.Value<ResourceKind>(),
+                };
                 _bindingInfosByVdIndex[i] = new ResourceBindingInfo(
                     slot,
                     elements[i].Stages,
@@ -76,7 +62,7 @@ namespace Veldrid.MTL
             SamplerCount = samplerIndex;
         }
 
-        public override string Name { get; set; }
+        public override string? Name { get; set; }
 
         public override bool IsDisposed => _disposed;
 

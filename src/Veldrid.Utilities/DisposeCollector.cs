@@ -5,7 +5,7 @@ namespace Veldrid.Utilities
 {
     public class DisposeCollector
     {
-        private readonly List<IDisposable> _disposables = new List<IDisposable>();
+        private readonly List<IDisposable> _disposables = new();
 
         public void Add(IDisposable disposable)
         {

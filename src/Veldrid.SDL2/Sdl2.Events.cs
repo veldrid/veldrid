@@ -1,6 +1,4 @@
 ﻿using System;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace Veldrid.Sdl2
@@ -36,18 +34,12 @@ namespace Veldrid.Sdl2
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public unsafe delegate int SDL_EventFilter(void* userdata, SDL_Event* @event);
 
-    [StructLayout(LayoutKind.Explicit)]
+    [StructLayout(LayoutKind.Sequential, Size = 56)]
     public struct SDL_Event
     {
-        [FieldOffset(0)]
         public SDL_EventType type;
-        [FieldOffset(4)]
         public uint timestamp;
-        [FieldOffset(8)]
         public uint windowID;
-        [FieldOffset(0)]
-        private Bytex56 __padding;
-        private unsafe struct Bytex56 { private fixed byte bytes[56]; }
     }
 
     [StructLayout(LayoutKind.Sequential)]
@@ -331,12 +323,7 @@ namespace Veldrid.Sdl2
         /// <summary>
         /// text/plain drag-and-drop event
         /// </summary>
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        DropTest,
-        /// <summary>
-        /// text/plain drag-and-drop event
-        /// </summary>
-        DropText = DropTest,
+        DropText,
         /// <summary>
         /// A new set of drops is beginning (NULL filename) 
         /// </summary>
@@ -573,6 +560,36 @@ namespace Veldrid.Sdl2
         /// The input text.
         /// </summary>
         public fixed byte text[MaxTextSize];
+    }
+
+    /// <summary>
+    /// Keyboard text editing event structure (event.text.*)
+    /// </summary>
+    public unsafe struct SDL_TextEditingEvent
+    {
+        public const int MaxTextSize = 32;
+
+        /// <summary>
+        /// SDL_TEXTEDITING.
+        /// </summary>
+        public SDL_EventType type;
+        public uint timestamp;
+        /// <summary>
+        /// The Sdl2Window with keyboard focus, if any.
+        /// </summary>
+        public uint windowID;
+        /// <summary>
+        /// The input text.
+        /// </summary>
+        public fixed byte text[MaxTextSize];
+        /// <summary>
+        /// The location to begin editing from.
+        /// </summary>
+        public int start;
+        /// <summary>
+        /// The number of characters to edit from the start point.
+        /// </summary>
+        public int length;
     }
 
     public unsafe struct SDL_DropEvent

@@ -12,7 +12,7 @@ namespace Veldrid.NeoDemo.Objects
 
         public override void CreateDeviceObjects(GraphicsDevice gd, CommandList cl, SceneContext sc)
         {
-            DisposeCollectorResourceFactory factory = new DisposeCollectorResourceFactory(gd.ResourceFactory);
+            DisposeCollectorResourceFactory factory = new(gd.ResourceFactory);
             _disposeCollector = factory.DisposeCollector;
 
             ResourceLayout resourceLayout = factory.CreateResourceLayout(new ResourceLayoutDescription(
@@ -21,13 +21,14 @@ namespace Veldrid.NeoDemo.Objects
 
             (Shader vs, Shader fs) = StaticResourceCache.GetShaders(gd, gd.ResourceFactory, "ScreenDuplicator");
 
-            var blend = BlendAttachmentDescription.OverrideBlend;
+            BlendAttachmentDescription blend = BlendAttachmentDescription.OverrideBlend;
             blend.ColorWriteMask = sc.MainSceneMask;
 
-            GraphicsPipelineDescription pd = new GraphicsPipelineDescription(
+            GraphicsPipelineDescription pd = new(
                 new BlendStateDescription(
                     RgbaFloat.Black,
-                    blend, blend),
+                    blend, 
+                    blend),
                 gd.IsDepthRangeZeroToOne ? DepthStencilStateDescription.DepthOnlyGreaterEqual : DepthStencilStateDescription.DepthOnlyLessEqual,
                 RasterizerStateDescription.Default,
                 PrimitiveTopology.TriangleList,
@@ -42,15 +43,15 @@ namespace Veldrid.NeoDemo.Objects
                     ShaderHelper.GetSpecializations(gd)),
                 new ResourceLayout[] { resourceLayout },
                 sc.DuplicatorFramebuffer.OutputDescription);
-            _pipeline = factory.CreateGraphicsPipeline(ref pd);
+            _pipeline = factory.CreateGraphicsPipeline(pd);
 
             float[] verts = Util.GetFullScreenQuadVerts(gd);
 
-            _vb = factory.CreateBuffer(new BufferDescription(verts.SizeInBytes() * sizeof(float), BufferUsage.VertexBuffer));
+            _vb = factory.CreateBuffer(new BufferDescription(verts.SizeInBytes(), BufferUsage.VertexBuffer));
             cl.UpdateBuffer(_vb, 0, verts);
 
             _ib = factory.CreateBuffer(
-                new BufferDescription((uint)s_quadIndices.Length * sizeof(ushort), BufferUsage.IndexBuffer));
+                new BufferDescription(s_quadIndices.SizeInBytes(), BufferUsage.IndexBuffer));
             cl.UpdateBuffer(_ib, 0, s_quadIndices);
         }
 

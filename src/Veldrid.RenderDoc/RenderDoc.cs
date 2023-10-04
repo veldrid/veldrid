@@ -1,9 +1,9 @@
-﻿using NativeLibraryLoader;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
+using NativeLibrary = NativeLibraryLoader.NativeLibrary;
 
 namespace Veldrid
 {
@@ -359,7 +359,7 @@ namespace Veldrid
         {
             try
             {
-                NativeLibrary lib = new NativeLibrary(renderDocLibPaths);
+                NativeLibrary lib = new(renderDocLibPaths);
                 renderDoc = new RenderDoc(lib);
                 return true;
             }
@@ -374,7 +374,7 @@ namespace Veldrid
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                List<string> paths = new List<string>();
+                List<string> paths = new();
                 string programFiles = Environment.GetEnvironmentVariable("ProgramFiles");
                 if (programFiles != null)
                 {

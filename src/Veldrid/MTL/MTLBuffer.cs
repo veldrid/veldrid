@@ -3,17 +3,12 @@ using Veldrid.MetalBindings;
 
 namespace Veldrid.MTL
 {
-    internal class MTLBuffer : DeviceBuffer
+    internal sealed class MTLBuffer : DeviceBuffer
     {
-        private string _name;
+        private string? _name;
         private bool _disposed;
 
-        public override uint SizeInBytes { get; }
-        public override BufferUsage Usage { get; }
-
-        public uint ActualCapacity { get; }
-
-        public override string Name
+        public override string? Name
         {
             get => _name;
             set
@@ -29,15 +24,21 @@ namespace Veldrid.MTL
 
         public MetalBindings.MTLBuffer DeviceBuffer { get; private set; }
 
-        public MTLBuffer(ref BufferDescription bd, MTLGraphicsDevice gd)
+        public unsafe MTLBuffer(in BufferDescription bd, MTLGraphicsDevice gd) : base(bd)
         {
-            SizeInBytes = bd.SizeInBytes;
-            uint roundFactor = (4 - (SizeInBytes % 4)) % 4;
-            ActualCapacity = SizeInBytes + roundFactor;
-            Usage = bd.Usage;
-            DeviceBuffer = gd.Device.newBufferWithLengthOptions(
-                (UIntPtr)ActualCapacity,
-                0);
+            if (bd.InitialData == IntPtr.Zero)
+            {
+                DeviceBuffer = gd.Device.newBufferWithLengthOptions(
+                    SizeInBytes,
+                    0);
+            }
+            else
+            {
+                DeviceBuffer = gd.Device.newBuffer(
+                    (void*)bd.InitialData,
+                    SizeInBytes,
+                    0);
+            }
         }
 
         public override void Dispose()

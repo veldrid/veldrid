@@ -38,7 +38,7 @@ namespace Veldrid.VirtualReality.Sample
                     WindowState.Normal,
                     "Veldrid.VirtualReality Sample"));
 
-            VRContextOptions options = new VRContextOptions
+            VRContextOptions options = new()
             {
                 EyeFramebufferSampleCount = TextureSampleCount.Count4
             };
@@ -51,7 +51,7 @@ namespace Veldrid.VirtualReality.Sample
             debug = true;
 #endif
 
-            GraphicsDeviceOptions gdo = new GraphicsDeviceOptions(debug, null, false, ResourceBindingModel.Improved, true, true, true);
+            GraphicsDeviceOptions gdo = new(debug, null, false, ResourceBindingModel.Improved, true, true, true);
 
             if (backend == GraphicsBackend.Vulkan)
             {
@@ -64,16 +64,16 @@ namespace Veldrid.VirtualReality.Sample
 
             vrContext.Initialize(gd);
 
-            ImGuiRenderer igr = new ImGuiRenderer(gd, sc.Framebuffer.OutputDescription, window.Width, window.Height, ColorSpaceHandling.Linear);
+            ImGuiRenderer igr = new(gd, sc.Framebuffer.OutputDescription, window.Width, window.Height, ColorSpaceHandling.Linear);
             window.Resized += () => igr.WindowResized(window.Width, window.Height);
 
-            AssimpMesh mesh = new AssimpMesh(
+            AssimpMesh mesh = new(
                 gd,
                 vrContext.LeftEyeFramebuffer.OutputDescription,
                 Path.Combine(AppContext.BaseDirectory, "cat", "cat.obj"),
                 Path.Combine(AppContext.BaseDirectory, "cat", "cat_diff.png"));
 
-            Skybox skybox = new Skybox(
+            Skybox skybox = new(
                 Image.Load<Rgba32>(Path.Combine(AppContext.BaseDirectory, "skybox", "miramar_ft.png")),
                 Image.Load<Rgba32>(Path.Combine(AppContext.BaseDirectory, "skybox", "miramar_bk.png")),
                 Image.Load<Rgba32>(Path.Combine(AppContext.BaseDirectory, "skybox", "miramar_lf.png")),
@@ -240,7 +240,7 @@ namespace Veldrid.VirtualReality.Sample
             if (backend == GraphicsBackend.Vulkan)
             {
                 (string[] instance, string[] device) = vrc.GetRequiredVulkanExtensions();
-                VulkanDeviceOptions vdo = new VulkanDeviceOptions(instance, device);
+                VulkanDeviceOptions vdo = new(instance, device);
                 GraphicsDevice gd = GraphicsDevice.CreateVulkan(gdo, vdo);
                 Swapchain sc = gd.ResourceFactory.CreateSwapchain(new SwapchainDescription(
                     VeldridStartup.GetSwapchainSource(window),

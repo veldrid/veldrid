@@ -15,7 +15,7 @@ namespace Veldrid.Tests
             Texture colorTex = RF.CreateTexture(TextureDescription.Texture2D(1, 1, 1, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.RenderTarget));
             Framebuffer framebuffer = RF.CreateFramebuffer(new FramebufferDescription(null, colorTex));
 
-            ShaderSetDescription shaderSet = new ShaderSetDescription(
+            ShaderSetDescription shaderSet = new(
                 new VertexLayoutDescription[]
                 {
                     new VertexLayoutDescription(
@@ -30,7 +30,7 @@ namespace Veldrid.Tests
                 new ResourceLayoutElementDescription("InfoBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex),
                 new ResourceLayoutElementDescription("Ortho", ResourceKind.UniformBuffer, ShaderStages.Vertex)));
 
-            GraphicsPipelineDescription gpd = new GraphicsPipelineDescription(
+            GraphicsPipelineDescription gpd = new(
                 BlendStateDescription.SingleOverrideBlend,
                 DepthStencilStateDescription.Disabled,
                 RasterizerStateDescription.Default,
@@ -39,14 +39,14 @@ namespace Veldrid.Tests
                 layout,
                 framebuffer.OutputDescription);
 
-            Pipeline pipeline1 = RF.CreateGraphicsPipeline(ref gpd);
-            Pipeline pipeline2 = RF.CreateGraphicsPipeline(ref gpd);
+            _ = RF.CreateGraphicsPipeline(gpd);
+            _ = RF.CreateGraphicsPipeline(gpd);
 
             gpd.ShaderSet.VertexLayouts[0].InstanceStepRate = 4;
-            Pipeline pipeline3 = RF.CreateGraphicsPipeline(ref gpd);
+            _ = RF.CreateGraphicsPipeline(gpd);
 
             gpd.ShaderSet.VertexLayouts[0].InstanceStepRate = 5;
-            Pipeline pipeline4 = RF.CreateGraphicsPipeline(ref gpd);
+            _ = RF.CreateGraphicsPipeline(gpd);
         }
     }
 

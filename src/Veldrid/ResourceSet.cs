@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 
 namespace Veldrid
 {
@@ -9,7 +8,7 @@ namespace Veldrid
     /// </summary>
     public abstract class ResourceSet : DeviceResource, IDisposable
     {
-        internal ResourceSet(ref ResourceSetDescription description)
+        internal ResourceSet(in ResourceSetDescription description)
         {
 #if VALIDATE_USAGE
             Layout = description.Layout;
@@ -17,11 +16,8 @@ namespace Veldrid
 #endif
         }
 
-        /// <summary>
-        /// A string identifying this instance. Can be used to differentiate between objects in graphics debuggers and other
-        /// tools.
-        /// </summary>
-        public abstract string Name { get; set; }
+        /// <inheritdoc/>
+        public abstract string? Name { get; set; }
 
         /// <summary>
         /// A bool indicating whether this instance has been disposed.

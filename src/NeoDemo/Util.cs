@@ -1,9 +1,6 @@
-﻿using ImGuiNET;
-using System;
-using System.Diagnostics;
+﻿using System;
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using Veldrid.Utilities;
 
 namespace Veldrid.NeoDemo
 {
@@ -15,7 +12,7 @@ namespace Veldrid.NeoDemo
         }
 
         // Code adapted from https://bitbucket.org/sinbad/ogre/src/9db75e3ba05c/OgreMain/include/OgreVector3.h
-        internal static Quaternion FromToRotation(Vector3 from, Vector3 to, Vector3 fallbackAxis = default(Vector3))
+        internal static Quaternion FromToRotation(Vector3 from, Vector3 to, Vector3 fallbackAxis = default)
         {
             // Based on Stan Melax's article in Game Programming Gems
             Quaternion q;
@@ -71,11 +68,12 @@ namespace Veldrid.NeoDemo
         // clipPlane is in camera space
         public static void CalculateObliqueMatrixPerspective(ref Matrix4x4 projection, Matrix4x4 view, Plane clipPlane)
         {
-            Matrix4x4 invTransposeView = VdUtilities.CalculateInverseTranspose(view);
-            Vector4 clipV4 = new Vector4(clipPlane.Normal, clipPlane.D);
+            Matrix4x4.Invert(view, out Matrix4x4 invertedView);
+            Matrix4x4 invTransposeView = Matrix4x4.Transpose(invertedView);
+            Vector4 clipV4 = new(clipPlane.Normal, clipPlane.D);
             clipV4 = Vector4.Transform(clipV4, invTransposeView);
 
-            Vector4 q = new Vector4(
+            Vector4 q = new(
                 (Math.Sign(clipV4.X) + projection.M13) / projection.M11,
                 (Math.Sign(clipV4.Y) + projection.M23) / projection.M22,
                 -1f,
@@ -87,19 +85,6 @@ namespace Veldrid.NeoDemo
             projection.M32 = c.Y;
             projection.M33 = c.Z;
             projection.M34 = c.W;
-        }
-
-        private static float sgn(float x)
-        {
-            if (x > 0) return 1;
-            else if (x < 0) return -1;
-            else return 0;
-        }
-
-        public static Matrix4x4 Inverse(this Matrix4x4 src)
-        {
-            Matrix4x4.Invert(src, out Matrix4x4 result);
-            return result;
         }
 
         public static Matrix4x4 CreatePerspective(
@@ -153,7 +138,7 @@ namespace Veldrid.NeoDemo
             result.M21 = result.M23 = result.M24 = 0.0f;
 
             result.M31 = result.M32 = 0.0f;
-            var negFarRange = float.IsPositiveInfinity(far) ? -1.0f : far / (near - far);
+            float negFarRange = float.IsPositiveInfinity(far) ? -1.0f : far / (near - far);
             result.M33 = negFarRange;
             result.M34 = -1.0f;
 

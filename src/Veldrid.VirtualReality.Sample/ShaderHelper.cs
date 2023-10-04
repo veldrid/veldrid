@@ -10,7 +10,7 @@ namespace Veldrid.Oculus.Sample
         {
             bool fixClipZ = false;
             bool invertY = false;
-            List<SpecializationConstant> specializations = new List<SpecializationConstant>();
+            List<SpecializationConstant> specializations = new();
             specializations.Add(new SpecializationConstant(102, gd.IsDepthRangeZeroToOne));
             switch (gd.BackendType)
             {

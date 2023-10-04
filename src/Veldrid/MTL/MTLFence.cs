@@ -3,7 +3,7 @@ using System.Threading;
 
 namespace Veldrid.MTL
 {
-    internal class MTLFence : Fence
+    internal sealed class MTLFence : Fence
     {
         private readonly ManualResetEvent _mre;
         private bool _disposed;
@@ -13,7 +13,7 @@ namespace Veldrid.MTL
             _mre = new ManualResetEvent(signaled);
         }
 
-        public override string Name { get; set; }
+        public override string? Name { get; set; }
         public ManualResetEvent ResetEvent => _mre;
 
         public void Set() => _mre.Set();

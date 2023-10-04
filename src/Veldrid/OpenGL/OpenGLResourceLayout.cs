@@ -1,17 +1,17 @@
 ﻿namespace Veldrid.OpenGL
 {
-    internal class OpenGLResourceLayout : ResourceLayout
+    internal sealed class OpenGLResourceLayout : ResourceLayout
     {
         private bool _disposed;
 
         public ResourceLayoutElementDescription[] Elements { get; }
 
-        public override string Name { get; set; }
+        public override string? Name { get; set; }
 
         public override bool IsDisposed => _disposed;
 
-        public OpenGLResourceLayout(ref ResourceLayoutDescription description)
-            : base(ref description)
+        public OpenGLResourceLayout(in ResourceLayoutDescription description)
+            : base(description)
         {
             Elements = Util.ShallowClone(description.Elements);
         }

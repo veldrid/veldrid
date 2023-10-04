@@ -1,17 +1,15 @@
 ﻿using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Veldrid
 {
     public static class FormatSizeHelpers
     {
         /// <summary>
-        /// Given a pixel format, returns the number of bytes required to store
-        /// a single pixel.
-        /// Compressed formats may not be used with this method as the number of
-        /// bytes per pixel is variable.
+        /// Given a pixel format, returns the number of bytes required to store a single pixel.
         /// </summary>
-        /// <param name="format">An uncompressed pixel format</param>
-        /// <returns>The number of bytes required to store a single pixel in the given format</returns>
+        /// <param name="format">An uncompressed pixel format.</param>
+        /// <returns>The number of bytes required to store a single pixel in the given format.</returns>
         public static uint GetSizeInBytes(PixelFormat format)
         {
             switch (format)
@@ -91,7 +89,9 @@ namespace Veldrid
                 case PixelFormat.ETC2_R8_G8_B8_A8_UNorm:
                     Debug.Fail("GetSizeInBytes should not be used on a compressed format.");
                     throw Illegal.Value<PixelFormat>();
-                default: throw Illegal.Value<PixelFormat>();
+
+                default:
+                    throw Illegal.Value<PixelFormat>();
             }
         }
 
@@ -99,8 +99,9 @@ namespace Veldrid
         /// Given a vertex element format, returns the number of bytes required
         /// to store an element in that format.
         /// </summary>
-        /// <param name="format">A vertex element format</param>
-        /// <returns>The number of bytes required to store an element in the given format</returns>
+        /// <param name="format">A vertex element format.</param>
+        /// <returns>The number of bytes required to store an element in the given format.</returns>
+        [SuppressMessage("Style", "IDE0066:Convert switch statement to expression", Justification = "<Pending>")]
         public static uint GetSizeInBytes(VertexElementFormat format)
         {
             switch (format)

@@ -107,11 +107,22 @@ namespace Veldrid
         /// <summary>
         /// Transitions the given Texture's underlying VkImage into a new layout.
         /// </summary>
+        /// <param name="commandList">The command list to record the image transition into.</param>
         /// <param name="texture">The Texture whose underlying VkImage will be transitioned.</param>
         /// <param name="layout">The new VkImageLayout value.</param>
+        public void TransitionImageLayout(CommandList commandList, Texture texture, uint layout)
+        {
+            VkCommandList vkCL = Util.AssertSubtype<CommandList, VkCommandList>(commandList);
+            vkCL.TransitionImageLayout(Util.AssertSubtype<Texture, VkTexture>(texture), (VkImageLayout)layout);
+        }
+
+        /// <inheritdoc cref="TransitionImageLayout(CommandList, Texture, uint)"/>
+        [Obsolete("Prefer using the overload taking a CommandList.")]
         public void TransitionImageLayout(Texture texture, uint layout)
         {
-            _gd.TransitionImageLayout(Util.AssertSubtype<Texture, VkTexture>(texture), (VkImageLayout)layout);
+            VkCommandList cl = _gd.GetAndBeginCommandList();
+            cl.TransitionImageLayout(Util.AssertSubtype<Texture, VkTexture>(texture), (VkImageLayout)layout);
+            _gd.EndAndSubmitCommands(cl);
         }
 
         private unsafe ReadOnlyCollection<ExtensionProperties> EnumerateDeviceExtensions()

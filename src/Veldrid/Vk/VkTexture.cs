@@ -269,11 +269,15 @@ namespace Veldrid.Vulkan
             // If the image is going to be used as a render target, we need to clear the data before its first use.
             if ((Usage & TextureUsage.RenderTarget) != 0)
             {
-                _gd.ClearColorTexture(this, new VkClearColorValue());
+                VkCommandList cl = _gd.GetAndBeginCommandList();
+                cl.ClearColorTexture(this, new VkClearColorValue());
+                _gd.EndAndSubmitCommands(cl);
             }
             else if ((Usage & TextureUsage.DepthStencil) != 0)
             {
-                _gd.ClearDepthTexture(this, new VkClearDepthStencilValue());
+                VkCommandList cl = _gd.GetAndBeginCommandList();
+                cl.ClearDepthTexture(this, new VkClearDepthStencilValue());
+                _gd.EndAndSubmitCommands(cl);
             }
         }
 
@@ -281,7 +285,9 @@ namespace Veldrid.Vulkan
         {
             if ((Usage & TextureUsage.Sampled) != 0)
             {
-                _gd.TransitionImageLayout(this, VkImageLayout.VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+                VkCommandList cl = _gd.GetAndBeginCommandList();
+                cl.TransitionImageLayout(this, VkImageLayout.VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+                _gd.EndAndSubmitCommands(cl);
             }
         }
 
@@ -478,30 +484,30 @@ namespace Veldrid.Vulkan
             {
                 return;
             }
-                base.Dispose();
+            base.Dispose();
 
-                _destroyed = true;
+            _destroyed = true;
 
             if (_leaveOpen)
-                {
+            {
                 return;
             }
 
-                bool isStaging = (Usage & TextureUsage.Staging) == TextureUsage.Staging;
-                if (isStaging)
-                {
-                    vkDestroyBuffer(_gd.Device, _stagingBuffer, null);
-                }
-                else
-                {
-                    vkDestroyImage(_gd.Device, _optimalImage, null);
-                }
-
-                if (_memoryBlock.DeviceMemory != VkDeviceMemory.NULL)
-                {
-                    _gd.MemoryManager.Free(_memoryBlock);
-                }
+            bool isStaging = (Usage & TextureUsage.Staging) == TextureUsage.Staging;
+            if (isStaging)
+            {
+                vkDestroyBuffer(_gd.Device, _stagingBuffer, null);
             }
+            else
+            {
+                vkDestroyImage(_gd.Device, _optimalImage, null);
+            }
+
+            if (_memoryBlock.DeviceMemory != VkDeviceMemory.NULL)
+            {
+                _gd.MemoryManager.Free(_memoryBlock);
+            }
+        }
 
         internal void SetImageLayout(uint mipLevel, uint arrayLayer, VkImageLayout layout)
         {

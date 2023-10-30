@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 
 namespace Veldrid
 {
@@ -122,14 +123,16 @@ namespace Veldrid
         /// <summary>
         /// Frees unmanaged device resources controlled by this instance.
         /// </summary>
-        public virtual void Dispose()
+        public void Dispose()
         {
             lock (_fullTextureViewLock)
             {
                 _fullTextureView?.Dispose();
-            }
 
-            DisposeCore();
+                // Dispose inside lock to prevent creating a new view.
+                DisposeCore();
+                Debug.Assert(IsDisposed);
+            }
         }
 
         private protected abstract void DisposeCore();

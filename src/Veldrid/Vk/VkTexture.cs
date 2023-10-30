@@ -479,8 +479,6 @@ namespace Veldrid.Vulkan
 
         void IResourceRefCountTarget.RefZeroed()
         {
-            base.Dispose();
-
             if (_leaveOpen)
             {
                 return;

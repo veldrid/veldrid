@@ -4,7 +4,6 @@ using System.Linq;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using Vortice.Mathematics;
 using Xunit;
 
 namespace Veldrid.Tests
@@ -41,7 +40,8 @@ namespace Veldrid.Tests
         public Vector4 D_V4;
     }
 
-    public abstract class RenderTests<T> : GraphicsDeviceTestBase<T> where T : GraphicsDeviceCreator
+    public abstract class RenderTests<T> : GraphicsDeviceTestBase<T>
+        where T : IGraphicsDeviceCreator
     {
         [Fact]
         public void Points_WithUIntColor()

@@ -2,7 +2,8 @@ using Xunit;
 
 namespace Veldrid.Tests
 {
-    public abstract class DisposalTestBase<T> : GraphicsDeviceTestBase<T> where T : GraphicsDeviceCreator
+    public abstract class DisposalTestBase<T> : GraphicsDeviceTestBase<T>
+        where T : IGraphicsDeviceCreator
     {
         [Fact]
         public void Dispose_Buffer()

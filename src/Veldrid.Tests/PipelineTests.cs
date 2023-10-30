@@ -1,13 +1,9 @@
-﻿using System;
-using System.Diagnostics;
-using System.Numerics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using Xunit;
+﻿using Xunit;
 
 namespace Veldrid.Tests
 {
-    public abstract class PipelineTests<T> : GraphicsDeviceTestBase<T> where T : GraphicsDeviceCreator
+    public abstract class PipelineTests<T> : GraphicsDeviceTestBase<T>
+        where T : IGraphicsDeviceCreator
     {
         [Fact]
         public void CreatePipelines_DifferentInstanceStepRate_Succeeds()

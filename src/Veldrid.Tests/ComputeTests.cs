@@ -27,8 +27,8 @@ namespace Veldrid.Tests
         }
     }
 
-
-    public abstract class ComputeTests<T> : GraphicsDeviceTestBase<T> where T : GraphicsDeviceCreator
+    public abstract class ComputeTests<T> : GraphicsDeviceTestBase<T>
+        where T : IGraphicsDeviceCreator
     {
         [Fact]
         public void ComputeShader3dTexture()
@@ -107,7 +107,7 @@ void main()
             // Read back from our texture and make sure it has been properly filled.
             for (uint depth = 0; depth < computeTargetTexture.Depth; depth++)
             {
-                RgbaFloat expectedFillValue = new(new System.Numerics.Vector4(FillValue * (depth + 1)));
+                RgbaFloat expectedFillValue = new(new Vector4(FillValue * (depth + 1)));
                 int notFilledCount = CountTexelsNotFilledAtDepth(GD, computeTargetTexture, expectedFillValue, depth);
 
                 Assert.Equal(0, notFilledCount);
@@ -538,11 +538,11 @@ void main()
 #endif
 #if TEST_VULKAN
     [Trait("Backend", "Vulkan")]
-    public class VulkanComputeTests : ComputeTests<VulkanDeviceCreatorWithMainSwapchain> { }
+    public class VulkanComputeTests : ComputeTests<VulkanDeviceCreator> { }
 #endif
 #if TEST_D3D11
     [Trait("Backend", "D3D11")]
-    public class D3D11ComputeTests : ComputeTests<D3D11DeviceCreatorWithMainSwapchain> { }
+    public class D3D11ComputeTests : ComputeTests<D3D11DeviceCreator> { }
 #endif
 #if TEST_METAL
     [Trait("Backend", "Metal")]

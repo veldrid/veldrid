@@ -1,12 +1,12 @@
 using System;
 using System.Linq;
 using System.Numerics;
-using System.Runtime.CompilerServices;
 using Xunit;
 
 namespace Veldrid.Tests
 {
-    public abstract class BufferTestBase<T> : GraphicsDeviceTestBase<T> where T : GraphicsDeviceCreator
+    public abstract class BufferTestBase<T> : GraphicsDeviceTestBase<T>
+        where T : IGraphicsDeviceCreator
     {
         [Fact]
         public void CreateBuffer_Succeeds()
@@ -161,17 +161,11 @@ namespace Veldrid.Tests
             }
         }
 
-        [Fact]
+        [SkippableFact]
         public void MapThenUpdate_Fails()
         {
-            if (GD.BackendType == GraphicsBackend.Vulkan)
-            {
-                return; // TODO
-            }
-            if (GD.BackendType == GraphicsBackend.Metal)
-            {
-                return; // TODO
-            }
+            Skip.If(GD.BackendType == GraphicsBackend.Vulkan); // TODO
+            Skip.If(GD.BackendType == GraphicsBackend.Metal); // TODO
 
             DeviceBuffer buffer = RF.CreateBuffer(new BufferDescription(1024, BufferUsage.StagingReadWrite));
             MappedResourceView<int> view = GD.Map<int>(buffer, MapMode.ReadWrite);
@@ -179,17 +173,11 @@ namespace Veldrid.Tests
             Assert.Throws<VeldridMappedResourceException>(() => GD.UpdateBuffer(buffer, 0, data));
         }
 
-        [Fact]
+        [SkippableFact]
         public void Map_MultipleTimes_Fails()
         {
-            if (GD.BackendType == GraphicsBackend.Vulkan)
-            {
-                return; // TODO
-            }
-            if (GD.BackendType == GraphicsBackend.Metal)
-            {
-                return; // TODO
-            }
+            Skip.If(GD.BackendType == GraphicsBackend.Vulkan); // TODO
+            Skip.If(GD.BackendType == GraphicsBackend.Metal); // TODO
 
             DeviceBuffer buffer = RF.CreateBuffer(new BufferDescription(1024, BufferUsage.StagingReadWrite));
             MappedResource map = GD.Map(buffer, MapMode.ReadWrite);
@@ -422,7 +410,7 @@ namespace Veldrid.Tests
             GD.Unmap(readback);
         }
 
-        [Theory]
+        [SkippableTheory]
         [InlineData(BufferUsage.UniformBuffer)]
         [InlineData(BufferUsage.UniformBuffer | BufferUsage.DynamicWrite)]
         [InlineData(BufferUsage.VertexBuffer)]
@@ -440,11 +428,8 @@ namespace Veldrid.Tests
         [InlineData(BufferUsage.StagingWrite)]
         public void CreateBuffer_UsageFlagsCoverage(BufferUsage usage)
         {
-            if ((usage & BufferUsage.StructuredBufferReadOnly) != 0
-                || (usage & BufferUsage.StructuredBufferReadWrite) != 0)
-            {
-                return;
-            }
+            Skip.If((usage & BufferUsage.StructuredBufferReadOnly) != 0);
+            Skip.If((usage & BufferUsage.StructuredBufferReadWrite) != 0);
 
             BufferDescription description = new(64, usage);
             if ((usage & BufferUsage.StructuredBufferReadOnly) != 0 || (usage & BufferUsage.StructuredBufferReadWrite) != 0)

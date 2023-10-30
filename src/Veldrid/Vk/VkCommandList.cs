@@ -18,7 +18,6 @@ namespace Veldrid.Vulkan
         private readonly VkGraphicsDevice _gd;
         private VkCommandPool _pool;
         private VkCommandBuffer _cb;
-        private bool _destroyed;
 
         private bool _commandBufferBegun;
         private bool _commandBufferEnded;
@@ -66,7 +65,7 @@ namespace Veldrid.Vulkan
 
         public ResourceRefCount RefCount { get; }
 
-        public override bool IsDisposed => _destroyed;
+        public override bool IsDisposed => RefCount.IsDisposed;
 
         public VkCommandList(VkGraphicsDevice gd, in CommandListDescription description)
             : base(description, gd.Features, gd.UniformBufferMinOffsetAlignment, gd.StructuredBufferMinOffsetAlignment)
@@ -1383,6 +1382,8 @@ namespace Veldrid.Vulkan
 
         internal void ClearColorTexture(VkTexture texture, VkClearColorValue color)
         {
+            _currentStagingInfo.AddResource(texture.RefCount);
+
             uint effectiveLayers = texture.ActualArrayLayers;
 
             VkImageSubresourceRange range = new()
@@ -1404,6 +1405,8 @@ namespace Veldrid.Vulkan
 
         internal void ClearDepthTexture(VkTexture texture, VkClearDepthStencilValue clearValue)
         {
+            _currentStagingInfo.AddResource(texture.RefCount);
+
             uint effectiveLayers = texture.ActualArrayLayers;
 
             VkImageAspectFlags aspect = FormatHelpers.IsStencilFormat(texture.Format)
@@ -1432,6 +1435,8 @@ namespace Veldrid.Vulkan
 
         internal void TransitionImageLayout(VkTexture texture, VkImageLayout layout)
         {
+            _currentStagingInfo.AddResource(texture.RefCount);
+
             texture.TransitionImageLayout(_cb, 0, texture.MipLevels, 0, texture.ActualArrayLayers, layout);
         }
 
@@ -1603,18 +1608,14 @@ namespace Veldrid.Vulkan
 
         void IResourceRefCountTarget.RefZeroed()
         {
-            if (!_destroyed)
+            vkDestroyCommandPool(_gd.Device, _pool, null);
+
+            Debug.Assert(_submittedStagingInfos.Count == 0);
+
+            if (_currentStagingInfo.IsValid)
             {
-                _destroyed = true;
-                vkDestroyCommandPool(_gd.Device, _pool, null);
-
-                Debug.Assert(_submittedStagingInfos.Count == 0);
-
-                if (_currentStagingInfo.IsValid)
-                {
-                    RecycleStagingInfo(_currentStagingInfo);
-                    _currentStagingInfo = default;
-                }
+                RecycleStagingInfo(_currentStagingInfo);
+                _currentStagingInfo = default;
             }
         }
 

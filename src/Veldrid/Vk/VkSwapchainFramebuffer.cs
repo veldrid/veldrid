@@ -19,7 +19,6 @@ namespace Veldrid.Vulkan
         private VkExtent2D _scExtent;
         private FramebufferAttachment[][] _scColorTextures = Array.Empty<FramebufferAttachment[]>();
 
-        private bool _destroyed;
         private string? _name;
 
         public override TerraFX.Interop.Vulkan.VkFramebuffer CurrentFramebuffer => _scFramebuffers[(int)_currentImageIndex].CurrentFramebuffer;
@@ -33,8 +32,6 @@ namespace Veldrid.Vulkan
         public uint ImageIndex => _currentImageIndex;
 
         public VkSwapchain Swapchain => _swapchain;
-
-        public override bool IsDisposed => _destroyed;
 
         public VkSwapchainFramebuffer(
             VkGraphicsDevice gd,
@@ -179,12 +176,8 @@ namespace Veldrid.Vulkan
 
         protected override void DisposeCore()
         {
-            if (!_destroyed)
-            {
-                _destroyed = true;
-                _depthTarget?.Target.Dispose();
-                DestroySwapchainFramebuffers();
-            }
+            _depthTarget?.Target.Dispose();
+            DestroySwapchainFramebuffers();
         }
     }
 }

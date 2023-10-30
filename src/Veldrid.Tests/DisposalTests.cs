@@ -18,7 +18,6 @@ namespace Veldrid.Tests
         {
             Texture t = RF.CreateTexture(TextureDescription.Texture2D(1, 1, 1, 1, PixelFormat.R32_G32_B32_A32_Float, TextureUsage.Sampled));
             TextureView tv = RF.CreateTextureView(t);
-            GD.WaitForIdle(); // Required currently by Vulkan backend.
             tv.Dispose();
             Assert.True(tv.IsDisposed);
             Assert.False(t.IsDisposed);
@@ -31,7 +30,6 @@ namespace Veldrid.Tests
         {
             Texture t = RF.CreateTexture(TextureDescription.Texture2D(1, 1, 1, 1, PixelFormat.R32_G32_B32_A32_Float, TextureUsage.RenderTarget));
             Framebuffer fb = RF.CreateFramebuffer(new FramebufferDescription(null, t));
-            GD.WaitForIdle(); // Required currently by Vulkan backend.
             fb.Dispose();
             Assert.True(fb.IsDisposed);
             Assert.False(t.IsDisposed);

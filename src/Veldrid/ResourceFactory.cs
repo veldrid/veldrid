@@ -191,6 +191,10 @@ namespace Veldrid
         /// <param name="description">The desired properties of the created object.</param>
         protected virtual void ValidateTextureView(in TextureViewDescription description)
         {
+            if (description.Target.IsDisposed)
+            {
+                throw new VeldridException("The target texture is disposed.");
+            }
             if (description.MipLevels == 0 || description.ArrayLayers == 0
                 || (description.BaseMipLevel + description.MipLevels) > description.Target.MipLevels
                 || (description.BaseArrayLayer + description.ArrayLayers) > description.Target.ArrayLayers)

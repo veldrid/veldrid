@@ -13,10 +13,9 @@ namespace Veldrid.Vulkan
         private readonly VkMemoryBlock _memoryBlock;
         private readonly TerraFX.Interop.Vulkan.VkBuffer _stagingBuffer;
         private readonly uint _actualImageArrayLayers;
-        private bool _destroyed;
-
+        
         public uint ActualArrayLayers => _actualImageArrayLayers;
-        public override bool IsDisposed => _destroyed;
+        public override bool IsDisposed => RefCount.IsDisposed;
 
         public VkImage OptimalDeviceImage => _optimalImage;
         public TerraFX.Interop.Vulkan.VkBuffer StagingBuffer => _stagingBuffer;
@@ -219,9 +218,9 @@ namespace Veldrid.Vulkan
                 _imageLayouts = Array.Empty<VkImageLayout>();
             }
 
+            RefCount = new ResourceRefCount(this);
             ClearIfRenderTarget();
             TransitionIfSampled();
-            RefCount = new ResourceRefCount(this);
         }
 
         // Used to construct Swapchain textures.
@@ -260,8 +259,8 @@ namespace Veldrid.Vulkan
             _isSwapchainTexture = isSwapchainTexture;
             _leaveOpen = leaveOpen;
 
-            ClearIfRenderTarget();
             RefCount = new ResourceRefCount(this);
+            ClearIfRenderTarget();
         }
 
         private void ClearIfRenderTarget()
@@ -480,13 +479,7 @@ namespace Veldrid.Vulkan
 
         void IResourceRefCountTarget.RefZeroed()
         {
-            if (_destroyed)
-            {
-                return;
-            }
             base.Dispose();
-
-            _destroyed = true;
 
             if (_leaveOpen)
             {

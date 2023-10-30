@@ -4,12 +4,13 @@ using VulkanFence = TerraFX.Interop.Vulkan.VkFence;
 
 namespace Veldrid.Vulkan
 {
-    internal sealed unsafe class VkFence : Fence
+    internal sealed unsafe class VkFence : Fence, IResourceRefCountTarget
     {
         private readonly VkGraphicsDevice _gd;
         private VulkanFence _fence;
         private string? _name;
-        private bool _destroyed;
+        
+        public ResourceRefCount RefCount { get; }
 
         public VulkanFence DeviceFence => _fence;
 
@@ -25,6 +26,8 @@ namespace Veldrid.Vulkan
             VkResult result = vkCreateFence(_gd.Device, &fenceCI, null, &fence);
             VulkanUtil.CheckResult(result);
             _fence = fence;
+
+            RefCount = new ResourceRefCount(this);
         }
 
         public override void Reset()
@@ -33,7 +36,7 @@ namespace Veldrid.Vulkan
         }
 
         public override bool Signaled => vkGetFenceStatus(_gd.Device, _fence) == VkResult.VK_SUCCESS;
-        public override bool IsDisposed => _destroyed;
+        public override bool IsDisposed => RefCount.IsDisposed;
 
         public override string? Name
         {
@@ -47,11 +50,12 @@ namespace Veldrid.Vulkan
 
         public override void Dispose()
         {
-            if (!_destroyed)
-            {
-                vkDestroyFence(_gd.Device, _fence, null);
-                _destroyed = true;
-            }
+            RefCount.DecrementDispose();
+        }
+
+        void IResourceRefCountTarget.RefZeroed()
+        {
+            vkDestroyFence(_gd.Device, _fence, null);
         }
     }
 }

@@ -10,7 +10,6 @@ namespace Veldrid.Vulkan
         private readonly DescriptorResourceCounts _descriptorCounts;
         private readonly DescriptorAllocationToken _descriptorAllocationToken;
         private readonly List<ResourceRefCount> _refCounts = new();
-        private bool _destroyed;
         private string? _name;
 
         public VkDescriptorSet DescriptorSet => _descriptorAllocationToken.Set;
@@ -23,7 +22,7 @@ namespace Veldrid.Vulkan
         public ResourceRefCount RefCount { get; }
         public List<ResourceRefCount> RefCounts => _refCounts;
 
-        public override bool IsDisposed => _destroyed;
+        public override bool IsDisposed => RefCount.IsDisposed;
 
         public VkResourceSet(VkGraphicsDevice gd, in ResourceSetDescription description)
             : base(description)
@@ -126,11 +125,7 @@ namespace Veldrid.Vulkan
 
         void IResourceRefCountTarget.RefZeroed()
         {
-            if (!_destroyed)
-            {
-                _destroyed = true;
-                _gd.DescriptorPoolManager.Free(_descriptorAllocationToken, _descriptorCounts);
-            }
+            _gd.DescriptorPoolManager.Free(_descriptorAllocationToken, _descriptorCounts);
         }
     }
 }

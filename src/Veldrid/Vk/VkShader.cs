@@ -5,16 +5,17 @@ using static Veldrid.Vulkan.VulkanUtil;
 
 namespace Veldrid.Vulkan
 {
-    internal sealed unsafe class VkShader : Shader
+    internal sealed unsafe class VkShader : Shader, IResourceRefCountTarget
     {
         private readonly VkGraphicsDevice _gd;
         private readonly VkShaderModule _shaderModule;
-        private bool _disposed;
         private string? _name;
+
+        public ResourceRefCount RefCount { get; }
 
         public VkShaderModule ShaderModule => _shaderModule;
 
-        public override bool IsDisposed => _disposed;
+        public override bool IsDisposed => RefCount.IsDisposed;
 
         public VkShader(VkGraphicsDevice gd, in ShaderDescription description)
             : base(description.Stage, description.EntryPoint)
@@ -35,6 +36,8 @@ namespace Veldrid.Vulkan
                 CheckResult(result);
                 _shaderModule = shaderModule;
             }
+
+            RefCount = new ResourceRefCount(this);
         }
 
         public override string? Name
@@ -49,11 +52,12 @@ namespace Veldrid.Vulkan
 
         public override void Dispose()
         {
-            if (!_disposed)
-            {
-                _disposed = true;
-                vkDestroyShaderModule(_gd.Device, ShaderModule, null);
-            }
+            RefCount.DecrementDispose();
+        }
+
+        public void RefZeroed()
+        {
+            vkDestroyShaderModule(_gd.Device, ShaderModule, null);
         }
     }
 }

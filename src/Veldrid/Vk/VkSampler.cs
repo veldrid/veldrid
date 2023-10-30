@@ -8,14 +8,13 @@ namespace Veldrid.Vulkan
     {
         private readonly VkGraphicsDevice _gd;
         private readonly VulkanSampler _sampler;
-        private bool _disposed;
         private string? _name;
 
         public VulkanSampler DeviceSampler => _sampler;
 
         public ResourceRefCount RefCount { get; }
 
-        public override bool IsDisposed => _disposed;
+        public override bool IsDisposed => RefCount.IsDisposed;
 
         public VkSampler(VkGraphicsDevice gd, in SamplerDescription description)
         {
@@ -67,11 +66,7 @@ namespace Veldrid.Vulkan
 
         void IResourceRefCountTarget.RefZeroed()
         {
-            if (!_disposed)
-            {
-                vkDestroySampler(_gd.Device, _sampler, null);
-                _disposed = true;
-            }
+            vkDestroySampler(_gd.Device, _sampler, null);
         }
     }
 }

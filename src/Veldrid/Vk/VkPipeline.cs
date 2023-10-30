@@ -13,7 +13,6 @@ namespace Veldrid.Vulkan
         private readonly VulkanPipeline _devicePipeline;
         private readonly VkPipelineLayout _pipelineLayout;
         private readonly VkRenderPass _renderPass;
-        private bool _destroyed;
         private string? _name;
 
         public VulkanPipeline DevicePipeline => _devicePipeline;
@@ -29,7 +28,7 @@ namespace Veldrid.Vulkan
 
         public ResourceRefCount RefCount { get; }
 
-        public override bool IsDisposed => _destroyed;
+        public override bool IsDisposed => RefCount.IsDisposed;
 
         public VkPipeline(VkGraphicsDevice gd, in GraphicsPipelineDescription description)
             : base(description)
@@ -517,15 +516,11 @@ namespace Veldrid.Vulkan
 
         void IResourceRefCountTarget.RefZeroed()
         {
-            if (!_destroyed)
+            vkDestroyPipelineLayout(_gd.Device, _pipelineLayout, null);
+            vkDestroyPipeline(_gd.Device, _devicePipeline, null);
+            if (!IsComputePipeline)
             {
-                _destroyed = true;
-                vkDestroyPipelineLayout(_gd.Device, _pipelineLayout, null);
-                vkDestroyPipeline(_gd.Device, _devicePipeline, null);
-                if (!IsComputePipeline)
-                {
-                    vkDestroyRenderPass(_gd.Device, _renderPass, null);
-                }
+                vkDestroyRenderPass(_gd.Device, _renderPass, null);
             }
         }
     }

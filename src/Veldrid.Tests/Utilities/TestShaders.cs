@@ -1,16 +1,24 @@
 ﻿using System;
-using System.IO;
 using Veldrid.SPIRV;
+using Veldrid.Tests.Utilities;
 
 namespace Veldrid.Tests
 {
     internal static class TestShaders
     {
+        public static IShaderProvider ShaderProvider { get; set; } = new FileShaderProvider(AppContext.BaseDirectory);
+
+        public static ShaderDescription GetShaderDescription(ShaderStages stage, string name, string entryPoint = "main")
+        {
+            string path = ShaderProvider.GetPath($"{name}.{stage.ToString().ToLowerInvariant()[..4]}");
+            return new ShaderDescription(stage, ShaderProvider.ReadAllBytes(path), "main");
+        }
+
         public static Shader[] LoadVertexFragment(ResourceFactory factory, string setName)
         {
             return factory.CreateFromSpirv(
-                new ShaderDescription(ShaderStages.Vertex, File.ReadAllBytes(GetPath(setName, ShaderStages.Vertex)), "main"),
-                new ShaderDescription(ShaderStages.Fragment, File.ReadAllBytes(GetPath(setName, ShaderStages.Fragment)), "main"),
+                GetShaderDescription(ShaderStages.Vertex, setName),
+                GetShaderDescription(ShaderStages.Fragment, setName),
                 new CrossCompileOptions(false, false, new SpecializationConstant[]
                 {
                     new SpecializationConstant(100, false)
@@ -20,19 +28,11 @@ namespace Veldrid.Tests
         public static Shader LoadCompute(ResourceFactory factory, string setName)
         {
             return factory.CreateFromSpirv(
-                new ShaderDescription(ShaderStages.Compute, File.ReadAllBytes(GetPath(setName, ShaderStages.Compute)), "main"),
+                GetShaderDescription(ShaderStages.Compute, setName),
                 new CrossCompileOptions(false, false, new SpecializationConstant[]
                 {
                     new SpecializationConstant(100, false)
                 }));
-        }
-
-        public static string GetPath(string setName, ShaderStages stage)
-        {
-            return Path.Combine(
-                AppContext.BaseDirectory,
-                "Shaders",
-                $"{setName}.{stage.ToString().ToLowerInvariant()[..4]}");
         }
     }
 }

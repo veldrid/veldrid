@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Veldrid.Tests
+namespace Veldrid.Tests.Utilities
 {
     internal unsafe class TextureDataReaderWriter
     {

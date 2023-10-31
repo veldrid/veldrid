@@ -34,24 +34,7 @@
     </Content>
     <Content Include="Shaders/*" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
-
-  <ItemGroup>
-    <None Remove="Shaders\ComputeCubemapGenerator.comp" />
-    <None Remove="Shaders\ComputeImage2DArrayGenerator.comp" />
-    <None Remove="Shaders\ComputeTextureGenerator.comp" />
-    <None Remove="Shaders\F16VertexAttribs.frag" />
-    <None Remove="Shaders\F16VertexAttribs.vert" />
-    <None Remove="Shaders\FullScreenBlit.frag" />
-    <None Remove="Shaders\FullScreenBlit.vert" />
-    <None Remove="Shaders\FullScreenTriSampleTexture2D.frag" />
-    <None Remove="Shaders\FullScreenTriSampleTexture2D.vert" />
-    <None Remove="Shaders\FullScreenTriSampleTextureArray.vert" />
-    <None Remove="Shaders\FullScreenWriteDepth.frag" />
-    <None Remove="Shaders\FullScreenWriteDepth.vert" />
-    <None Remove="Shaders\VertexLayoutTestShader.frag" />
-    <None Remove="Shaders\VertexLayoutTestShader.vert" />
-  </ItemGroup>
-
+  
   <ItemGroup>
     <PackageReference Update="Microsoft.SourceLink.GitHub" Version="1.1.0-beta-20204-02" />
     <PackageReference Update="Nerdbank.GitVersioning" Version="3.4.220" />

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Veldrid.Tests.Utilities;
 using Xunit;
 
 namespace Veldrid.Tests

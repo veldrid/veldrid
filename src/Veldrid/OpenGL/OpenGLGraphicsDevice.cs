@@ -387,6 +387,10 @@ namespace Veldrid.OpenGL
                     androidSource.Surface);
                 InitializeANativeWindow(options, aNativeWindow, swapchainDescription);
             }
+            else if (source is AndroidWindowSwapchainSource aWindowSource)
+            {
+                InitializeANativeWindow(options, aWindowSource.ANativeWindow, swapchainDescription);
+            }
             else
             {
                 throw new VeldridException(

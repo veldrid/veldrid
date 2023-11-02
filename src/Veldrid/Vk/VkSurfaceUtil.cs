@@ -49,7 +49,12 @@ namespace Veldrid.Vulkan
 
                 case AndroidSurfaceSwapchainSource androidSource:
                     ThrowIfMissing(KHR_ANDROID_SURFACE_EXTENSION_NAME);
-                    return CreateAndroidSurface(GetInstanceProcAddr(instance, "vkCreateAndroidSurfaceKHR"), instance, androidSource);
+                    IntPtr aNativeWindow = AndroidRuntime.ANativeWindow_fromSurface(androidSource.JniEnv, androidSource.Surface);
+                    return CreateAndroidSurface(GetInstanceProcAddr(instance, "vkCreateAndroidSurfaceKHR"), instance, aNativeWindow);
+
+                case AndroidWindowSwapchainSource aWindowSource:
+                    ThrowIfMissing(KHR_ANDROID_SURFACE_EXTENSION_NAME);
+                    return CreateAndroidSurface(GetInstanceProcAddr(instance, "vkCreateAndroidSurfaceKHR"), instance, aWindowSource.ANativeWindow);
 
                 case NSWindowSwapchainSource nsWindowSource:
                     if (instanceExtensions.Contains(EXT_METAL_SURFACE_EXTENSION_NAME))
@@ -140,10 +145,8 @@ namespace Veldrid.Vulkan
             return surface;
         }
 
-        private static VkSurfaceKHR CreateAndroidSurface(
-            IntPtr khr, VkInstance instance, AndroidSurfaceSwapchainSource androidSource)
+        private static VkSurfaceKHR CreateAndroidSurface(IntPtr khr, VkInstance instance, IntPtr aNativeWindow)
         {
-            IntPtr aNativeWindow = AndroidRuntime.ANativeWindow_fromSurface(androidSource.JniEnv, androidSource.Surface);
             VkAndroidSurfaceCreateInfoKHR androidSurfaceCI = new()
             {
                 sType = VkStructureType.VK_STRUCTURE_TYPE_ANDROID_SURFACE_CREATE_INFO_KHR,

@@ -13,16 +13,25 @@ namespace Veldrid.Tests
 
         static unsafe TestUtils()
         {
-            int result = Sdl2Native.SDL_Init(SDLInitFlags.Video);
-            if (result != 0)
+            try
             {
-                InitializationFailedMessage = GetString(Sdl2Native.SDL_GetError());
-                Console.WriteLine($"Failed to initialize SDL2: {InitializationFailedMessage}");
-                InitializedSdl2 = false;
+                int result = Sdl2Native.SDL_Init(SDLInitFlags.Video);
+                if (result != 0)
+                {
+                    InitializationFailedMessage = GetString(Sdl2Native.SDL_GetError());
+                    Console.WriteLine($"Failed to initialize SDL2: {InitializationFailedMessage}");
+                    InitializedSdl2 = false;
+                }
+                else
+                {
+                    InitializedSdl2 = true;
+                }
             }
-            else
+            catch (Exception ex)
             {
-                InitializedSdl2 = true;
+                InitializationFailedMessage = ex.ToString();
+                Console.WriteLine($"SDL2 intializer threw exception: {ex}");
+                InitializedSdl2 = false;
             }
         }
 
@@ -99,15 +108,8 @@ namespace Veldrid.Tests
             VeldridStartup.CreateWindowAndGraphicsDevice(wci, options, GraphicsBackend.OpenGL, out window, out gd);
         }
 
-        internal static void CreateOpenGLESDevice(out Sdl2Window window, out GraphicsDevice gd)
+        internal static void CreateOpenGLESDevice(out IDisposable window, out GraphicsDevice gd)
         {
-            if (!InitializedSdl2)
-            {
-                window = null;
-                gd = null;
-                return;
-            }
-
             WindowCreateInfo wci = new()
             {
                 WindowWidth = 200,
@@ -117,7 +119,21 @@ namespace Veldrid.Tests
 
             GraphicsDeviceOptions options = new(true, PixelFormat.R16_UNorm, false);
 
-            VeldridStartup.CreateWindowAndGraphicsDevice(wci, options, GraphicsBackend.OpenGLES, out window, out gd);
+#if ANDROID
+            // TODO: dependency inject this?
+            Android.Utilities.AndroidStartup.CreateWindowAndGraphicsDevice(
+                wci.WindowWidth, wci.WindowHeight, options, GraphicsBackend.OpenGLES, out window, out gd);
+#else
+            if (!InitializedSdl2)
+            {
+                window = null;
+                gd = null;
+                return;
+            }
+
+            VeldridStartup.CreateWindowAndGraphicsDevice(wci, options, GraphicsBackend.OpenGLES, out Sdl2Window sdlWindow, out gd);
+            window = new WindowClosable(sdlWindow);
+#endif
         }
 
         public static GraphicsDevice CreateMetalDevice()
@@ -161,18 +177,33 @@ namespace Veldrid.Tests
 
             return Encoding.UTF8.GetString(stringStart, characters);
         }
+
+        private class WindowClosable : IDisposable
+        {
+            public Sdl2Window Window { get; }
+
+            public WindowClosable(Sdl2Window window)
+            {
+                Window = window;
+            }
+
+            public void Dispose()
+            {
+                Window.Close();
+            }
+        }
     }
 
-    public abstract class GraphicsDeviceTestBase<T> : IDisposable where T : GraphicsDeviceCreator
+    public abstract class GraphicsDeviceTestBase<T> : IDisposable
+        where T : IGraphicsDeviceCreator
     {
-        private readonly Sdl2Window _window;
         private readonly GraphicsDevice _gd;
         private readonly DisposeCollectorResourceFactory _factory;
         private readonly RenderDoc _renderDoc;
+        private readonly T _deviceCreator;
 
         public GraphicsDevice GD => _gd;
         public ResourceFactory RF => _factory;
-        public Sdl2Window Window => _window;
         public RenderDoc RenderDoc => _renderDoc;
 
         public GraphicsDeviceTestBase()
@@ -183,7 +214,8 @@ namespace Veldrid.Tests
                 _renderDoc.APIValidation = true;
                 _renderDoc.DebugOutputMute = false;
             }
-            Activator.CreateInstance<T>().CreateGraphicsDevice(out _window, out _gd);
+            _deviceCreator = Activator.CreateInstance<T>();
+            _deviceCreator.CreateGraphicsDevice(out _gd);
             _factory = new DisposeCollectorResourceFactory(_gd.ResourceFactory);
         }
 
@@ -196,7 +228,9 @@ namespace Veldrid.Tests
             }
             else
             {
-                readback = RF.CreateBuffer(new BufferDescription(buffer.SizeInBytes, BufferUsage.StagingRead));
+                readback = RF.CreateBuffer(new BufferDescription(buffer.SizeInBytes, BufferUsage.StagingReadWrite));
+                readback.Name = $"Readback for ({buffer.Name})";
+
                 CommandList cl = RF.CreateCommandList();
                 cl.Begin();
                 cl.CopyBuffer(buffer, 0, readback, 0, buffer.SizeInBytes);
@@ -242,77 +276,101 @@ namespace Veldrid.Tests
             GD.WaitForIdle();
             _factory.DisposeCollector.DisposeAll();
             GD.Dispose();
-            _window?.Close();
+            (_deviceCreator as IDisposable)?.Dispose();
         }
     }
 
-    public interface GraphicsDeviceCreator
+    public interface IGraphicsDeviceCreator
     {
-        void CreateGraphicsDevice(out Sdl2Window window, out GraphicsDevice gd);
+        void CreateGraphicsDevice(out GraphicsDevice gd);
     }
 
-    public class VulkanDeviceCreator : GraphicsDeviceCreator
+    public abstract class WindowedDeviceCreator : IGraphicsDeviceCreator, IDisposable
     {
-        public void CreateGraphicsDevice(out Sdl2Window window, out GraphicsDevice gd)
+        protected Sdl2Window window;
+
+        public abstract void CreateGraphicsDevice(out GraphicsDevice gd);
+
+        public void Dispose()
         {
-            window = null;
+            if (window != null)
+            {
+                window.Close();
+                window = null;
+            }
+        }
+    }
+
+    public class VulkanDeviceCreator : IGraphicsDeviceCreator
+    {
+        public void CreateGraphicsDevice(out GraphicsDevice gd)
+        {
             gd = TestUtils.CreateVulkanDevice();
         }
     }
 
-    public class VulkanDeviceCreatorWithMainSwapchain : GraphicsDeviceCreator
+    public class VulkanDeviceCreatorWithMainSwapchain : WindowedDeviceCreator
     {
-        public unsafe void CreateGraphicsDevice(out Sdl2Window window, out GraphicsDevice gd)
+        public override void CreateGraphicsDevice(out GraphicsDevice gd)
         {
             TestUtils.CreateVulkanDeviceWithSwapchain(out window, out gd);
         }
     }
 
-    public class D3D11DeviceCreator : GraphicsDeviceCreator
+    public class D3D11DeviceCreator : IGraphicsDeviceCreator
     {
-        public unsafe void CreateGraphicsDevice(out Sdl2Window window, out GraphicsDevice gd)
+        public void CreateGraphicsDevice(out GraphicsDevice gd)
         {
-            window = null;
             gd = TestUtils.CreateD3D11Device();
         }
     }
 
-    public class D3D11DeviceCreatorWithMainSwapchain : GraphicsDeviceCreator
+    public class D3D11DeviceCreatorWithMainSwapchain : WindowedDeviceCreator
     {
-        public unsafe void CreateGraphicsDevice(out Sdl2Window window, out GraphicsDevice gd)
+        public override void CreateGraphicsDevice(out GraphicsDevice gd)
         {
             TestUtils.CreateD3D11DeviceWithSwapchain(out window, out gd);
         }
     }
 
-    public class OpenGLDeviceCreator : GraphicsDeviceCreator
+    public class OpenGLDeviceCreator : WindowedDeviceCreator
     {
-        public unsafe void CreateGraphicsDevice(out Sdl2Window window, out GraphicsDevice gd)
+        public override void CreateGraphicsDevice(out GraphicsDevice gd)
         {
             TestUtils.CreateOpenGLDevice(out window, out gd);
         }
     }
 
-    public class OpenGLESDeviceCreator : GraphicsDeviceCreator
+    public class OpenGLESDeviceCreator : IGraphicsDeviceCreator, IDisposable
     {
-        public unsafe void CreateGraphicsDevice(out Sdl2Window window, out GraphicsDevice gd)
+        private IDisposable? window;
+
+        public void CreateGraphicsDevice(out GraphicsDevice gd)
         {
             TestUtils.CreateOpenGLESDevice(out window, out gd);
         }
+
+        public void Dispose()
+        {
+            if (window != null)
+            {
+                window.Dispose();
+                window = null;
+            }
+        }
     }
 
-    public class MetalDeviceCreator : GraphicsDeviceCreator
+    public class MetalDeviceCreator : IGraphicsDeviceCreator
     {
-        public unsafe void CreateGraphicsDevice(out Sdl2Window window, out GraphicsDevice gd)
+        public void CreateGraphicsDevice(out GraphicsDevice gd)
         {
-            window = null;
             gd = TestUtils.CreateMetalDevice();
         }
     }
 
-    public class MetalDeviceCreatorWithMainSwapchain : GraphicsDeviceCreator
+    public class MetalDeviceCreatorWithMainSwapchain : WindowedDeviceCreator
     {
-        public unsafe void CreateGraphicsDevice(out Sdl2Window window, out GraphicsDevice gd)
+        public override void CreateGraphicsDevice(out GraphicsDevice gd)
         {
             TestUtils.CreateMetalDeviceWithSwapchain(out window, out gd);
         }

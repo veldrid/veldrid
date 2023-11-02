@@ -7,7 +7,7 @@ namespace Veldrid.Sdl2
 {
     public static unsafe partial class Sdl2Native
     {
-        private static readonly IntPtr s_sdl2Lib = LoadSdl2();
+        private static Lazy<IntPtr> LibHandle { get; } = new(LoadSdl2);
 
         private static IntPtr LoadSdl2()
         {
@@ -44,7 +44,7 @@ namespace Veldrid.Sdl2
         /// <returns>A delegate which can be used to invoke the native function.</returns>
         public static T LoadFunction<T>(string name)
         {
-            IntPtr export = NativeLibrary.GetExport(s_sdl2Lib, name);
+            IntPtr export = NativeLibrary.GetExport(LibHandle.Value, name);
             return Marshal.GetDelegateForFunctionPointer<T>(export);
         }
 

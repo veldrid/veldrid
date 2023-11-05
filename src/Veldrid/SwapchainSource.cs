@@ -79,6 +79,15 @@ namespace Veldrid
             => new AndroidSurfaceSwapchainSource(surfaceHandle, jniEnv);
 
         /// <summary>
+        /// Creates a new SwapchainSource for the given Native Window.
+        /// </summary>
+        /// <param name="aNativeWindow">The handle of the Native Window.</param>
+        /// <returns>A new SwapchainSource which can be used to create a Vulkan <see cref="Swapchain"/> or an OpenGLES
+        /// <see cref="GraphicsDevice"/> for the given Native Window.</returns>
+        public static SwapchainSource CreateAndroidWindow(IntPtr aNativeWindow)
+            => new AndroidWindowSwapchainSource(aNativeWindow);
+
+        /// <summary>
         /// Creates a new SwapchainSource for the given NSView.
         /// </summary>
         /// <param name="nsView">A pointer to an NSView.</param>
@@ -165,6 +174,16 @@ namespace Veldrid
         {
             Surface = surfaceHandle;
             JniEnv = jniEnv;
+        }
+    }
+
+    internal sealed class AndroidWindowSwapchainSource : SwapchainSource
+    {
+        public IntPtr ANativeWindow { get; }
+
+        public AndroidWindowSwapchainSource(IntPtr aNativeWindow)
+        {
+            ANativeWindow = aNativeWindow;
         }
     }
 

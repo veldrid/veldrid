@@ -3,7 +3,8 @@ using Xunit;
 
 namespace Veldrid.Tests
 {
-    public abstract class FramebufferTests<T> : GraphicsDeviceTestBase<T> where T : GraphicsDeviceCreator
+    public abstract class FramebufferTests<T> : GraphicsDeviceTestBase<T>
+        where T : IGraphicsDeviceCreator
     {
         [Fact]
         public void NoDepthTarget_ClearAllColors_Succeeds()
@@ -134,7 +135,8 @@ namespace Veldrid.Tests
         }
     }
 
-    public abstract class SwapchainFramebufferTests<T> : GraphicsDeviceTestBase<T> where T : GraphicsDeviceCreator
+    public abstract class SwapchainFramebufferTests<T> : GraphicsDeviceTestBase<T>
+        where T : IGraphicsDeviceCreator
     {
         [Fact]
         public void ClearSwapchainFramebuffer_Succeeds()

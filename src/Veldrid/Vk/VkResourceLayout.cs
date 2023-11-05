@@ -4,20 +4,21 @@ using static Veldrid.Vulkan.VulkanUtil;
 
 namespace Veldrid.Vulkan
 {
-    internal sealed unsafe class VkResourceLayout : ResourceLayout
+    internal sealed unsafe class VkResourceLayout : ResourceLayout, IResourceRefCountTarget
     {
         private readonly VkGraphicsDevice _gd;
         private readonly VkDescriptorSetLayout _dsl;
         private readonly VkDescriptorType[] _descriptorTypes;
-        private bool _disposed;
         private string? _name;
+
+        public ResourceRefCount RefCount { get; }
 
         public VkDescriptorSetLayout DescriptorSetLayout => _dsl;
         public VkDescriptorType[] DescriptorTypes => _descriptorTypes;
         public DescriptorResourceCounts DescriptorResourceCounts { get; }
         public new int DynamicBufferCount { get; }
 
-        public override bool IsDisposed => _disposed;
+        public override bool IsDisposed => RefCount.IsDisposed;
 
         public VkResourceLayout(VkGraphicsDevice gd, in ResourceLayoutDescription description)
             : base(description)
@@ -95,6 +96,8 @@ namespace Veldrid.Vulkan
             VkResult result = vkCreateDescriptorSetLayout(_gd.Device, &dslCI, null, &dsl);
             CheckResult(result);
             _dsl = dsl;
+
+            RefCount = new ResourceRefCount(this);
         }
 
         public override string? Name
@@ -109,11 +112,12 @@ namespace Veldrid.Vulkan
 
         public override void Dispose()
         {
-            if (!_disposed)
-            {
-                _disposed = true;
-                vkDestroyDescriptorSetLayout(_gd.Device, _dsl, null);
-            }
+            RefCount.DecrementDispose();
+        }
+
+        void IResourceRefCountTarget.RefZeroed()
+        {
+            vkDestroyDescriptorSetLayout(_gd.Device, _dsl, null);
         }
     }
 }

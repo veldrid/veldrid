@@ -1,18 +1,15 @@
-﻿using System;
-using TerraFX.Interop.Vulkan;
+﻿using TerraFX.Interop.Vulkan;
 
 namespace Veldrid.Vulkan
 {
     internal sealed class VkResourceFactory : ResourceFactory
     {
         private readonly VkGraphicsDevice _gd;
-        private readonly VkDevice _device;
 
         public VkResourceFactory(VkGraphicsDevice vkGraphicsDevice)
             : base(vkGraphicsDevice.Features)
         {
             _gd = vkGraphicsDevice;
-            _device = vkGraphicsDevice.Device;
         }
 
         public override GraphicsBackend BackendType => GraphicsBackend.Vulkan;
@@ -76,7 +73,9 @@ namespace Veldrid.Vulkan
                 VkFormats.VdToVkPixelFormat(description.Format, (description.Usage & TextureUsage.DepthStencil) != 0),
                 description.Usage,
                 description.SampleCount,
-                new VkImage(nativeTexture));
+                new VkImage(nativeTexture),
+                false,
+                true);
         }
 
         public override TextureView CreateTextureView(in TextureViewDescription description)

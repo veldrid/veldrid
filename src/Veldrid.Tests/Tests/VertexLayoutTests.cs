@@ -3,8 +3,8 @@ using Xunit;
 
 namespace Veldrid.Tests
 {
-
-    public abstract class VertexLayoutTests<T> : GraphicsDeviceTestBase<T> where T : GraphicsDeviceCreator
+    public abstract class VertexLayoutTests<T> : GraphicsDeviceTestBase<T>
+        where T : IGraphicsDeviceCreator
     {
         [Theory]
         [InlineData(0, 0, 0, 0, -1, true)]
@@ -65,7 +65,7 @@ namespace Veldrid.Tests
 #endif
 #if TEST_VULKAN
     [Trait("Backend", "Vulkan")]
-    public class VulkanVertexLayoutTests : VertexLayoutTests<VulkanDeviceCreatorWithMainSwapchain> { }
+    public class VulkanVertexLayoutTests : VertexLayoutTests<VulkanDeviceCreator> { }
 #endif
 #if TEST_D3D11
     [Trait("Backend", "D3D11")]

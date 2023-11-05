@@ -1,8 +1,7 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 
-namespace Veldrid.Tests
+namespace Veldrid.Tests.Utilities
 {
     internal class RgbaFloatFuzzyComparer : IEqualityComparer<RgbaFloat>
     {

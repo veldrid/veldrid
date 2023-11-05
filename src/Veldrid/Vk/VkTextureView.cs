@@ -7,7 +7,6 @@ namespace Veldrid.Vulkan
     {
         private readonly VkGraphicsDevice _gd;
         private readonly VkImageView _imageView;
-        private bool _destroyed;
         private string? _name;
 
         public VkImageView ImageView => _imageView;
@@ -16,7 +15,7 @@ namespace Veldrid.Vulkan
 
         public ResourceRefCount RefCount { get; }
 
-        public override bool IsDisposed => _destroyed;
+        public override bool IsDisposed => RefCount.IsDisposed;
 
         public VkTextureView(VkGraphicsDevice gd, in TextureViewDescription description)
             : base(description)
@@ -99,11 +98,7 @@ namespace Veldrid.Vulkan
 
         void IResourceRefCountTarget.RefZeroed()
         {
-            if (!_destroyed)
-            {
-                _destroyed = true;
-                vkDestroyImageView(_gd.Device, ImageView, null);
-            }
+            vkDestroyImageView(_gd.Device, ImageView, null);
         }
     }
 }

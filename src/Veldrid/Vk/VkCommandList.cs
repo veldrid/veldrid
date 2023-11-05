@@ -2,7 +2,9 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using TerraFX.Interop.Vulkan;
 using static TerraFX.Interop.Vulkan.Vulkan;
 using static Veldrid.Vulkan.VulkanUtil;
@@ -16,7 +18,6 @@ namespace Veldrid.Vulkan
         private readonly VkGraphicsDevice _gd;
         private VkCommandPool _pool;
         private VkCommandBuffer _cb;
-        private bool _destroyed;
 
         private bool _commandBufferBegun;
         private bool _commandBufferEnded;
@@ -52,6 +53,7 @@ namespace Veldrid.Vulkan
         private BoundResourceSetInfo[] _currentComputeResourceSets = Array.Empty<BoundResourceSetInfo>();
         private bool[] _computeResourceSetsChanged = Array.Empty<bool>();
         private string? _name;
+        private string _stagingBufferName;
 
         private readonly object _commandBufferListLock = new();
         private readonly Stack<VkCommandBuffer> _availableCommandBuffers = new();
@@ -60,13 +62,10 @@ namespace Veldrid.Vulkan
         private StagingResourceInfo _currentStagingInfo;
         private readonly Dictionary<VkCommandBuffer, StagingResourceInfo> _submittedStagingInfos = new();
         private readonly ConcurrentQueue<StagingResourceInfo> _availableStagingInfos = new();
-        private readonly List<VkBuffer> _availableStagingBuffers = new();
-
-        public VkCommandPool CommandPool => _pool;
 
         public ResourceRefCount RefCount { get; }
 
-        public override bool IsDisposed => _destroyed;
+        public override bool IsDisposed => RefCount.IsDisposed;
 
         public VkCommandList(VkGraphicsDevice gd, in CommandListDescription description)
             : base(description, gd.Features, gd.UniformBufferMinOffsetAlignment, gd.StructuredBufferMinOffsetAlignment)
@@ -79,12 +78,18 @@ namespace Veldrid.Vulkan
                 queueFamilyIndex = gd.GraphicsQueueIndex
             };
 
+            if (description.Transient)
+            {
+                poolCI.flags |= VkCommandPoolCreateFlags.VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;
+            }
+
             VkCommandPool pool;
             VkResult result = vkCreateCommandPool(_gd.Device, &poolCI, null, &pool);
             CheckResult(result);
             _pool = pool;
 
             _cb = GetNextCommandBuffer();
+            _stagingBufferName = $"Staging Buffer (CommandList)";
             RefCount = new ResourceRefCount(this);
         }
 
@@ -110,6 +115,15 @@ namespace Veldrid.Vulkan
             VkCommandBuffer cb;
             VkResult result = vkAllocateCommandBuffers(_gd.Device, &cbAI, &cb);
             CheckResult(result);
+
+            if (_gd.DebugMarkerEnabled)
+            {
+                _gd.SetDebugMarkerName(
+                    VkDebugReportObjectTypeEXT.VK_DEBUG_REPORT_OBJECT_TYPE_COMMAND_BUFFER_EXT,
+                    (ulong)cb.Value,
+                    _name);
+            }
+
             return cb;
         }
 
@@ -118,23 +132,24 @@ namespace Veldrid.Vulkan
             RefCount.Increment();
 
             VkCommandBuffer cb = _cb;
+            _cb = default;
+
+            StagingResourceInfo info = _currentStagingInfo;
+            _currentStagingInfo = default;
 
             lock (_commandBufferListLock)
             {
-                if (!_submittedStagingInfos.TryAdd(cb, _currentStagingInfo))
+                if (!_submittedStagingInfos.TryAdd(cb, info))
                 {
-                    throw new InvalidOperationException();
+                    ThrowUnreachableStateException();
                 }
+
                 _submittedCommandBuffers.Add(cb);
+                return cb;
             }
-
-            _currentStagingInfo = default;
-            _cb = default;
-
-            return cb;
         }
 
-        public void CommandBufferCompleted(VkCommandBuffer completedCB)
+        public StagingResourceInfo CommandBufferCompleted(VkCommandBuffer completedCB)
         {
             lock (_commandBufferListLock)
             {
@@ -146,17 +161,18 @@ namespace Veldrid.Vulkan
                         _availableCommandBuffers.Push(completedCB);
                         _submittedCommandBuffers.RemoveAt(i);
                         i -= 1;
+                        break;
                     }
                 }
 
                 if (!_submittedStagingInfos.Remove(completedCB, out StagingResourceInfo info))
                 {
-                    throw new InvalidOperationException();
+                    ThrowUnreachableStateException();
                 }
-                RecycleStagingInfo(info);
-            }
 
-            RefCount.Decrement();
+                RefCount.Decrement();
+                return info;
+            }
         }
 
         public override void Begin()
@@ -544,7 +560,7 @@ namespace Veldrid.Vulkan
 
             vkSource.TransitionImageLayout(_cb, 0, 1, 0, 1, VkImageLayout.VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
             vkDestination.TransitionImageLayout(_cb, 0, 1, 0, 1, VkImageLayout.VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-             
+
             vkCmdResolveImage(
                 _cb,
                 vkSource.OptimalDeviceImage,
@@ -880,7 +896,10 @@ namespace Veldrid.Vulkan
 
         private protected override void UpdateBufferCore(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
         {
-            VkBuffer stagingBuffer = GetStagingBuffer(sizeInBytes);
+            VkBuffer stagingBuffer = _gd.GetPooledStagingBuffer(sizeInBytes);
+            stagingBuffer.Name = _stagingBufferName;
+            AddStagingResource(stagingBuffer);
+
             _gd.UpdateBuffer(stagingBuffer, 0, source, sizeInBytes);
             CopyBuffer(stagingBuffer, 0, buffer, bufferOffsetInBytes, sizeInBytes);
         }
@@ -1343,6 +1362,84 @@ namespace Veldrid.Vulkan
             vkTex.TransitionImageLayoutNonmatching(_cb, 0, vkTex.MipLevels, 0, layerCount, layout);
         }
 
+        /// <summary>
+        /// Adds a staging buffer to the current recording.
+        /// </summary>
+        /// <param name="buffer">The buffer resource to add.</param>
+        internal void AddStagingResource(VkBuffer buffer)
+        {
+            _currentStagingInfo.BuffersUsed.Add(buffer);
+        }
+
+        /// <summary>
+        /// Adds a staging texture to the current recording.
+        /// </summary>
+        /// <param name="texture">The texture resource to add.</param>
+        internal void AddStagingResource(VkTexture texture)
+        {
+            _currentStagingInfo.TexturesUsed.Add(texture);
+        }
+
+        internal void ClearColorTexture(VkTexture texture, VkClearColorValue color)
+        {
+            _currentStagingInfo.AddResource(texture.RefCount);
+
+            uint effectiveLayers = texture.ActualArrayLayers;
+
+            VkImageSubresourceRange range = new()
+            {
+                aspectMask = VkImageAspectFlags.VK_IMAGE_ASPECT_COLOR_BIT,
+                baseMipLevel = 0,
+                levelCount = texture.MipLevels,
+                baseArrayLayer = 0,
+                layerCount = effectiveLayers
+            };
+
+            texture.TransitionImageLayout(_cb, 0, texture.MipLevels, 0, effectiveLayers, VkImageLayout.VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+            vkCmdClearColorImage(_cb, texture.OptimalDeviceImage, VkImageLayout.VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &color, 1, &range);
+            VkImageLayout colorLayout = texture.IsSwapchainTexture
+                ? VkImageLayout.VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
+                : VkImageLayout.VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+            texture.TransitionImageLayout(_cb, 0, texture.MipLevels, 0, effectiveLayers, colorLayout);
+        }
+
+        internal void ClearDepthTexture(VkTexture texture, VkClearDepthStencilValue clearValue)
+        {
+            _currentStagingInfo.AddResource(texture.RefCount);
+
+            uint effectiveLayers = texture.ActualArrayLayers;
+
+            VkImageAspectFlags aspect = FormatHelpers.IsStencilFormat(texture.Format)
+                ? VkImageAspectFlags.VK_IMAGE_ASPECT_DEPTH_BIT | VkImageAspectFlags.VK_IMAGE_ASPECT_STENCIL_BIT
+                : VkImageAspectFlags.VK_IMAGE_ASPECT_DEPTH_BIT;
+
+            VkImageSubresourceRange range = new()
+            {
+                aspectMask = aspect,
+                baseMipLevel = 0,
+                levelCount = texture.MipLevels,
+                baseArrayLayer = 0,
+                layerCount = effectiveLayers
+            };
+
+            texture.TransitionImageLayout(_cb, 0, texture.MipLevels, 0, effectiveLayers, VkImageLayout.VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+            vkCmdClearDepthStencilImage(
+                _cb,
+                texture.OptimalDeviceImage,
+                VkImageLayout.VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                &clearValue,
+                1,
+                &range);
+            texture.TransitionImageLayout(_cb, 0, texture.MipLevels, 0, effectiveLayers, VkImageLayout.VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+        }
+
+        internal void TransitionImageLayout(VkTexture texture, VkImageLayout layout)
+        {
+            _currentStagingInfo.AddResource(texture.RefCount);
+
+            texture.TransitionImageLayout(_cb, 0, texture.MipLevels, 0, texture.ActualArrayLayers, layout);
+        }
+
         [Conditional("DEBUG")]
         private void DebugFullPipelineBarrier()
         {
@@ -1400,6 +1497,7 @@ namespace Veldrid.Vulkan
             set
             {
                 _name = value;
+                _stagingBufferName = $"Staging Buffer (CommandList {_name})";
 
                 if (_gd.DebugMarkerEnabled)
                 {
@@ -1442,35 +1540,8 @@ namespace Veldrid.Vulkan
 
             _gd.SetDebugMarkerName(
                 VkDebugReportObjectTypeEXT.VK_DEBUG_REPORT_OBJECT_TYPE_COMMAND_POOL_EXT,
-                CommandPool.Value,
+                _pool.Value,
                 utf8Buffer);
-        }
-
-        private VkBuffer GetStagingBuffer(uint size)
-        {
-            VkBuffer? ret = null;
-
-            lock (_availableStagingBuffers)
-            {
-                foreach (VkBuffer buffer in _availableStagingBuffers)
-                {
-                    if (buffer.SizeInBytes >= size)
-                    {
-                        ret = buffer;
-                        _availableStagingBuffers.Remove(buffer);
-                        break;
-                    }
-                }
-            }
-            if (ret == null)
-            {
-                ret = (VkBuffer)_gd.ResourceFactory.CreateBuffer(
-                    new BufferDescription(size, BufferUsage.StagingWrite));
-                ret.Name = $"Staging Buffer (CommandList {_name})";
-            }
-
-            _currentStagingInfo.BuffersUsed.Add(ret);
-            return ret;
         }
 
         [SkipLocalsInit]
@@ -1537,35 +1608,29 @@ namespace Veldrid.Vulkan
 
         void IResourceRefCountTarget.RefZeroed()
         {
-            if (!_destroyed)
+            vkDestroyCommandPool(_gd.Device, _pool, null);
+
+            Debug.Assert(_submittedStagingInfos.Count == 0);
+
+            if (_currentStagingInfo.IsValid)
             {
-                _destroyed = true;
-                vkDestroyCommandPool(_gd.Device, _pool, null);
-
-                Debug.Assert(_submittedStagingInfos.Count == 0);
-
-                if (_currentStagingInfo.IsValid)
-                {
-                    RecycleStagingInfo(_currentStagingInfo);
-                }
-
-                foreach (VkBuffer buffer in _availableStagingBuffers)
-                {
-                    buffer.Dispose();
-                }
+                RecycleStagingInfo(_currentStagingInfo);
+                _currentStagingInfo = default;
             }
         }
 
-        private readonly struct StagingResourceInfo
+        internal readonly struct StagingResourceInfo
         {
             public List<VkBuffer> BuffersUsed { get; }
+            public List<VkTexture> TexturesUsed { get; }
             public HashSet<ResourceRefCount> Resources { get; }
 
-            public bool IsValid => BuffersUsed != null;
+            public bool IsValid => Resources != null;
 
             public StagingResourceInfo()
             {
                 BuffersUsed = new List<VkBuffer>();
+                TexturesUsed = new List<VkTexture>();
                 Resources = new HashSet<ResourceRefCount>();
             }
 
@@ -1580,6 +1645,7 @@ namespace Veldrid.Vulkan
             public void Clear()
             {
                 BuffersUsed.Clear();
+                TexturesUsed.Clear();
                 Resources.Clear();
             }
         }
@@ -1593,14 +1659,16 @@ namespace Veldrid.Vulkan
             return ret;
         }
 
-        private void RecycleStagingInfo(StagingResourceInfo info)
+        internal void RecycleStagingInfo(StagingResourceInfo info)
         {
-            lock (_availableStagingBuffers)
+            if (info.BuffersUsed.Count > 0)
             {
-                foreach (VkBuffer buffer in info.BuffersUsed)
-                {
-                    _availableStagingBuffers.Add(buffer);
-                }
+                _gd.ReturnPooledStagingBuffers(CollectionsMarshal.AsSpan(info.BuffersUsed));
+            }
+
+            if (info.TexturesUsed.Count > 0)
+            {
+                _gd.ReturnPooledStagingTextures(CollectionsMarshal.AsSpan(info.TexturesUsed));
             }
 
             foreach (ResourceRefCount rrc in info.Resources)
@@ -1611,6 +1679,12 @@ namespace Veldrid.Vulkan
             info.Clear();
 
             _availableStagingInfos.Enqueue(info);
+        }
+
+        [DoesNotReturn]
+        private static void ThrowUnreachableStateException()
+        {
+            throw new Exception("Implementation reached unexpected condition.");
         }
     }
 }

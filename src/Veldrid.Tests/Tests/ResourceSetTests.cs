@@ -1,9 +1,9 @@
-﻿using System.Numerics;
-using Xunit;
+﻿using Xunit;
 
 namespace Veldrid.Tests
 {
-    public abstract class ResourceSetTests<T> : GraphicsDeviceTestBase<T> where T : GraphicsDeviceCreator
+    public abstract class ResourceSetTests<T> : GraphicsDeviceTestBase<T>
+        where T : IGraphicsDeviceCreator
     {
         [Fact]
         public void ResourceSet_BufferInsteadOfTextureView_Fails()

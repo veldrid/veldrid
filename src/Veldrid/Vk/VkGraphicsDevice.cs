@@ -29,7 +29,7 @@ namespace Veldrid.Vulkan
         private uint _graphicsQueueIndex;
         private uint _presentQueueIndex;
         private VkCommandPool _graphicsCommandPool;
-        private readonly object _graphicsCommandPoolLock = new();
+        private readonly object _graphicsCommandListLock = new();
         private VkQueue _graphicsQueue;
         private readonly object _graphicsQueueLock = new();
         private VkDebugReportCallbackEXT _debugCallbackHandle;
@@ -41,8 +41,8 @@ namespace Veldrid.Vulkan
         private readonly ConcurrentDictionary<VkFormat, VkFilter> _filters = new();
         private readonly BackendInfoVulkan _vulkanInfo;
 
-        private const int SharedCommandPoolCount = 4;
-        private Stack<SharedCommandPool> _sharedGraphicsCommandPools = new();
+        private const int MaxSharedCommandLists = 4;
+        private Stack<VkCommandList> _sharedCommandLists = new(MaxSharedCommandLists);
         private VkDescriptorPoolManager _descriptorPoolManager;
         private bool _standardValidationSupported;
         private bool _khronosValidationSupported;
@@ -54,13 +54,8 @@ namespace Veldrid.Vulkan
         private const uint MinStagingBufferSize = 64;
         private const uint MaxStagingBufferSize = 512;
 
-        private readonly object _stagingResourcesLock = new();
         private readonly List<VkTexture> _availableStagingTextures = new();
         private readonly List<VkBuffer> _availableStagingBuffers = new();
-
-        private readonly Dictionary<VkCommandBuffer, VkTexture> _submittedStagingTextures = new();
-        private readonly Dictionary<VkCommandBuffer, VkBuffer> _submittedStagingBuffers = new();
-        private readonly Dictionary<VkCommandBuffer, SharedCommandPool> _submittedSharedCommandPools = new();
 
         public override bool GetVulkanInfo(out BackendInfoVulkan info)
         {
@@ -154,10 +149,6 @@ namespace Veldrid.Vulkan
             _descriptorPoolManager = new VkDescriptorPoolManager(this);
 
             CreateGraphicsCommandPool();
-            for (int i = 0; i < SharedCommandPoolCount; i++)
-            {
-                _sharedGraphicsCommandPools.Push(new SharedCommandPool(this, true));
-            }
 
             _vulkanInfo = new BackendInfoVulkan(this);
 
@@ -166,19 +157,25 @@ namespace Veldrid.Vulkan
 
         private protected override void SubmitCommandsCore(CommandList cl, Fence? fence)
         {
-            SubmitCommandList(cl, 0, null, 0, null, fence);
+            VkCommandList vkCL = Util.AssertSubtype<CommandList, VkCommandList>(cl);
+            SubmitCommandList(vkCL, 0, null, 0, null, fence, false);
+        }
+
+        internal void EndAndSubmitCommands(VkCommandList cl)
+        {
+            cl.End();
+            SubmitCommandList(cl, 0, null, 0, null, null, true);
         }
 
         private void SubmitCommandList(
-            CommandList cl,
+            VkCommandList vkCL,
             uint waitSemaphoreCount,
             VkSemaphore* waitSemaphoresPtr,
             uint signalSemaphoreCount,
             VkSemaphore* signalSemaphoresPtr,
-            Fence? fence)
+            Fence? fence,
+            bool isPooled)
         {
-            VkCommandList vkCL = Util.AssertSubtype<CommandList, VkCommandList>(cl);
-
             // A fence may complete before Veldrid gets notified of the
             // corresponding VkCommandBuffer completion, so check fences here
             CheckSubmittedFences();
@@ -186,17 +183,18 @@ namespace Veldrid.Vulkan
             VkCommandBuffer cb = vkCL.CommandBufferSubmitted();
 
             SubmitCommandBuffer(
-                vkCL, cb, waitSemaphoreCount, waitSemaphoresPtr, signalSemaphoreCount, signalSemaphoresPtr, fence);
+                vkCL, cb, waitSemaphoreCount, waitSemaphoresPtr, signalSemaphoreCount, signalSemaphoresPtr, fence, isPooled);
         }
 
         private void SubmitCommandBuffer(
-            VkCommandList? vkCL,
+            VkCommandList vkCL,
             VkCommandBuffer vkCB,
             uint waitSemaphoreCount,
             VkSemaphore* waitSemaphoresPtr,
             uint signalSemaphoreCount,
             VkSemaphore* signalSemaphoresPtr,
-            Fence? fence)
+            Fence? fence,
+            bool isPooled)
         {
             VkPipelineStageFlags waitDstStageMask = VkPipelineStageFlags.VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
@@ -237,7 +235,7 @@ namespace Veldrid.Vulkan
 
             lock (_submittedFencesLock)
             {
-                _submittedFences.Add(new FenceSubmissionInfo(submissionFence, vkCL, vkCB));
+                _submittedFences.Add(new FenceSubmissionInfo(submissionFence, vkCL, vkCB, isPooled));
             }
         }
 
@@ -245,60 +243,48 @@ namespace Veldrid.Vulkan
         {
             lock (_submittedFencesLock)
             {
-                for (int i = 0; i < _submittedFences.Count; i++)
+                List<FenceSubmissionInfo> submittedFences = _submittedFences;
+                for (int i = 0; i < submittedFences.Count; i++)
                 {
-                    FenceSubmissionInfo fsi = _submittedFences[i];
+                    FenceSubmissionInfo fsi = submittedFences[i];
                     if (vkGetFenceStatus(_device, fsi.Fence) == VkResult.VK_SUCCESS)
                     {
                         CompleteFenceSubmission(fsi);
-                        _submittedFences.RemoveAt(i);
+                        submittedFences.RemoveAt(i);
                         i -= 1;
                     }
                 }
             }
         }
 
-        private void CompleteFenceSubmission(FenceSubmissionInfo fsi)
+        private void CompleteFenceSubmission(in FenceSubmissionInfo fsi)
         {
+            VkCommandList cl = fsi.CommandList;
             VulkanFence fence = fsi.Fence;
             VkCommandBuffer completedCB = fsi.CommandBuffer;
-            fsi.CommandList?.CommandBufferCompleted(completedCB);
-            VkResult resetResult = vkResetFences(_device, 1, &fence);
-            CheckResult(resetResult);
-            ReturnSubmissionFence(fence);
-            lock (_stagingResourcesLock)
+            VkCommandList.StagingResourceInfo stagingInfo = cl.CommandBufferCompleted(completedCB);
+            try
             {
-                if (_submittedStagingTextures.Remove(completedCB, out VkTexture? stagingTex))
-                {
-                    _availableStagingTextures.Add(stagingTex);
-                }
+                VkResult resetResult = vkResetFences(_device, 1, &fence);
+                CheckResult(resetResult);
+                ReturnSubmissionFence(fence);
 
-                if (_submittedStagingBuffers.Remove(completedCB, out VkBuffer? stagingBuffer))
+                if (fsi.IsPooled)
                 {
-                    if (stagingBuffer.SizeInBytes <= MaxStagingBufferSize)
+                    lock (_sharedCommandLists)
                     {
-                        _availableStagingBuffers.Add(stagingBuffer);
-                    }
-                    else
-                    {
-                        stagingBuffer.Dispose();
-                    }
-                }
-
-                if (_submittedSharedCommandPools.Remove(completedCB, out SharedCommandPool? sharedPool))
-                {
-                    lock (_graphicsCommandPoolLock)
-                    {
-                        if (sharedPool.IsCached)
+                        if (_sharedCommandLists.Count < MaxSharedCommandLists)
                         {
-                            _sharedGraphicsCommandPools.Push(sharedPool);
-                        }
-                        else
-                        {
-                            sharedPool.Destroy();
+                            _sharedCommandLists.Push(cl);
+                            return;
                         }
                     }
+                    cl.Dispose();
                 }
+            }
+            finally
+            {
+                cl.RecycleStagingInfo(stagingInfo);
             }
         }
 
@@ -1104,25 +1090,19 @@ namespace Veldrid.Vulkan
             _descriptorPoolManager.DestroyAll();
             vkDestroyCommandPool(_device, _graphicsCommandPool, null);
 
-            Debug.Assert(_submittedStagingTextures.Count == 0);
             foreach (VkTexture tex in _availableStagingTextures)
             {
                 tex.Dispose();
             }
 
-            Debug.Assert(_submittedStagingBuffers.Count == 0);
             foreach (VkBuffer buffer in _availableStagingBuffers)
             {
                 buffer.Dispose();
             }
 
-            lock (_graphicsCommandPoolLock)
+            while (_sharedCommandLists.TryPop(out VkCommandList? cl))
             {
-                while (_sharedGraphicsCommandPools.Count > 0)
-                {
-                    SharedCommandPool sharedPool = _sharedGraphicsCommandPools.Pop();
-                    sharedPool.Destroy();
-                }
+                cl.Dispose();
             }
 
             _memoryManager.Dispose();
@@ -1254,7 +1234,8 @@ namespace Veldrid.Vulkan
             }
             else
             {
-                copySrcVkBuffer = GetFreeStagingBuffer(sizeInBytes);
+                copySrcVkBuffer = GetPooledStagingBuffer(sizeInBytes);
+                copySrcVkBuffer.Name = "Staging Buffer (GraphicsDevice)";
                 mappedPtr = (IntPtr)copySrcVkBuffer.Memory.BlockMappedPointer;
                 destPtr = (byte*)mappedPtr;
             }
@@ -1263,41 +1244,26 @@ namespace Veldrid.Vulkan
 
             if (copySrcVkBuffer != null)
             {
-                SharedCommandPool pool = GetFreeCommandPool();
-                VkCommandBuffer cb = pool.BeginNewCommandBuffer();
-
-                VkBufferCopy copyRegion = new()
-                {
-                    dstOffset = bufferOffsetInBytes,
-                    size = sizeInBytes
-                };
-                vkCmdCopyBuffer(cb, copySrcVkBuffer.DeviceBuffer, vkBuffer.DeviceBuffer, 1, &copyRegion);
-
-                pool.EndAndSubmit(cb);
-                lock (_stagingResourcesLock)
-                {
-                    _submittedStagingBuffers.Add(cb, copySrcVkBuffer);
-                }
+                VkCommandList cl = GetAndBeginCommandList();
+                cl.AddStagingResource(copySrcVkBuffer);
+                cl.CopyBuffer(copySrcVkBuffer, 0, vkBuffer, bufferOffsetInBytes, sizeInBytes);
+                EndAndSubmitCommands(cl);
             }
         }
 
-        private SharedCommandPool GetFreeCommandPool()
+        internal VkCommandList GetAndBeginCommandList()
         {
-            SharedCommandPool? sharedPool = null;
-            lock (_graphicsCommandPoolLock)
+            if (!_sharedCommandLists.TryPop(out VkCommandList? sharedList))
             {
-                if (_sharedGraphicsCommandPools.Count > 0)
+                CommandListDescription desc = new()
                 {
-                    sharedPool = _sharedGraphicsCommandPools.Pop();
-                }
+                    Transient = true
+                };
+                sharedList = (VkCommandList)ResourceFactory.CreateCommandList(desc);
             }
-
-            if (sharedPool == null)
-            {
-                sharedPool = new SharedCommandPool(this, false);
-            }
-
-            return sharedPool;
+            sharedList.Begin();
+            sharedList.Name = "Shared CommandList (GraphicsDevice)";
+            return sharedList;
         }
 
         private protected override void UpdateTextureCore(
@@ -1334,27 +1300,24 @@ namespace Veldrid.Vulkan
             }
             else
             {
-                VkTexture stagingTex = GetFreeStagingTexture(width, height, depth, texture.Format);
+                VkTexture stagingTex = GetPooledStagingTexture(width, height, depth, texture.Format);
+                stagingTex.Name = "Staging Texture (GraphicsDevice)";
                 UpdateTexture(stagingTex, source, sizeInBytes, 0, 0, 0, width, height, depth, 0, 0);
-                SharedCommandPool pool = GetFreeCommandPool();
-                VkCommandBuffer cb = pool.BeginNewCommandBuffer();
-                VkCommandList.CopyTextureCore_VkCommandBuffer(
-                    cb,
+
+                VkCommandList cl = GetAndBeginCommandList();
+                cl.AddStagingResource(stagingTex);
+                cl.CopyTexture(
                     stagingTex, 0, 0, 0, 0, 0,
                     texture, x, y, z, mipLevel, arrayLayer,
                     width, height, depth, 1);
-                lock (_stagingResourcesLock)
-                {
-                    _submittedStagingTextures.Add(cb, stagingTex);
-                }
-                pool.EndAndSubmit(cb);
+                EndAndSubmitCommands(cl);
             }
         }
 
-        private VkTexture GetFreeStagingTexture(uint width, uint height, uint depth, PixelFormat format)
+        internal VkTexture GetPooledStagingTexture(uint width, uint height, uint depth, PixelFormat format)
         {
             uint totalSize = FormatHelpers.GetRegionSize(width, height, depth, format);
-            lock (_stagingResourcesLock)
+            lock (_availableStagingTextures)
             {
                 for (int i = 0; i < _availableStagingTextures.Count; i++)
                 {
@@ -1373,13 +1336,12 @@ namespace Veldrid.Vulkan
             VkTexture newTex = (VkTexture)ResourceFactory.CreateTexture(TextureDescription.Texture3D(
                 texWidth, texHeight, depth, 1, format, TextureUsage.Staging));
             newTex.SetStagingDimensions(width, height, depth, format);
-
             return newTex;
         }
 
-        private VkBuffer GetFreeStagingBuffer(uint size)
+        internal VkBuffer GetPooledStagingBuffer(uint size)
         {
-            lock (_stagingResourcesLock)
+            lock (_availableStagingBuffers)
             {
                 for (int i = 0; i < _availableStagingBuffers.Count; i++)
                 {
@@ -1396,6 +1358,28 @@ namespace Veldrid.Vulkan
             VkBuffer newBuffer = (VkBuffer)ResourceFactory.CreateBuffer(
                 new BufferDescription(newBufferSize, BufferUsage.StagingWrite));
             return newBuffer;
+        }
+
+        internal void ReturnPooledStagingBuffers(ReadOnlySpan<VkBuffer> buffers)
+        {
+            lock (_availableStagingBuffers)
+            {
+                foreach (VkBuffer buffer in buffers)
+                {
+                    _availableStagingBuffers.Add(buffer);
+                }
+            }
+        }
+
+        internal void ReturnPooledStagingTextures(ReadOnlySpan<VkTexture> textures)
+        {
+            lock (_availableStagingTextures)
+            {
+                foreach (VkTexture texture in textures)
+                {
+                    _availableStagingTextures.Add(texture);
+                }
+            }
         }
 
         public override void ResetFence(Fence fence)
@@ -1478,142 +1462,19 @@ namespace Veldrid.Vulkan
             return false;
         }
 
-        internal void ClearColorTexture(VkTexture texture, VkClearColorValue color)
-        {
-            uint effectiveLayers = texture.ActualArrayLayers;
-
-            VkImageSubresourceRange range = new()
-            {
-                aspectMask = VkImageAspectFlags.VK_IMAGE_ASPECT_COLOR_BIT,
-                baseMipLevel = 0,
-                levelCount = texture.MipLevels,
-                baseArrayLayer = 0,
-                layerCount = effectiveLayers
-            };
-
-            SharedCommandPool pool = GetFreeCommandPool();
-            VkCommandBuffer cb = pool.BeginNewCommandBuffer();
-            texture.TransitionImageLayout(cb, 0, texture.MipLevels, 0, effectiveLayers, VkImageLayout.VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-            vkCmdClearColorImage(cb, texture.OptimalDeviceImage, VkImageLayout.VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &color, 1, &range);
-            VkImageLayout colorLayout = texture.IsSwapchainTexture
-                ? VkImageLayout.VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
-                : VkImageLayout.VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-            texture.TransitionImageLayout(cb, 0, texture.MipLevels, 0, effectiveLayers, colorLayout);
-            pool.EndAndSubmit(cb);
-        }
-
-        internal void ClearDepthTexture(VkTexture texture, VkClearDepthStencilValue clearValue)
-        {
-            uint effectiveLayers = texture.ActualArrayLayers;
-
-            VkImageAspectFlags aspect = FormatHelpers.IsStencilFormat(texture.Format)
-                ? VkImageAspectFlags.VK_IMAGE_ASPECT_DEPTH_BIT | VkImageAspectFlags.VK_IMAGE_ASPECT_STENCIL_BIT
-                : VkImageAspectFlags.VK_IMAGE_ASPECT_DEPTH_BIT;
-
-            VkImageSubresourceRange range = new()
-            {
-                aspectMask = aspect,
-                baseMipLevel = 0,
-                levelCount = texture.MipLevels,
-                baseArrayLayer = 0,
-                layerCount = effectiveLayers
-            };
-
-            SharedCommandPool pool = GetFreeCommandPool();
-            VkCommandBuffer cb = pool.BeginNewCommandBuffer();
-            texture.TransitionImageLayout(cb, 0, texture.MipLevels, 0, effectiveLayers, VkImageLayout.VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-            vkCmdClearDepthStencilImage(
-                cb,
-                texture.OptimalDeviceImage,
-                VkImageLayout.VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                &clearValue,
-                1,
-                &range);
-            texture.TransitionImageLayout(cb, 0, texture.MipLevels, 0, effectiveLayers, VkImageLayout.VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
-            pool.EndAndSubmit(cb);
-        }
-
-        internal void TransitionImageLayout(VkTexture texture, VkImageLayout layout)
-        {
-            SharedCommandPool pool = GetFreeCommandPool();
-            VkCommandBuffer cb = pool.BeginNewCommandBuffer();
-            texture.TransitionImageLayout(cb, 0, texture.MipLevels, 0, texture.ActualArrayLayers, layout);
-            pool.EndAndSubmit(cb);
-        }
-
-        private sealed class SharedCommandPool
-        {
-            private readonly VkGraphicsDevice _gd;
-            private readonly VkCommandPool _pool;
-            private readonly VkCommandBuffer _cb;
-
-            public bool IsCached { get; }
-
-            public SharedCommandPool(VkGraphicsDevice gd, bool isCached)
-            {
-                _gd = gd;
-                IsCached = isCached;
-
-                VkCommandPool pool;
-                VkCommandPoolCreateInfo commandPoolCI = new();
-                commandPoolCI.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-                commandPoolCI.flags = VkCommandPoolCreateFlags.VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VkCommandPoolCreateFlags.VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-                commandPoolCI.queueFamilyIndex = _gd.GraphicsQueueIndex;
-                VkResult result = vkCreateCommandPool(_gd.Device, &commandPoolCI, null, &pool);
-                CheckResult(result);
-                _pool = pool;
-
-                VkCommandBuffer cb;
-                VkCommandBufferAllocateInfo allocateInfo = new();
-                allocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-                allocateInfo.commandBufferCount = 1;
-                allocateInfo.level = VkCommandBufferLevel.VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-                allocateInfo.commandPool = _pool;
-                result = vkAllocateCommandBuffers(_gd.Device, &allocateInfo, &cb);
-                CheckResult(result);
-                _cb = cb;
-            }
-
-            public VkCommandBuffer BeginNewCommandBuffer()
-            {
-                VkCommandBufferBeginInfo beginInfo = new();
-                beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-                beginInfo.flags = VkCommandBufferUsageFlags.VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-                VkResult result = vkBeginCommandBuffer(_cb, &beginInfo);
-                CheckResult(result);
-
-                return _cb;
-            }
-
-            public void EndAndSubmit(VkCommandBuffer cb)
-            {
-                VkResult result = vkEndCommandBuffer(cb);
-                CheckResult(result);
-                _gd.CheckSubmittedFences();
-                _gd.SubmitCommandBuffer(null, cb, 0, null, 0, null, null);
-                lock (_gd._stagingResourcesLock)
-                {
-                    _gd._submittedSharedCommandPools.Add(cb, this);
-                }
-            }
-
-            internal void Destroy()
-            {
-                vkDestroyCommandPool(_gd.Device, _pool, null);
-            }
-        }
-
         private struct FenceSubmissionInfo
         {
             public VulkanFence Fence;
-            public VkCommandList? CommandList;
+            public VkCommandList CommandList;
             public VkCommandBuffer CommandBuffer;
+            public bool IsPooled;
 
-            public FenceSubmissionInfo(VulkanFence fence, VkCommandList? commandList, VkCommandBuffer commandBuffer)
+            public FenceSubmissionInfo(VulkanFence fence, VkCommandList commandList, VkCommandBuffer commandBuffer, bool isPooled)
             {
                 Fence = fence;
                 CommandList = commandList;
                 CommandBuffer = commandBuffer;
+                IsPooled = isPooled;
             }
         }
     }

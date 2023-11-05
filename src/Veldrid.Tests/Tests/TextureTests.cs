@@ -2,11 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using Veldrid.Tests.Utilities;
 using Xunit;
 
 namespace Veldrid.Tests
 {
-    public abstract class TextureTestBase<T> : GraphicsDeviceTestBase<T> where T : GraphicsDeviceCreator
+    public abstract class TextureTestBase<T> : GraphicsDeviceTestBase<T>
+        where T : IGraphicsDeviceCreator
     {
         [Fact]
         public void Map_Succeeds()
@@ -673,7 +675,7 @@ namespace Veldrid.Tests
             }
         }
 
-        [Theory]
+        [SkippableTheory]
         [InlineData(PixelFormat.BC1_Rgb_UNorm, 8, 0, 0, 64, 64)]
         [InlineData(PixelFormat.BC1_Rgb_UNorm, 8, 8, 4, 16, 16)]
         [InlineData(PixelFormat.BC1_Rgb_UNorm_SRgb, 8, 0, 0, 64, 64)]
@@ -704,10 +706,8 @@ namespace Veldrid.Tests
         [InlineData(PixelFormat.BC7_UNorm_SRgb, 16, 8, 4, 16, 16)]
         public unsafe void Copy_Compressed_Texture(PixelFormat format, uint blockSizeInBytes, uint srcX, uint srcY, uint copyWidth, uint copyHeight)
         {
-            if (!GD.GetPixelFormatSupport(format, TextureType.Texture2D, TextureUsage.Sampled))
-            {
-                return;
-            }
+            Skip.IfNot(GD.GetPixelFormatSupport(format, TextureType.Texture2D, TextureUsage.Staging));
+            Skip.IfNot(GD.GetPixelFormatSupport(format, TextureType.Texture2D, TextureUsage.Sampled));
 
             Texture copySrc = RF.CreateTexture(TextureDescription.Texture2D(
                 64, 64, 1, 1, format, TextureUsage.Staging));
@@ -752,14 +752,11 @@ namespace Veldrid.Tests
 
         // [InlineData(true)]
         [InlineData(false)]
-        [Theory]
+        [SkippableTheory]
         public unsafe void Copy_Compressed_Array(bool separateLayerCopies)
         {
             PixelFormat format = PixelFormat.BC3_UNorm;
-            if (!GD.GetPixelFormatSupport(format, TextureType.Texture2D, TextureUsage.Sampled))
-            {
-                return;
-            }
+            Skip.IfNot(GD.GetPixelFormatSupport(format, TextureType.Texture2D, TextureUsage.Sampled));
 
             TextureDescription texDesc = TextureDescription.Texture2D(
                 16, 16,
@@ -881,10 +878,10 @@ namespace Veldrid.Tests
             GD.Unmap(tex3D);
         }
 
-        [Fact]
+        [SkippableFact]
         public unsafe void Update_ThenMapRead_1D()
         {
-            if (!GD.Features.Texture1D) { return; }
+            Skip.IfNot(GD.Features.Texture1D);
 
             Texture tex1D = RF.CreateTexture(
                 TextureDescription.Texture1D(100, 1, 1, PixelFormat.R16_UNorm, TextureUsage.Staging));
@@ -902,10 +899,10 @@ namespace Veldrid.Tests
             GD.Unmap(tex1D);
         }
 
-        [Fact]
+        [SkippableFact]
         public unsafe void MapWrite_ThenMapRead_1D()
         {
-            if (!GD.Features.Texture1D) { return; }
+            Skip.IfNot(GD.Features.Texture1D);
 
             Texture tex1D = RF.CreateTexture(
                 TextureDescription.Texture1D(100, 1, 1, PixelFormat.R16_UNorm, TextureUsage.Staging));
@@ -925,10 +922,10 @@ namespace Veldrid.Tests
             GD.Unmap(tex1D);
         }
 
-        [Fact]
+        [SkippableFact]
         public unsafe void Copy_1DTo2D()
         {
-            if (!GD.Features.Texture1D) { return; }
+            Skip.IfNot(GD.Features.Texture1D);
 
             Texture tex1D = RF.CreateTexture(
                 TextureDescription.Texture1D(100, 1, 1, PixelFormat.R16_UNorm, TextureUsage.Staging));
@@ -961,10 +958,10 @@ namespace Veldrid.Tests
             GD.Unmap(tex2D);
         }
 
-        [Fact]
+        [SkippableFact]
         public void Update_MultipleMips_1D()
         {
-            if (!GD.Features.Texture1D) { return; }
+            Skip.IfNot(GD.Features.Texture1D);
 
             Texture tex1D = RF.CreateTexture(TextureDescription.Texture1D(
                 100, 5, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Staging));
@@ -990,10 +987,10 @@ namespace Veldrid.Tests
             }
         }
 
-        [Fact]
+        [SkippableFact]
         public void Copy_DifferentMip_1DTo2D()
         {
-            if (!GD.Features.Texture1D) { return; }
+            Skip.IfNot(GD.Features.Texture1D);
 
             Texture tex1D = RF.CreateTexture(
                 TextureDescription.Texture1D(200, 2, 1, PixelFormat.R16_UNorm, TextureUsage.Staging));
@@ -1164,9 +1161,11 @@ namespace Veldrid.Tests
                 }
         }
 
-        [Fact]
+        [SkippableFact]
         public unsafe void Update_NonMultipleOfFourWithCompressedTexture_2D()
         {
+            Skip.IfNot(GD.GetPixelFormatSupport(PixelFormat.BC1_Rgb_UNorm, TextureType.Texture2D, TextureUsage.Staging));
+            
             Texture tex2D = RF.CreateTexture(TextureDescription.Texture2D(
                 2, 2, 1, 1, PixelFormat.BC1_Rgb_UNorm, TextureUsage.Staging));
 
@@ -1291,7 +1290,7 @@ namespace Veldrid.Tests
             GD.Unmap(dst);
         }
 
-        [Theory]
+        [SkippableTheory]
         [MemberData(nameof(FormatCoverageData))]
         public unsafe void FormatCoverage_CopyThenRead(
             PixelFormat format, int rBits, int gBits, int bBits, int aBits,
@@ -1305,10 +1304,7 @@ namespace Veldrid.Tests
             uint dstX, uint dstY, uint dstZ,
             uint dstMipLevel, uint dstArrayLayer)
         {
-            if (!GD.GetPixelFormatSupport(format, srcType, TextureUsage.Staging))
-            {
-                return;
-            }
+            Skip.IfNot(GD.GetPixelFormatSupport(format, srcType, TextureUsage.Staging));
 
             Texture srcTex = RF.CreateTexture(new TextureDescription(
                 srcWidth, srcHeight, srcDepth, srcMipLevels, srcArrayLayers,
@@ -1434,9 +1430,12 @@ namespace Veldrid.Tests
             }
         }
 
-        [Fact]
+        [SkippableFact]
         public void CopyTexture_SmallCompressed()
         {
+            Skip.IfNot(GD.GetPixelFormatSupport(PixelFormat.BC3_UNorm, TextureType.Texture2D, TextureUsage.Staging));
+            Skip.IfNot(GD.GetPixelFormatSupport(PixelFormat.BC3_UNorm, TextureType.Texture2D, TextureUsage.Sampled));
+
             Texture src = RF.CreateTexture(TextureDescription.Texture2D(16, 16, 4, 1, PixelFormat.BC3_UNorm, TextureUsage.Staging));
             Texture dst = RF.CreateTexture(TextureDescription.Texture2D(16, 16, 4, 1, PixelFormat.BC3_UNorm, TextureUsage.Sampled));
 
@@ -1451,7 +1450,7 @@ namespace Veldrid.Tests
             GD.WaitForIdle();
         }
 
-        [Theory]
+        [SkippableTheory]
         [InlineData(PixelFormat.BC1_Rgb_UNorm)]
         [InlineData(PixelFormat.BC1_Rgb_UNorm_SRgb)]
         [InlineData(PixelFormat.BC1_Rgba_UNorm)]
@@ -1468,6 +1467,8 @@ namespace Veldrid.Tests
         [InlineData(PixelFormat.BC7_UNorm_SRgb)]
         public void CreateSmallTexture(PixelFormat format)
         {
+            Skip.IfNot(GD.GetPixelFormatSupport(format, TextureType.Texture2D, TextureUsage.Sampled));
+
             Texture tex = RF.CreateTexture(TextureDescription.Texture2D(1, 1, 1, 1, format, TextureUsage.Sampled));
             Assert.Equal(1u, tex.Width);
             Assert.Equal(1u, tex.Height);

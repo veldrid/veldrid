@@ -7,6 +7,8 @@ namespace Veldrid.OpenGL.EGL
     {
         private const string LibName = "libEGL.so";
 
+        public const int EGL_HEIGHT = 0x3056;
+        public const int EGL_WIDTH = 0x3057;
         public const int EGL_DRAW = 0x3059;
         public const int EGL_READ = 0x305A;
         public const int EGL_RED_SIZE = 0x3024;
@@ -16,6 +18,7 @@ namespace Veldrid.OpenGL.EGL
         public const int EGL_DEPTH_SIZE = 0x3025;
         public const int EGL_SURFACE_TYPE = 0x3033;
         public const int EGL_WINDOW_BIT = 0x0004;
+        public const int EGL_PBUFFER_BIT = 0x0001;
         public const int EGL_OPENGL_ES_BIT = 0x0001;
         public const int EGL_OPENGL_ES2_BIT = 0x0004;
         public const int EGL_OPENGL_ES3_BIT = 0x00000040;
@@ -49,12 +52,20 @@ namespace Veldrid.OpenGL.EGL
         public static extern IntPtr eglGetCurrentSurface(int readdraw);
         [DllImport(LibName)]
         public static extern int eglInitialize(IntPtr display, int* major, int* minor);
+
         [DllImport(LibName)]
         public static extern IntPtr eglCreateWindowSurface(
             IntPtr display,
             IntPtr config,
             IntPtr native_window,
             int* attrib_list);
+
+        [DllImport(LibName)]
+        public static extern IntPtr eglCreatePbufferSurface(
+            IntPtr display,
+            IntPtr config,
+            int* attrib_list);
+
         [DllImport(LibName)]
         public static extern IntPtr eglCreateContext(IntPtr display,
             IntPtr config,
@@ -66,6 +77,13 @@ namespace Veldrid.OpenGL.EGL
         public static extern int eglSwapInterval(IntPtr display, int value);
         [DllImport(LibName)]
         public static extern int eglGetConfigAttrib(IntPtr display, IntPtr config, int attribute, int* value);
+
+        [DllImport(LibName)]
+        public static extern int eglQuerySurface(
+            IntPtr display,
+            IntPtr surface,
+            int attribute,
+            int* value);
     }
 
     internal enum EGLError

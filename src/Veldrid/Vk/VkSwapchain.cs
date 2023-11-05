@@ -23,7 +23,6 @@ namespace Veldrid.Vulkan
         private bool? _newSyncToVBlank;
         private uint _currentImageIndex;
         private string? _name;
-        private bool _disposed;
 
         public override string? Name { get => _name; set { _name = value; _gd.SetResourceName(this, value); } }
 
@@ -41,7 +40,7 @@ namespace Veldrid.Vulkan
             }
         }
 
-        public override bool IsDisposed => _disposed;
+        public override bool IsDisposed => RefCount.IsDisposed;
 
         public VkSwapchainKHR DeviceSwapchain => _deviceSwapchain;
         public uint ImageIndex => _currentImageIndex;
@@ -338,14 +337,10 @@ namespace Veldrid.Vulkan
 
         void IResourceRefCountTarget.RefZeroed()
         {
-            if (!_disposed)
-            {
-                _disposed = true;
-                vkDestroyFence(_gd.Device, _imageAvailableFence, null);
-                _framebuffer.Dispose();
-                vkDestroySwapchainKHR(_gd.Device, _deviceSwapchain, null);
-                vkDestroySurfaceKHR(_gd.Instance, _surface, null);
-            }
+            vkDestroyFence(_gd.Device, _imageAvailableFence, null);
+            _framebuffer.Dispose();
+            vkDestroySwapchainKHR(_gd.Device, _deviceSwapchain, null);
+            vkDestroySurfaceKHR(_gd.Instance, _surface, null);
         }
     }
 }

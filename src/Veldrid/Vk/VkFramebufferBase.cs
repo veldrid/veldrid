@@ -33,10 +33,15 @@ namespace Veldrid.Vulkan
         public abstract VkRenderPass RenderPassNoClear_Init { get; }
         public abstract VkRenderPass RenderPassNoClear_Load { get; }
         public abstract VkRenderPass RenderPassClear { get; }
+
         public uint AttachmentCount { get; protected set; }
+
+        public override bool IsDisposed => RefCount.IsDisposed;
 
         public abstract void TransitionToIntermediateLayout(VkCommandBuffer cb);
         public abstract void TransitionToFinalLayout(VkCommandBuffer cb, bool attachment);
+
+        public FramebufferAttachment[] ColorTargetArray => _colorTargets;
 
         void IResourceRefCountTarget.RefZeroed()
         {

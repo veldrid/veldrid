@@ -168,8 +168,16 @@ namespace Veldrid.Vulkan
         {
             int state = _state;
             int count = (int)((uint)(state & StateBits.RefCount) / StateBits.RefCountOne);
-            string flag = ((state & StateBits.Disposed) == StateBits.Disposed) ? " D" : "";
-            return $"{nameof(ResourceRefCount)}@{count}{flag}";
+            string flags = " ";
+            if ((state & StateBits.Disposed) == StateBits.Disposed)
+            {
+                flags += "D";
+            }
+            if ((state & StateBits.Closed) == StateBits.Closed)
+            {
+                flags += "C";
+            }
+            return $"{nameof(ResourceRefCount)}@{count}{flags}";
         }
 
         [DoesNotReturn]

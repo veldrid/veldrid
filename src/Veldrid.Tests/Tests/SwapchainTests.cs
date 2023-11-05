@@ -4,7 +4,8 @@ using Xunit;
 
 namespace Veldrid.Tests
 {
-    public abstract class SwapchainTests<T> : GraphicsDeviceTestBase<T> where T : GraphicsDeviceCreator
+    public abstract class SwapchainTests<T> : GraphicsDeviceTestBase<T>
+        where T : IGraphicsDeviceCreator
     {
         [Theory]
         [InlineData(PixelFormat.R16_UNorm, false)]
@@ -36,7 +37,8 @@ namespace Veldrid.Tests
         }
     }
 
-    public abstract class MainSwapchainTests<T> : GraphicsDeviceTestBase<T> where T : GraphicsDeviceCreator
+    public abstract class MainSwapchainTests<T> : GraphicsDeviceTestBase<T>
+        where T : IGraphicsDeviceCreator
     {
         [Fact]
         public void Textures_Properties_Correct()

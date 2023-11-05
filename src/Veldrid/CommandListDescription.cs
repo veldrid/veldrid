@@ -8,22 +8,28 @@ namespace Veldrid
     public struct CommandListDescription : IEquatable<CommandListDescription>
     {
         /// <summary>
+        /// Command lists will be short, meaning that they will be reset or freed in a relatively short timeframe.
+        /// This flag may be used by the implementation to control memory allocation behavior.
+        /// </summary>
+        public bool Transient;
+
+        /// <summary>
         /// Element-wise equality.
         /// </summary>
         /// <param name="other">The instance to compare to.</param>
         /// <returns>True if all elements are equal; false otherswise.</returns>
-        public bool Equals(CommandListDescription other)
+        public readonly bool Equals(CommandListDescription other)
         {
-            return true;
+            return Transient == other.Transient;
         }
 
         /// <summary>
         /// Returns the hash code for this instance.
         /// </summary>
         /// <returns>A 32-bit signed integer that is the hash code for this instance.</returns>
-        public override int GetHashCode()
+        public override readonly int GetHashCode()
         {
-            return base.GetHashCode();
+            return HashCode.Combine(Transient);
         }
     }
 }

@@ -387,6 +387,10 @@ namespace Veldrid.OpenGL
                     androidSource.Surface);
                 InitializeANativeWindow(options, aNativeWindow, swapchainDescription);
             }
+            else if (source is AndroidWindowSwapchainSource aWindowSource)
+            {
+                InitializeANativeWindow(options, aWindowSource.ANativeWindow, swapchainDescription);
+            }
             else
             {
                 throw new VeldridException(
@@ -621,7 +625,9 @@ namespace Veldrid.OpenGL
                     ? GetDepthBits(swapchainDescription.DepthFormat.Value)
                     : 0,
                 EGL_SURFACE_TYPE,
-                EGL_WINDOW_BIT,
+                aNativeWindow == IntPtr.Zero
+                    ? EGL_WINDOW_BIT
+                    : EGL_PBUFFER_BIT,
                 EGL_RENDERABLE_TYPE,
                 EGL_OPENGL_ES3_BIT,
                 EGL_NONE,
@@ -643,18 +649,44 @@ namespace Veldrid.OpenGL
                 throw new VeldridException($"Failed to get the EGLConfig's format: {eglGetError()}");
             }
 
-            int setBuffersGeometryResult = Android.AndroidRuntime.ANativeWindow_setBuffersGeometry(aNativeWindow, 0, 0, format);
-            if (setBuffersGeometryResult != 0)
+            IntPtr eglSurface;
+            if (aNativeWindow != IntPtr.Zero)
             {
-                throw new VeldridException($"ANativeWindow_setBuffersGeometry failed with code {setBuffersGeometryResult:x}");
+                int setBuffersGeometryResult = Android.AndroidRuntime.ANativeWindow_setBuffersGeometry(aNativeWindow, 0, 0, format);
+                if (setBuffersGeometryResult != 0)
+                {
+                    throw new VeldridException($"ANativeWindow_setBuffersGeometry failed with code 0x{setBuffersGeometryResult:x}");
+                }
+
+                eglSurface = eglCreateWindowSurface(display, bestConfig, aNativeWindow, null);
+                if (eglSurface == IntPtr.Zero)
+                {
+                    throw new VeldridException($"Failed to create an EGL surface from the Android native window: {eglGetError()}");
+                }
+            }
+            else
+            {
+                int* pbufferAttribs = stackalloc int[]
+                {
+                    EGL_WIDTH,
+                    (int)swapchainDescription.Width,
+                    EGL_HEIGHT,
+                    (int)swapchainDescription.Height,
+                    EGL_NONE,
+                };
+
+                eglSurface = eglCreatePbufferSurface(display, bestConfig, pbufferAttribs);
+                if (eglSurface == IntPtr.Zero)
+                {
+                    throw new VeldridException($"Failed to create an EGL pixel buffer surface: {eglGetError()}");
+                }
             }
 
-            IntPtr eglWindowSurface = eglCreateWindowSurface(display, bestConfig, aNativeWindow, null);
-            if (eglWindowSurface == IntPtr.Zero)
-            {
-                throw new VeldridException(
-                    $"Failed to create an EGL surface from the Android native window: {eglGetError()}");
-            }
+            int surfaceWidth = (int)swapchainDescription.Width;
+            ValidateSuccess(eglQuerySurface(display, eglSurface, EGL_WIDTH, &surfaceWidth), "Failed to query width of EGL surface: ");
+
+            int surfaceHeight = (int)swapchainDescription.Height;
+            ValidateSuccess(eglQuerySurface(display, eglSurface, EGL_HEIGHT, &surfaceHeight), "Failed to query height of EGL surface: ");
 
             bool debug = options.Debug;
             int* contextAttribs = stackalloc int[5];
@@ -690,7 +722,7 @@ namespace Veldrid.OpenGL
 
             void makeCurrent(IntPtr ctx)
             {
-                if (eglMakeCurrent(display, eglWindowSurface, eglWindowSurface, ctx) == 0)
+                if (eglMakeCurrent(display, eglSurface, eglSurface, ctx) == 0)
                 {
                     throw new VeldridException($"Failed to make the EGLContext {ctx} current: {eglGetError()}");
                 }
@@ -708,7 +740,7 @@ namespace Veldrid.OpenGL
 
             void swapBuffers()
             {
-                if (eglSwapBuffers(display, eglWindowSurface) == 0)
+                if (eglSwapBuffers(display, eglSurface) == 0)
                 {
                     throw new VeldridException("Failed to swap buffers: " + eglGetError());
                 }
@@ -716,10 +748,7 @@ namespace Veldrid.OpenGL
 
             void setSync(bool vsync)
             {
-                if (eglSwapInterval(display, vsync ? 1 : 0) == 0)
-                {
-                    throw new VeldridException($"Failed to set the swap interval: " + eglGetError());
-                }
+                ValidateSuccess(eglSwapInterval(display, vsync ? 1 : 0), "Failed to set the swap interval: ");
             }
 
             // Set the desired initial state.
@@ -732,9 +761,9 @@ namespace Veldrid.OpenGL
                     throw new VeldridException($"Failed to destroy EGLContext {ctx}: {eglGetError()}");
                 }
 
-                if (eglDestroySurface(display, eglWindowSurface) == 0)
+                if (eglDestroySurface(display, eglSurface) == 0)
                 {
-                    throw new VeldridException($"Failed to destroy EGLSurface {eglWindowSurface}: {eglGetError()}");
+                    throw new VeldridException($"Failed to destroy EGLSurface {eglSurface}: {eglGetError()}");
                 }
 
                 if (eglTerminate(display) == 0)
@@ -753,7 +782,19 @@ namespace Veldrid.OpenGL
                 swapBuffers,
                 setSync);
 
-            Init(options, platformInfo, swapchainDescription.Width, swapchainDescription.Height, true);
+            Init(options, platformInfo, (uint)surfaceWidth, (uint)surfaceHeight, true);
+        }
+
+        private static void ValidateSuccess(int result, string message)
+        {
+            if (result == 0)
+            {
+                EGL.EGLError error = eglGetError();
+                if (error != EGL.EGLError.Success)
+                {
+                    throw new VeldridException(message + error);
+                }
+            }
         }
 
         private static int GetDepthBits(PixelFormat value)
@@ -1074,6 +1115,9 @@ namespace Veldrid.OpenGL
         public void EnableDebugCallback(DebugProc callback)
         {
             glEnable(EnableCap.DebugOutput);
+            CheckLastError();
+
+            glEnable(EnableCap.DebugOutputSynchronous);
             CheckLastError();
 
             // The debug callback delegate must be persisted, otherwise errors will occur

@@ -12,7 +12,7 @@ namespace Veldrid.D3D11
 
         public ID3D11Resource DeviceTexture { get; }
         public Vortice.DXGI.Format DxgiFormat { get; }
-        public Vortice.DXGI.Format TypelessDxgiFormat { get; }
+        public Vortice.DXGI.Format TypelessDxgiFormat => D3D11Formats.GetTypelessFormat(DxgiFormat);
 
         public D3D11Texture(ID3D11Device device, in TextureDescription description)
         {
@@ -29,8 +29,7 @@ namespace Veldrid.D3D11
             DxgiFormat = D3D11Formats.ToDxgiFormat(
                 description.Format,
                 (description.Usage & TextureUsage.DepthStencil) == TextureUsage.DepthStencil);
-            TypelessDxgiFormat = D3D11Formats.GetTypelessFormat(DxgiFormat);
-
+            
             CpuAccessFlags cpuFlags = CpuAccessFlags.None;
             ResourceUsage resourceUsage = ResourceUsage.Default;
             BindFlags bindFlags = BindFlags.None;
@@ -152,7 +151,6 @@ namespace Veldrid.D3D11
             DxgiFormat = D3D11Formats.ToDxgiFormat(
                 format,
                 (Usage & TextureUsage.DepthStencil) == TextureUsage.DepthStencil);
-            TypelessDxgiFormat = D3D11Formats.GetTypelessFormat(DxgiFormat);
         }
 
         private protected override TextureView CreateFullTextureView(GraphicsDevice gd)

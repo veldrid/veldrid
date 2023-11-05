@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using TerraFX.Interop.Vulkan;
 using static TerraFX.Interop.Vulkan.Vulkan;
 using static Veldrid.Vulkan.VulkanUtil;
@@ -17,12 +18,10 @@ namespace Veldrid.Vulkan
         private VkImage[] _scImages = Array.Empty<VkImage>();
         private VkFormat _scImageFormat;
         private VkExtent2D _scExtent;
-        private FramebufferAttachment[][] _scColorTextures = Array.Empty<FramebufferAttachment[]>();
 
-        private bool _destroyed;
         private string? _name;
 
-        public override TerraFX.Interop.Vulkan.VkFramebuffer CurrentFramebuffer => _scFramebuffers[(int)_currentImageIndex].CurrentFramebuffer;
+        public override TerraFX.Interop.Vulkan.VkFramebuffer CurrentFramebuffer => _scFramebuffers[_currentImageIndex].CurrentFramebuffer;
 
         public override VkRenderPass RenderPassNoClear_Init => _scFramebuffers[0].RenderPassNoClear_Init;
         public override VkRenderPass RenderPassNoClear_Load => _scFramebuffers[0].RenderPassNoClear_Load;
@@ -33,8 +32,6 @@ namespace Veldrid.Vulkan
         public uint ImageIndex => _currentImageIndex;
 
         public VkSwapchain Swapchain => _swapchain;
-
-        public override bool IsDisposed => _destroyed;
 
         public VkSwapchainFramebuffer(
             VkGraphicsDevice gd,
@@ -54,7 +51,7 @@ namespace Veldrid.Vulkan
         internal void SetImageIndex(uint index)
         {
             _currentImageIndex = index;
-            _colorTargets = _scColorTextures[(int)_currentImageIndex];
+            _colorTargets = _scFramebuffers[_currentImageIndex].ColorTargetArray;
         }
 
         internal void SetNewSwapchain(
@@ -84,7 +81,6 @@ namespace Veldrid.Vulkan
             _scImageFormat = surfaceFormat.format;
             _scExtent = swapchainExtent;
 
-            CreateDepthTexture();
             CreateFramebuffers();
 
             OutputDescription = OutputDescription.CreateFromFramebuffer(this);
@@ -92,10 +88,20 @@ namespace Veldrid.Vulkan
 
         private void DestroySwapchainFramebuffers()
         {
-            for (int i = 0; i < _scFramebuffers.Length; i++)
+            _depthTarget?.Target.Dispose();
+            _depthTarget = default;
+
+            foreach (ref VkFramebuffer fb in _scFramebuffers.AsSpan())
             {
-                _scFramebuffers[i]?.Dispose();
-                _scFramebuffers[i] = null!;
+                if (fb != null)
+                {
+                    foreach (FramebufferAttachment attachment in fb.ColorTargets)
+                    {
+                        attachment.Target.Dispose();
+                    }
+                    fb.Dispose();
+                    fb = null!;
+                }
             }
         }
 
@@ -103,7 +109,8 @@ namespace Veldrid.Vulkan
         {
             if (_depthFormat.HasValue)
             {
-                _depthTarget?.Target.Dispose();
+                Debug.Assert(!_depthTarget.HasValue);
+
                 VkTexture depthTexture = (VkTexture)_gd.ResourceFactory.CreateTexture(TextureDescription.Texture2D(
                     Math.Max(1, _scExtent.width),
                     Math.Max(1, _scExtent.height),
@@ -119,8 +126,9 @@ namespace Veldrid.Vulkan
         {
             DestroySwapchainFramebuffers();
 
+            CreateDepthTexture();
+
             Util.EnsureArrayMinimumSize(ref _scFramebuffers, (uint)_scImages.Length);
-            Util.EnsureArrayMinimumSize(ref _scColorTextures, (uint)_scImages.Length);
 
             for (uint i = 0; i < _scImages.Length; i++)
             {
@@ -133,11 +141,12 @@ namespace Veldrid.Vulkan
                     _scImageFormat,
                     TextureUsage.RenderTarget,
                     TextureSampleCount.Count1,
-                    _scImages[i]);
+                    _scImages[i],
+                    true,
+                    true);
                 FramebufferDescription desc = new(_depthTarget?.Target, colorTex);
                 VkFramebuffer fb = new(_gd, desc, true);
                 _scFramebuffers[i] = fb;
-                _scColorTextures[i] = new FramebufferAttachment[] { new FramebufferAttachment(colorTex, 0) };
             }
 
             SetImageIndex(0);
@@ -177,12 +186,7 @@ namespace Veldrid.Vulkan
 
         protected override void DisposeCore()
         {
-            if (!_destroyed)
-            {
-                _destroyed = true;
-                _depthTarget?.Target.Dispose();
-                DestroySwapchainFramebuffers();
-            }
+            DestroySwapchainFramebuffers();
         }
     }
 }

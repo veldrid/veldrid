@@ -65,7 +65,7 @@ namespace Veldrid.D3D11
             {
                 BlendAttachmentDescription state = attachmentStates[i];
                 ref RenderTargetBlendDescription renderTarget = ref d3dBlendStateDesc.RenderTarget[i];
-                renderTarget.IsBlendEnabled = state.BlendEnabled;
+                renderTarget.BlendEnable = state.BlendEnabled;
                 renderTarget.RenderTargetWriteMask = D3D11Formats.VdToD3D11ColorWriteEnable(state.ColorWriteMask.GetOrDefault());
                 renderTarget.SourceBlend = D3D11Formats.VdToD3D11Blend(state.SourceColorFactor);
                 renderTarget.DestinationBlend = D3D11Formats.VdToD3D11Blend(state.DestinationColorFactor);

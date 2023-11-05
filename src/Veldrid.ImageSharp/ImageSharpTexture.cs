@@ -70,6 +70,7 @@ namespace Veldrid.ImageSharp
         public unsafe Texture CreateDeviceTexture(GraphicsDevice gd, ResourceFactory factory)
         {
             return CreateTextureViaUpdate(gd, factory);
+            //return CreateTextureViaStaging(gd, factory);
         }
 
         private unsafe Texture CreateTextureViaStaging(GraphicsDevice gd, ResourceFactory factory)
@@ -180,6 +181,72 @@ namespace Veldrid.ImageSharp
             }
 
             return tex;
+        }
+        public unsafe void UpdateTexture(GraphicsDevice gd, Texture tex, in Image<Rgba32> newData, bool MipMaps)
+        {
+            if (newData == null)
+            {
+                return;
+            }
+
+            if (tex.Width != newData.Width || tex.Height != newData.Height)
+            {
+                throw new Exception("Need Recreate Texture, size not math!");
+            }
+
+            Image<Rgba32> img = newData;
+            if (MipMaps == true)
+            {
+                Images = MipmapHelper.GenerateMipmaps(img);
+            }
+            else
+            {
+                Images = new Image<Rgba32>[] { img };
+            }
+
+            for (int level = 0; level < MipLevels; level++)
+            {
+                Image<Rgba32> image = Images[level];
+                Span<Rgba32> pixelSpan = image.GetPixelSpan();
+                fixed (void* pin = &MemoryMarshal.GetReference(pixelSpan))
+                {
+                    gd.UpdateTexture(
+                        tex,
+                        (IntPtr)pin,
+                        (uint)(PixelSizeInBytes * image.Width * image.Height),
+                        0,
+                        0,
+                        0,
+                        (uint)image.Width,
+                        (uint)image.Height,
+                        1,
+                        (uint)level,
+                        0);
+                }
+            }
+        }
+        public unsafe void UpdateTexture(GraphicsDevice gd, Texture tex, in byte[] newData, bool MipMaps)
+        {
+            UpdateTexture(gd, tex, Image.Load<Rgba32>(newData), MipMaps);
+        }
+        public unsafe void UpdateTexture(GraphicsDevice gd, Texture tex, IntPtr newdata, bool MipMaps)
+        {
+            for (int level = 0; level < MipLevels; level++)
+            {
+                Image<Rgba32> image = Images[level];
+                gd.UpdateTexture(
+                    tex,
+                    newdata,
+                    (uint)(PixelSizeInBytes * image.Width * image.Height),
+                    0,
+                    0,
+                    0,
+                    (uint)image.Width,
+                    (uint)image.Height,
+                    1,
+                    (uint)level,
+                    0);
+            }
         }
     }
 }

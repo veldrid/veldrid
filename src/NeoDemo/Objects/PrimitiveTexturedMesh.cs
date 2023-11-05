@@ -4,6 +4,7 @@ using System;
 using Veldrid.ImageSharp;
 using Veldrid.Utilities;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 namespace Veldrid.NeoDemo.Objects
 {
@@ -59,7 +60,7 @@ void main()
         private uint _uniformOffset = 0;
 
         private readonly string _name;
-        private readonly MeshData _meshData;
+        private readonly ConstructedMesh _meshData;
         private readonly ImageSharpTexture _textureData;
         private readonly ImageSharpTexture _alphaTextureData;
         private readonly Transform _transform = new Transform();
@@ -94,7 +95,7 @@ void main()
 
         public Transform Transform => _transform;
 
-        public PrimitiveTexturedMesh(string name, MeshData meshData, ImageSharpTexture textureData, ImageSharpTexture alphaTexture, MaterialPropsAndBuffer materialProps)
+        public PrimitiveTexturedMesh(string name, ConstructedMesh meshData, ImageSharpTexture textureData, ImageSharpTexture alphaTexture, MaterialPropsAndBuffer materialProps)
         {
             _name = name;
             _meshData = meshData;
@@ -116,13 +117,14 @@ void main()
             ResourceFactory disposeFactory = new DisposeCollectorResourceFactory(gd.ResourceFactory, _disposeCollector);
             _vb = _meshData.CreateVertexBuffer(disposeFactory, cl);
             _vb.Name = _name + "_VB";
-            _ib = _meshData.CreateIndexBuffer(disposeFactory, cl, out _indexCount);
+            _ib = _meshData.CreateIndexBuffer(disposeFactory, cl);
+            _indexCount = _meshData.IndexCount;
             _ib.Name = _name + "_IB";
 
             uint bufferSize = 128;
             if (s_useUniformOffset) { bufferSize += _uniformOffset * 2; }
 
-            _worldAndInverseBuffer = disposeFactory.CreateBuffer(new BufferDescription(bufferSize, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
+            _worldAndInverseBuffer = disposeFactory.CreateBuffer(new BufferDescription(bufferSize, BufferUsage.UniformBuffer | BufferUsage.DynamicReadWrite));
             if (_materialPropsOwned)
             {
                 _materialProps.CreateDeviceObjects(gd, cl, sc);
@@ -372,7 +374,7 @@ void main()
             cl.SetPipeline(_shadowMapPipeline);
             cl.SetGraphicsResourceSet(0, _shadowMapResourceSets[shadowMapIndex * 2]);
             uint offset = _uniformOffset;
-            cl.SetGraphicsResourceSet(1, _shadowMapResourceSets[shadowMapIndex * 2 + 1], 1, ref offset);
+            cl.SetGraphicsResourceSet(1, _shadowMapResourceSets[shadowMapIndex * 2 + 1], MemoryMarshal.CreateReadOnlySpan(ref offset, 1));
             cl.DrawIndexed((uint)_indexCount, 1, 0, 0, 0);
         }
 
@@ -384,7 +386,7 @@ void main()
             cl.SetGraphicsResourceSet(0, _mainProjViewRS);
             cl.SetGraphicsResourceSet(1, _mainSharedRS);
             uint offset = _uniformOffset;
-            cl.SetGraphicsResourceSet(2, _mainPerObjectRS, 1, ref offset);
+            cl.SetGraphicsResourceSet(2, _mainPerObjectRS, MemoryMarshal.CreateReadOnlySpan(ref offset, 1));
             cl.SetGraphicsResourceSet(3, reflectionPass ? _reflectionRS : _noReflectionRS);
             cl.DrawIndexed((uint)_indexCount, 1, 0, 0, 0);
         }

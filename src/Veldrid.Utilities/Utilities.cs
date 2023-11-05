@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Numerics;
+using System.Text;
 
 namespace Veldrid.Utilities
 {
@@ -56,6 +57,25 @@ namespace Veldrid.Utilities
                 q = Quaternion.Normalize(q);
             }
             return q;
+        }
+        public static Matrix4x4 CalculateInverseTranspose(Matrix4x4 m) => CalculateInverseTranspose(ref m);
+        public static Matrix4x4 CalculateInverseTranspose(ref Matrix4x4 m)
+        {
+            Matrix4x4 inverted;
+            Matrix4x4.Invert(m, out inverted);
+            return Matrix4x4.Transpose(inverted);
+        }
+
+
+        public static unsafe string GetString(byte* stringStart)
+        {
+            int characters = 0;
+            while (stringStart[characters] != 0)
+            {
+                characters++;
+            }
+
+            return Encoding.UTF8.GetString(stringStart, characters);
         }
     }
 }

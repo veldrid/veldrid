@@ -14,6 +14,7 @@
   <PropertyGroup>
     <Description>Miscellaneous utility functions useful for Veldrid.</Description>
     <PackageTags>Core Standard Game Graphics</PackageTags>
+    <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
 
 </Project>

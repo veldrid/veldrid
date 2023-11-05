@@ -67,22 +67,19 @@ namespace Veldrid.Sdl2
             if (threadedProcessing)
             {
                 using ManualResetEvent mre = new(false);
-                WindowParams wp = new()
+                WindowParams wp = new WindowParams()
                 {
-                    WindowParams wp = new WindowParams()
-                    {
-                        Title = title,
-                        X = x,
-                        Y = y,
-                        Width = width,
-                        Height = height,
-                        WindowFlags = flags,
-                        ResetEvent = mre
-                    };
-                    //WindowOwnerRoutine(wp);
-                    Task.Factory.StartNew(WindowOwnerRoutine, wp, TaskCreationOptions.LongRunning);
-                    mre.WaitOne();
-                }
+                    Title = title,
+                    X = x,
+                    Y = y,
+                    Width = width,
+                    Height = height,
+                    WindowFlags = flags,
+                    ResetEvent = mre
+                };
+                //WindowOwnerRoutine(wp);
+                Task.Factory.StartNew(WindowOwnerRoutine, wp, TaskCreationOptions.LongRunning);
+                mre.WaitOne();
             }
             else
             {
@@ -99,14 +96,12 @@ namespace Veldrid.Sdl2
             if (threadedProcessing)
             {
                 using ManualResetEvent mre = new(false);
-                WindowParams wp = new()
+                WindowParams wp = new WindowParams()
                 {
-                    WindowParams wp = new WindowParams()
-                    {
-                        WindowHandle = windowHandle,
-                        WindowFlags = SDL_WindowFlags.OpenGL | SDL_WindowFlags.Resizable | SDL_WindowFlags.Shown,
-                        ResetEvent = mre
-                    };
+                    WindowHandle = windowHandle,
+                    WindowFlags = SDL_WindowFlags.OpenGL | SDL_WindowFlags.Resizable | SDL_WindowFlags.Shown,
+                    ResetEvent = mre
+                };
 
                 Task.Factory.StartNew(WindowOwnerRoutine, wp, TaskCreationOptions.LongRunning);
                 mre.WaitOne();

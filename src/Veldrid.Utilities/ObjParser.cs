@@ -95,7 +95,7 @@ namespace Veldrid.Utilities
                 Array.Copy(_readBuffer, consumed, _readBuffer, 0, readIndex);
             }
 
-            TryRead:
+        TryRead:
             int read;
             while ((read = reader.ReadBlock(_readBuffer, readIndex, _readBuffer.Length - readIndex)) > 0)
             {
@@ -207,7 +207,7 @@ namespace Veldrid.Utilities
                 else if (piece0.SequenceEqual("f"))
                 {
                     ExpectPieces(ref splitter, "f", false, out ReadOnlySpan<char> piece1, out ReadOnlySpan<char> piece2);
-                    ProcessFaceLine(ref splitter, piece1, piece2);
+                    //ProcessFaceLine(ref splitter, piece1, piece2);
                 }
                 else if (piece0.SequenceEqual("mtllib"))
                 {
@@ -255,7 +255,7 @@ namespace Veldrid.Utilities
             {
                 if (faceComponents.IsEmpty)
                     ThrowExceptionForWrongFaceCount("There must be at least one face component");
-                
+
                 int firstSlash = faceComponents.IndexOf(_slashChar);
                 ReadOnlySpan<char> firstSlice = firstSlash == -1
                     ? faceComponents

@@ -62,6 +62,10 @@
   <ItemGroup Condition="'$(UseStableVersions)' != 'true'">
     <ProjectReference Include="..\Veldrid\Veldrid.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Veldrid.SDL2\Veldrid.SDL2.csproj" />
+  </ItemGroup>
   
   <PropertyGroup>
     <Description>ImGui integration for Veldrid. Provides a simple interface for rendering and interacting with ImGui.NET.</Description>

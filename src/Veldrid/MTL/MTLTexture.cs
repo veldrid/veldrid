@@ -15,6 +15,8 @@ namespace Veldrid.MTL
         /// The staging MTLBuffer object. This property is only valid for staging Textures.
         /// </summary>
         public MetalBindings.MTLBuffer StagingBuffer { get; }
+        
+        public unsafe void* StagingBufferPointer { get; private set; }
 
         public override PixelFormat Format { get; }
 
@@ -93,6 +95,11 @@ namespace Veldrid.MTL
                 StagingBuffer = _gd.Device.newBufferWithLengthOptions(
                     (UIntPtr)totalStorageSize,
                     MTLResourceOptions.StorageModeShared);
+                
+                unsafe
+                {
+                    StagingBufferPointer = StagingBuffer.contents();
+                }
             }
         }
 

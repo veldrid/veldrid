@@ -28,6 +28,8 @@ namespace Veldrid.MTL
         public override bool IsDisposed => _disposed;
 
         public MetalBindings.MTLBuffer DeviceBuffer { get; private set; }
+        
+        public unsafe void* Pointer { get; private set; }
 
         public MTLBuffer(ref BufferDescription bd, MTLGraphicsDevice gd)
         {
@@ -42,6 +44,11 @@ namespace Veldrid.MTL
             DeviceBuffer = gd.Device.newBufferWithLengthOptions(
                 (UIntPtr)ActualCapacity,
                 bufferOptions);
+            
+            unsafe
+            {
+                Pointer = DeviceBuffer.contents();
+            }
         }
 
         public override void Dispose()

@@ -97,6 +97,7 @@ namespace Veldrid.D3D11
                         {
                             Vortice.Direct3D.FeatureLevel.Level_11_1,
                             Vortice.Direct3D.FeatureLevel.Level_11_0,
+                            Vortice.Direct3D.FeatureLevel.Level_10_0,
                         },
                         out _device).CheckError();
                 }
@@ -109,6 +110,7 @@ namespace Veldrid.D3D11
                         {
                             Vortice.Direct3D.FeatureLevel.Level_11_1,
                             Vortice.Direct3D.FeatureLevel.Level_11_0,
+                            Vortice.Direct3D.FeatureLevel.Level_10_0,
                         },
                         out _device).CheckError();
                 }

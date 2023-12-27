@@ -60,22 +60,22 @@ namespace Veldrid.D3D11
             switch (description.Stage)
             {
                 case ShaderStages.Vertex:
-                    profile = "vs_5_0";
+                    profile = "vs_4_0";
                     break;
                 case ShaderStages.Geometry:
-                    profile = "gs_5_0";
+                    profile = "gs_4_0";
                     break;
                 case ShaderStages.TessellationControl:
-                    profile = "hs_5_0";
+                    profile = "hs_4_0";
                     break;
                 case ShaderStages.TessellationEvaluation:
-                    profile = "ds_5_0";
+                    profile = "ds_4_0";
                     break;
                 case ShaderStages.Fragment:
-                    profile = "ps_5_0";
+                    profile = "ps_4_0";
                     break;
                 case ShaderStages.Compute:
-                    profile = "cs_5_0";
+                    profile = "cs_4_0";
                     break;
                 default:
                     throw Illegal.Value<ShaderStages>();

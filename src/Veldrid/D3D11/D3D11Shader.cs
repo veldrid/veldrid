@@ -8,6 +8,7 @@ namespace Veldrid.D3D11
 {
     internal class D3D11Shader : Shader
     {
+        private readonly ID3D11Device _device;
         private string _name;
 
         public ID3D11DeviceChild DeviceShader { get; }
@@ -16,6 +17,8 @@ namespace Veldrid.D3D11
         public D3D11Shader(ID3D11Device device, ShaderDescription description)
             : base(description.Stage, description.EntryPoint)
         {
+            _device = device;
+
             if (description.ShaderBytes.Length > 4
                 && description.ShaderBytes[0] == 0x44
                 && description.ShaderBytes[1] == 0x58
@@ -60,22 +63,22 @@ namespace Veldrid.D3D11
             switch (description.Stage)
             {
                 case ShaderStages.Vertex:
-                    profile = "vs_4_0";
+                    profile = _device.FeatureLevel >= FeatureLevel.Level_11_0 ? "vs_5_0" : "vs_4_0";
                     break;
                 case ShaderStages.Geometry:
-                    profile = "gs_4_0";
+                    profile = _device.FeatureLevel >= FeatureLevel.Level_11_0 ? "gs_5_0" : "gs_4_0";
                     break;
                 case ShaderStages.TessellationControl:
-                    profile = "hs_4_0";
+                    profile = _device.FeatureLevel >= FeatureLevel.Level_11_0 ? "hs_5_0" : "hs_4_0";
                     break;
                 case ShaderStages.TessellationEvaluation:
-                    profile = "ds_4_0";
+                    profile = _device.FeatureLevel >= FeatureLevel.Level_11_0 ? "ds_5_0" : "ds_4_0";
                     break;
                 case ShaderStages.Fragment:
-                    profile = "ps_4_0";
+                    profile = _device.FeatureLevel >= FeatureLevel.Level_11_0 ? "ps_5_0" : "ps_4_0";
                     break;
                 case ShaderStages.Compute:
-                    profile = "cs_4_0";
+                    profile = _device.FeatureLevel >= FeatureLevel.Level_11_0 ? "cs_5_0" : "cs_4_0";
                     break;
                 default:
                     throw Illegal.Value<ShaderStages>();

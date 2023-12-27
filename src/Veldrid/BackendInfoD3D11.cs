@@ -1,6 +1,7 @@
 ﻿#if !EXCLUDE_D3D11_BACKEND
 using System;
 using Veldrid.D3D11;
+using Vortice.Direct3D;
 
 namespace Veldrid
 {
@@ -27,6 +28,11 @@ namespace Veldrid
         /// Gets a pointer to the IAdapter used to create the GraphicsDevice.
         /// </summary>
         public IntPtr Adapter => _gd.Adapter.NativePointer;
+        
+        /// <summary>
+        /// Returns the feature level of the D3D11 device.
+        /// </summary>
+        public FeatureLevel FeatureLevel => _gd.Device.FeatureLevel;
 
         /// <summary>
         /// Gets the PCI ID of the hardware device.

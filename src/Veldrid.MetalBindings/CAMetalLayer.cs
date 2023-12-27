@@ -51,22 +51,22 @@ namespace Veldrid.MetalBindings
 
         public CGRect frame
         {
-            get => CGRect_objc_msgSend(NativePtr, "frame");
-            set => objc_msgSend(NativePtr, "setFrame:", value);
+            get => CGRect_objc_msgSend(NativePtr, sel_frame);
+            set => objc_msgSend(NativePtr, sel_setFrame, value);
         }
 
         public Bool8 opaque
         {
-            get => bool8_objc_msgSend(NativePtr, "isOpaque");
-            set => objc_msgSend(NativePtr, "setOpaque:", value);
+            get => bool8_objc_msgSend(NativePtr, sel_isOpaque);
+            set => objc_msgSend(NativePtr, sel_setOpaque, value);
         }
 
         public CAMetalDrawable nextDrawable() => objc_msgSend<CAMetalDrawable>(NativePtr, sel_nextDrawable);
 
         public Bool8 displaySyncEnabled
         {
-            get => bool8_objc_msgSend(NativePtr, "displaySyncEnabled");
-            set => objc_msgSend(NativePtr, "setDisplaySyncEnabled:", value);
+            get => bool8_objc_msgSend(NativePtr, sel_displaySyncEnabled);
+            set => objc_msgSend(NativePtr, sel_setDisplaySyncEnabled, value);
         }
 
         private static readonly ObjCClass s_class = new ObjCClass(nameof(CAMetalLayer));
@@ -78,6 +78,12 @@ namespace Veldrid.MetalBindings
         private static readonly Selector sel_setFramebufferOnly = "setFramebufferOnly:";
         private static readonly Selector sel_drawableSize = "drawableSize";
         private static readonly Selector sel_setDrawableSize = "setDrawableSize:";
+        private static readonly Selector sel_frame = "frame";
+        private static readonly Selector sel_setFrame = "setFrame:";
+        private static readonly Selector sel_isOpaque = "isOpaque";
+        private static readonly Selector sel_setOpaque = "setOpaque:";
+        private static readonly Selector sel_displaySyncEnabled = "displaySyncEnabled";
+        private static readonly Selector sel_setDisplaySyncEnabled = "setDisplaySyncEnabled:";
         private static readonly Selector sel_nextDrawable = "nextDrawable";
     }
 }

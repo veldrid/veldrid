@@ -6,6 +6,8 @@ namespace Veldrid.MetalBindings
     {
         public readonly IntPtr NativePtr;
 
-        public UIntPtr count => ObjectiveCRuntime.UIntPtr_objc_msgSend(NativePtr, "count");
+        public UIntPtr count => ObjectiveCRuntime.UIntPtr_objc_msgSend(NativePtr, sel_count);
+        
+        private static readonly Selector sel_count = "count";
     }
 }

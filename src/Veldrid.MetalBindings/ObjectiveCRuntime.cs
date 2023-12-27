@@ -277,8 +277,13 @@ namespace Veldrid.MetalBindings
 
         [DllImport(ObjCLibrary)]
         public static extern void free(IntPtr receiver);
-        public static void retain(IntPtr receiver) => objc_msgSend(receiver, "retain");
-        public static void release(IntPtr receiver) => objc_msgSend(receiver, "release");
-        public static ulong GetRetainCount(IntPtr receiver) => (ulong)UIntPtr_objc_msgSend(receiver, "retainCount");
+
+        public static void retain(IntPtr receiver) => objc_msgSend(receiver, sel_retain);
+        public static void release(IntPtr receiver) => objc_msgSend(receiver, sel_release);
+        public static ulong GetRetainCount(IntPtr receiver) => (ulong)UIntPtr_objc_msgSend(receiver, sel_retainCount);
+        
+        private static readonly Selector sel_retain = "retain";
+        private static readonly Selector sel_release = "release";
+        private static readonly Selector sel_retainCount = "retainCount";
     }
 }

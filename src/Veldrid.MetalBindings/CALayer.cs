@@ -12,7 +12,9 @@ namespace Veldrid.MetalBindings
 
         public void addSublayer(IntPtr layer)
         {
-            objc_msgSend(NativePtr, "addSublayer:", layer);
+            objc_msgSend(NativePtr, sel_addSublayer, layer);
         }
+        
+        private static readonly Selector sel_addSublayer = "addSublayer:";
     }
 }

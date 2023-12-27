@@ -17,18 +17,24 @@ namespace Veldrid.OpenGL.EAGL
 
         public CGRect frame
         {
-            get => CGRect_objc_msgSend(NativePtr, "frame");
-            set => objc_msgSend(NativePtr, "setFrame:", value);
+            get => CGRect_objc_msgSend(NativePtr, sel_frame);
+            set => objc_msgSend(NativePtr, sel_setFrame, value);
         }
 
         public Bool8 opaque
         {
-            get => bool8_objc_msgSend(NativePtr, "isOpaque");
-            set => objc_msgSend(NativePtr, "setOpaque:", value);
+            get => bool8_objc_msgSend(NativePtr, sel_isOpaque);
+            set => objc_msgSend(NativePtr, sel_setOpaque, value);
         }
-
-        public void removeFromSuperlayer() => objc_msgSend(NativePtr, "removeFromSuperlayer");
+        
+        public void removeFromSuperlayer() => objc_msgSend(NativePtr, sel_removeFromSuperlayer);
 
         public void Release() => release(NativePtr);
+        
+        private static readonly Selector sel_frame = "frame";
+        private static readonly Selector sel_setFrame = "setFrame:";
+        private static readonly Selector sel_isOpaque = "isOpaque";
+        private static readonly Selector sel_setOpaque = "setOpaque:";
+        private static readonly Selector sel_removeFromSuperlayer = "removeFromSuperlayer";
     }
 }

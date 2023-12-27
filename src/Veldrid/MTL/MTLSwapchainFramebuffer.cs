@@ -92,6 +92,16 @@ namespace Veldrid.MTL
                 var depthAttachment = ret.depthAttachment;
                 depthAttachment.texture = _depthTexture.DeviceTexture;
                 depthAttachment.loadAction = MTLLoadAction.Load;
+                depthAttachment.storeAction = MTLStoreAction.Store;
+
+                if (FormatHelpers.IsStencilFormat(_depthTarget.Value.Target.Format))
+                {
+                    MTLRenderPassStencilAttachmentDescriptor stencilDescriptor = ret.stencilAttachment;
+                    stencilDescriptor.loadAction = MTLLoadAction.Load;
+                    stencilDescriptor.storeAction = MTLStoreAction.Store;
+                    stencilDescriptor.texture = _depthTexture.DeviceTexture;
+                    stencilDescriptor.slice = (UIntPtr)_depthTarget.Value.ArrayLayer;
+                }
             }
 
             return ret;

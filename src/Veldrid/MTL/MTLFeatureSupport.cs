@@ -26,6 +26,7 @@ namespace Veldrid.MTL
                 }
             }
 
+            //TODO should be false for MacCatalyst build
             IsMacOS = IsSupported(MTLFeatureSet.macOS_GPUFamily1_v1)
                 || IsSupported(MTLFeatureSet.macOS_GPUFamily1_v2)
                 || IsSupported(MTLFeatureSet.macOS_GPUFamily1_v3);

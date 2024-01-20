@@ -147,8 +147,10 @@ namespace Veldrid.Utilities
                         ProcessFaceLine(pieces);
                         break;
                     case "mtllib":
-                        ExpectExactly(pieces, 1, "mtllib");
-                        DiscoverMaterialLib(pieces[1]);
+                        // file paths/file names can contain spaces, blender will not put quotation marks arround the file path. for example:
+                        // mtllib Space Station Scene.mtl
+                        string mtlLibFile = string.Join(" ", pieces.Skip(1));
+                        DiscoverMaterialLib(mtlLibFile);
                         break;
                     default:
                         throw new ObjParseException(
@@ -369,6 +371,9 @@ namespace Veldrid.Utilities
         public Vector2[] TexCoords { get; }
         public MeshGroup[] MeshGroups { get; }
         public string MaterialLibName { get; }
+
+        public static ObjFile Parse(string[] lines) => new ObjParser().Parse(lines);
+        public static ObjFile Parse(Stream s) => new ObjParser().Parse(s);
 
         public ObjFile(Vector3[] positions, Vector3[] normals, Vector2[] texCoords, MeshGroup[] meshGroups, string materialLibName)
         {

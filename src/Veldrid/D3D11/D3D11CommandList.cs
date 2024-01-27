@@ -311,6 +311,9 @@ namespace Veldrid.D3D11
                     _context.PSSetShader(pixelShader);
                 }
 
+                if (!Util.ArrayEqualsEquatable(_vertexStrides, d3dPipeline.VertexStrides))
+                    _vertexBindingsChanged = true;
+
                 _vertexStrides = d3dPipeline.VertexStrides;
                 if (_vertexStrides != null)
                 {

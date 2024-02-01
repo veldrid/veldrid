@@ -1,6 +1,6 @@
 namespace Veldrid.MetalBindings
 {
-    public enum MTLStorageMode : uint
+    public enum MTLStorageMode : ulong
     {
         Shared = 0,
         Managed = 1,

@@ -1,6 +1,6 @@
 namespace Veldrid.MetalBindings
 {
-    public enum MTLResourceOptions : uint
+    public enum MTLResourceOptions : ulong
     {
         CPUCacheModeDefaultCache = MTLCPUCacheMode.DefaultCache,
         CPUCacheModeWriteCombined = MTLCPUCacheMode.WriteCombined,

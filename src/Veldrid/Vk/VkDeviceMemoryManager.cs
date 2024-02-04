@@ -31,7 +31,7 @@ namespace Veldrid.Vk
         {
             _device = device;
             _physicalDevice = physicalDevice;
-            _bufferImageGranularity = bufferImageGranularity;
+            _bufferImageGranularity = Math.Max(4, bufferImageGranularity);
             _getBufferMemoryRequirements2 = getBufferMemoryRequirements2;
             _getImageMemoryRequirements2 = getImageMemoryRequirements2;
         }

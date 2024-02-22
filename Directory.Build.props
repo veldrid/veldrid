@@ -41,11 +41,11 @@
     </PackageReference>
   </ItemGroup>
 
-  <PropertyGroup>
+  <PropertyGroup Condition="'$(IsMacOS)' != 'true'" >
     <NerdbankGitVersioningVersion>3.4.255</NerdbankGitVersioningVersion>
   </PropertyGroup>
 
-  <ItemGroup>
+  <ItemGroup Condition="'$(IsMacOS)' != 'true'" >
     <PackageReference Include="Nerdbank.GitVersioning" Version="$(NerdbankGitVersioningVersion)">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>

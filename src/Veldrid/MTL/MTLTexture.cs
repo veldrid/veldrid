@@ -118,6 +118,23 @@ namespace Veldrid.MTL
                     (Usage & TextureUsage.Cubemap) != 0);
         }
 
+        public MTLTexture(CAMetalDrawable drawable, CGSize size, PixelFormat format)
+        {
+            DeviceTexture = drawable.texture;
+            Width = (uint)size.width;
+            Height = (uint)size.height;
+            Depth = 1;
+            ArrayLayers = 1;
+            MipLevels = 1;
+            Format = format;
+            Usage = TextureUsage.RenderTarget;
+            Type = TextureType.Texture2D;
+            SampleCount = TextureSampleCount.Count1;
+
+            MTLPixelFormat = MTLFormats.VdToMTLPixelFormat(Format, false);
+            MTLTextureType = MTLTextureType.Type2D;
+        }
+
         internal uint GetSubresourceSize(uint mipLevel, uint arrayLayer)
         {
             uint blockSize = FormatHelpers.IsCompressedFormat(Format) ? 4u : 1u;

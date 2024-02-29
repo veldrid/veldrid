@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 
 namespace Veldrid
 {
@@ -8,6 +9,8 @@ namespace Veldrid
         internal static void ValidateResourceSet(GraphicsDevice gd, ref ResourceSetDescription description)
         {
 #if VALIDATE_USAGE
+            if (description.Layout is null)
+                throw new NullReferenceException("There is no associated ResourceLayout in the provided ResourceSetDescription");
             ResourceLayoutElementDescription[] elements = description.Layout.Description.Elements;
             BindableResource[] resources = description.BoundResources;
 

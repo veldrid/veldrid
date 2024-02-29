@@ -3,19 +3,23 @@ using Veldrid.MetalBindings;
 
 namespace Veldrid.MTL
 {
-    internal class MTLFramebuffer : MTLFramebufferBase
+    internal class MTLFramebuffer : Framebuffer
     {
-        public override bool IsRenderable => true;
         private bool _disposed;
 
         public MTLFramebuffer(MTLGraphicsDevice gd, ref FramebufferDescription description)
-            : base(gd, ref description)
+            : base(description.DepthTarget, description.ColorTargets)
         {
         }
 
-        public override MTLRenderPassDescriptor CreateRenderPassDescriptor()
+        public MTLFramebuffer()
+        {
+        }
+
+        public MTLRenderPassDescriptor CreateRenderPassDescriptor()
         {
             MTLRenderPassDescriptor ret = MTLRenderPassDescriptor.New();
+
             for (int i = 0; i < ColorTargets.Count; i++)
             {
                 FramebufferAttachment colorTarget = ColorTargets[i];
@@ -50,6 +54,7 @@ namespace Veldrid.MTL
             return ret;
         }
 
+        public override string Name { get; set; }
         public override bool IsDisposed => _disposed;
 
         public override void Dispose()

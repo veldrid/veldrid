@@ -11,7 +11,7 @@ namespace Veldrid.MTL
     {
         private readonly MTLGraphicsDevice _gd;
         private MTLCommandBuffer _cb;
-        private MTLFramebufferBase _mtlFramebuffer;
+        private MTLFramebuffer _mtlFramebuffer;
         private uint _viewportCount;
         private bool _currentFramebufferEverActive;
         private MTLRenderCommandEncoder _rce;
@@ -695,7 +695,7 @@ namespace Veldrid.MTL
             }
 
             EnsureNoRenderPass();
-            _mtlFramebuffer = Util.AssertSubtype<Framebuffer, MTLFramebufferBase>(fb);
+            _mtlFramebuffer = Util.AssertSubtype<Framebuffer, MTLFramebuffer>(fb);
             _viewportCount = Math.Max(1u, (uint)fb.ColorTargets.Count);
             Util.EnsureArrayMinimumSize(ref _viewports, _viewportCount);
             Util.ClearArray(_viewports);
@@ -942,10 +942,8 @@ namespace Veldrid.MTL
 
         private bool BeginCurrentRenderPass()
         {
-            if (!_mtlFramebuffer.IsRenderable)
-            {
+            if (_mtlFramebuffer is MTLSwapchainFramebuffer swapchainFramebuffer && !swapchainFramebuffer.EnsureDrawableAvailable())
                 return false;
-            }
 
             MTLRenderPassDescriptor rpDesc = _mtlFramebuffer.CreateRenderPassDescriptor();
             for (uint i = 0; i < _clearColors.Length; i++)

@@ -2,7 +2,7 @@ using System;
 
 namespace Veldrid.MetalBindings
 {
-    public struct MTLScissorRect
+    public struct MTLScissorRect : IEquatable<MTLScissorRect>
     {
         public UIntPtr x;
         public UIntPtr y;
@@ -16,5 +16,11 @@ namespace Veldrid.MetalBindings
             this.width = (UIntPtr)width;
             this.height = (UIntPtr)height;
         }
+
+        public bool Equals(MTLScissorRect other)
+            => x == other.x
+               && y == other.y
+               && width == other.width
+               && height == other.height;
     }
 }

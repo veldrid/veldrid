@@ -82,16 +82,18 @@ namespace Veldrid.MTL
                 shaderFloat64: false);
             ResourceBindingModel = options.ResourceBindingModel;
 
-            _libSystem = new NativeLibrary("libSystem.dylib");
-            _concreteGlobalBlock = _libSystem.LoadFunction("_NSConcreteGlobalBlock");
             if (MetalFeatures.IsMacOS)
             {
+                _libSystem = new NativeLibrary("libSystem.dylib");
+                _concreteGlobalBlock = _libSystem.LoadFunction("_NSConcreteGlobalBlock");
                 _completionHandler = OnCommandBufferCompleted;
             }
             else
             {
+                _concreteGlobalBlock = IntPtr.Zero;
                 _completionHandler = OnCommandBufferCompleted_Static;
             }
+
             _completionHandlerFuncPtr = Marshal.GetFunctionPointerForDelegate<MTLCommandBufferHandler>(_completionHandler);
             _completionBlockDescriptor = Marshal.AllocHGlobal(Unsafe.SizeOf<BlockDescriptor>());
             BlockDescriptor* descriptorPtr = (BlockDescriptor*)_completionBlockDescriptor;
@@ -439,7 +441,7 @@ namespace Veldrid.MTL
                 s_aotRegisteredBlocks.Remove(_completionBlockLiteral);
             }
 
-            _libSystem.Dispose();
+            _libSystem?.Dispose();
             Marshal.FreeHGlobal(_completionBlockDescriptor);
             Marshal.FreeHGlobal(_completionBlockLiteral);
         }

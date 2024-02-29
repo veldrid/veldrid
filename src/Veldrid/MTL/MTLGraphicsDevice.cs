@@ -312,7 +312,7 @@ namespace Veldrid.MTL
         private protected override void UpdateBufferCore(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
         {
             var mtlBuffer = Util.AssertSubtype<DeviceBuffer, MTLBuffer>(buffer);
-            void* destPtr = mtlBuffer.DeviceBuffer.contents();
+            void* destPtr = mtlBuffer.Pointer;
             byte* destOffsetPtr = (byte*)destPtr + bufferOffsetInBytes;
             Unsafe.CopyBlock(destOffsetPtr, source.ToPointer(), sizeInBytes);
         }
@@ -358,7 +358,7 @@ namespace Veldrid.MTL
                     source.ToPointer(),
                     0, 0, 0,
                     srcRowPitch, srcDepthPitch,
-                    (byte*)mtlTex.StagingBuffer.contents() + dstOffset,
+                    (byte*)mtlTex.StagingBufferPointer + dstOffset,
                     x, y, z,
                     dstRowPitch, dstDepthPitch,
                     width, height, depth,
@@ -398,11 +398,10 @@ namespace Veldrid.MTL
 
         private MappedResource MapBuffer(MTLBuffer buffer, MapMode mode)
         {
-            void* data = buffer.DeviceBuffer.contents();
             return new MappedResource(
                 buffer,
                 mode,
-                (IntPtr)data,
+                (IntPtr)buffer.Pointer,
                 buffer.SizeInBytes,
                 0,
                 buffer.SizeInBytes,
@@ -412,7 +411,7 @@ namespace Veldrid.MTL
         private MappedResource MapTexture(MTLTexture texture, MapMode mode, uint subresource)
         {
             Debug.Assert(!texture.StagingBuffer.IsNull);
-            void* data = texture.StagingBuffer.contents();
+            void* data = texture.StagingBufferPointer;
             Util.GetMipLevelAndArrayLayer(texture, subresource, out uint mipLevel, out uint arrayLayer);
             Util.GetMipDimensions(texture, mipLevel, out uint width, out uint height, out uint depth);
             uint subresourceSize = texture.GetSubresourceSize(mipLevel, arrayLayer);

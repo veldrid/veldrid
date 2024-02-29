@@ -200,8 +200,8 @@ namespace Veldrid
         /// <returns>True if all elements and all array elements are equal; false otherswise.</returns>
         public bool Equals(BlendAttachmentDescription other)
         {
-            return BlendEnabled.Equals(other.BlendEnabled)
-                && ColorWriteMask.Equals(other.ColorWriteMask)
+            return BlendEnabled == other.BlendEnabled
+                && ColorWriteMask == other.ColorWriteMask
                 && SourceColorFactor == other.SourceColorFactor
                 && DestinationColorFactor == other.DestinationColorFactor && ColorFunction == other.ColorFunction
                 && SourceAlphaFactor == other.SourceAlphaFactor && DestinationAlphaFactor == other.DestinationAlphaFactor

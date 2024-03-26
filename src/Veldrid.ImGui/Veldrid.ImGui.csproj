@@ -50,15 +50,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="ImGui.NET" Version="1.89.2" />
+    <PackageReference Include="ImGui.NET" Version="1.90.1.1" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(UseStableVersions)' == 'true'" >
+  <ItemGroup Condition="'$(UseStableVersions)' == 'true'">
     <PackageReference Include="Veldrid" Version="4.5.0" />
     <PackageReference Include="Veldrid.SDL2" Version="4.5.0" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(UseStableVersions)' != 'true'" >
+  <ItemGroup Condition="'$(UseStableVersions)' != 'true'">
     <ProjectReference Include="..\Veldrid\Veldrid.csproj" />
     <ProjectReference Include="..\Veldrid.SDL2\Veldrid.SDL2.csproj" />
   </ItemGroup>

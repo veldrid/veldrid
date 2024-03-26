@@ -28,7 +28,7 @@ namespace Veldrid.D3D11
 
         private uint _numVertexBindings = 0;
         private ID3D11Buffer[] _vertexBindings = new ID3D11Buffer[1];
-        private int[] _vertexStrides;
+        private int[] _vertexStrides = new int[1];
         private int[] _vertexOffsets = new int[1];
 
         // Cached pipeline State
@@ -122,7 +122,7 @@ namespace Veldrid.D3D11
         {
             _numVertexBindings = 0;
             Util.ClearArray(_vertexBindings);
-            _vertexStrides = null;
+            Util.ClearArray(_vertexStrides);
             Util.ClearArray(_vertexOffsets);
 
             _framebuffer = null;
@@ -311,13 +311,20 @@ namespace Veldrid.D3D11
                     _context.PSSetShader(pixelShader);
                 }
 
-                _vertexStrides = d3dPipeline.VertexStrides;
-                if (_vertexStrides != null)
+                if (!Util.ArrayEqualsEquatable(_vertexStrides, d3dPipeline.VertexStrides))
                 {
-                    int vertexStridesCount = _vertexStrides.Length;
-                    Util.EnsureArrayMinimumSize(ref _vertexBindings, (uint)vertexStridesCount);
-                    Util.EnsureArrayMinimumSize(ref _vertexOffsets, (uint)vertexStridesCount);
+                    _vertexBindingsChanged = true;
+
+                    if (d3dPipeline.VertexStrides != null)
+                    {
+                        Util.EnsureArrayMinimumSize(ref _vertexStrides, (uint)d3dPipeline.VertexStrides.Length);
+                        d3dPipeline.VertexStrides.CopyTo(_vertexStrides, 0);
+                    }
                 }
+
+                Util.EnsureArrayMinimumSize(ref _vertexStrides, 1);
+                Util.EnsureArrayMinimumSize(ref _vertexBindings, (uint)_vertexStrides.Length);
+                Util.EnsureArrayMinimumSize(ref _vertexOffsets, (uint)_vertexStrides.Length);
 
                 Util.EnsureArrayMinimumSize(ref _graphicsResourceSets, (uint)d3dPipeline.ResourceLayouts.Length);
                 Util.EnsureArrayMinimumSize(ref _invalidatedGraphicsResourceSets, (uint)d3dPipeline.ResourceLayouts.Length);

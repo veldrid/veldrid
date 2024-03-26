@@ -13,9 +13,7 @@ namespace Veldrid.Vk
 {
     internal unsafe class VkGraphicsDevice : GraphicsDevice
     {
-        // I think it should ultimately be defined in 'Vulkan.RawConstants'.
         private const uint VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR = 0x00000001;
-
         private static readonly FixedUtf8String s_name = "Veldrid-VkGraphicsDevice";
         private static readonly Lazy<bool> s_isSupported = new Lazy<bool>(CheckIsSupported, isThreadSafe: true);
 
@@ -476,6 +474,12 @@ namespace Veldrid.Vk
                 _surfaceExtensions.Add(CommonStrings.VK_KHR_portability_subset);
             }
 
+            if (availableInstanceExtensions.Contains(CommonStrings.VK_KHR_portability_enumeration))
+            {
+                instanceExtensions.Add(CommonStrings.VK_KHR_portability_enumeration);
+                instanceCI.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
+            }
+
             if (availableInstanceExtensions.Contains(CommonStrings.VK_KHR_SURFACE_EXTENSION_NAME))
             {
                 _surfaceExtensions.Add(CommonStrings.VK_KHR_SURFACE_EXTENSION_NAME);
@@ -509,14 +513,6 @@ namespace Veldrid.Vk
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
-                // The new MoltenVK now requires the following code
-                // https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/VK_KHR_portability_enumeration.html
-                if (availableInstanceExtensions.Contains(CommonStrings.VK_KHR_portability_enumeration))
-                {
-                    instanceExtensions.Add(CommonStrings.VK_KHR_portability_enumeration);
-                    instanceCI.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
-                }
-
                 if (availableInstanceExtensions.Contains(CommonStrings.VK_EXT_METAL_SURFACE_EXTENSION_NAME))
                 {
                     _surfaceExtensions.Add(CommonStrings.VK_EXT_METAL_SURFACE_EXTENSION_NAME);
@@ -1405,8 +1401,6 @@ namespace Veldrid.Vk
                 return false;
             }
 
-            HashSet<string> availableInstanceExtensions = new HashSet<string>(GetInstanceExtensions());
-
             VkInstanceCreateInfo instanceCI = VkInstanceCreateInfo.New();
             VkApplicationInfo applicationInfo = new VkApplicationInfo();
             applicationInfo.apiVersion = new VkVersion(1, 0, 0);
@@ -1416,22 +1410,6 @@ namespace Veldrid.Vk
             applicationInfo.pEngineName = s_name;
 
             instanceCI.pApplicationInfo = &applicationInfo;
-
-            StackList<IntPtr, Size64Bytes> instanceExtensions = new StackList<IntPtr, Size64Bytes>();
-
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-            {
-                // The new MoltenVK now requires the following code
-                // https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/VK_KHR_portability_enumeration.html
-                if (availableInstanceExtensions.Contains(CommonStrings.VK_KHR_portability_enumeration))
-                {
-                    instanceExtensions.Add(CommonStrings.VK_KHR_portability_enumeration);
-                    instanceCI.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
-                }
-            }
-
-            instanceCI.enabledExtensionCount = instanceExtensions.Count;
-            instanceCI.ppEnabledExtensionNames = (byte**)instanceExtensions.Data;
 
             VkResult result = vkCreateInstance(ref instanceCI, null, out VkInstance testInstance);
             if (result != VkResult.Success)
@@ -1449,40 +1427,41 @@ namespace Veldrid.Vk
 
             vkDestroyInstance(testInstance, null);
 
-            if (!availableInstanceExtensions.Contains(CommonStrings.VK_KHR_SURFACE_EXTENSION_NAME))
+            HashSet<string> instanceExtensions = new HashSet<string>(GetInstanceExtensions());
+            if (!instanceExtensions.Contains(CommonStrings.VK_KHR_SURFACE_EXTENSION_NAME))
             {
                 return false;
             }
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                return availableInstanceExtensions.Contains(CommonStrings.VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
+                return instanceExtensions.Contains(CommonStrings.VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
             }
 #if NET5_0_OR_GREATER
             else if (OperatingSystem.IsAndroid())
             {
-                return availableInstanceExtensions.Contains(CommonStrings.VK_KHR_ANDROID_SURFACE_EXTENSION_NAME);
+                return instanceExtensions.Contains(CommonStrings.VK_KHR_ANDROID_SURFACE_EXTENSION_NAME);
             }
 #endif
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
                 if (RuntimeInformation.OSDescription.Contains("Unix")) // Android
                 {
-                    return availableInstanceExtensions.Contains(CommonStrings.VK_KHR_ANDROID_SURFACE_EXTENSION_NAME);
+                    return instanceExtensions.Contains(CommonStrings.VK_KHR_ANDROID_SURFACE_EXTENSION_NAME);
                 }
                 else
                 {
-                    return availableInstanceExtensions.Contains(CommonStrings.VK_KHR_XLIB_SURFACE_EXTENSION_NAME);
+                    return instanceExtensions.Contains(CommonStrings.VK_KHR_XLIB_SURFACE_EXTENSION_NAME);
                 }
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
                 if (RuntimeInformation.OSDescription.Contains("Darwin")) // macOS
                 {
-                    return availableInstanceExtensions.Contains(CommonStrings.VK_MVK_MACOS_SURFACE_EXTENSION_NAME);
+                    return instanceExtensions.Contains(CommonStrings.VK_MVK_MACOS_SURFACE_EXTENSION_NAME);
                 }
                 else // iOS
                 {
-                    return availableInstanceExtensions.Contains(CommonStrings.VK_MVK_IOS_SURFACE_EXTENSION_NAME);
+                    return instanceExtensions.Contains(CommonStrings.VK_MVK_IOS_SURFACE_EXTENSION_NAME);
                 }
             }
 

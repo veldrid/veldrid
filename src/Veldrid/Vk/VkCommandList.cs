@@ -760,13 +760,15 @@ namespace Veldrid.Vk
             VkMemoryBarrier barrier;
             barrier.sType = VkStructureType.MemoryBarrier;
             barrier.srcAccessMask = VkAccessFlags.TransferWrite;
-            barrier.dstAccessMask = needToProtectUniform
-                ? VkAccessFlags.VertexAttributeRead | VkAccessFlags.UniformRead
-                : VkAccessFlags.VertexAttributeRead;
+            barrier.dstAccessMask = needToProtectUniform ? VkAccessFlags.UniformRead : VkAccessFlags.VertexAttributeRead;
             barrier.pNext = null;
             vkCmdPipelineBarrier(
                 _cb,
-                VkPipelineStageFlags.Transfer, VkPipelineStageFlags.VertexInput,
+                VkPipelineStageFlags.Transfer, needToProtectUniform ?
+                    VkPipelineStageFlags.VertexShader | VkPipelineStageFlags.ComputeShader |
+                    VkPipelineStageFlags.FragmentShader | VkPipelineStageFlags.GeometryShader |
+                    VkPipelineStageFlags.TessellationControlShader | VkPipelineStageFlags.TessellationEvaluationShader
+                    : VkPipelineStageFlags.VertexInput,
                 VkDependencyFlags.None,
                 1, ref barrier,
                 0, null,

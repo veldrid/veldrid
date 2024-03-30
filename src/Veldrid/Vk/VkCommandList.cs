@@ -766,7 +766,11 @@ namespace Veldrid.Vk
             barrier.pNext = null;
             vkCmdPipelineBarrier(
                 _cb,
-                VkPipelineStageFlags.Transfer, VkPipelineStageFlags.VertexInput,
+                VkPipelineStageFlags.Transfer, needToProtectUniform ?
+                    VkPipelineStageFlags.VertexShader | VkPipelineStageFlags.ComputeShader |
+                    VkPipelineStageFlags.FragmentShader | VkPipelineStageFlags.GeometryShader |
+                    VkPipelineStageFlags.TessellationControlShader | VkPipelineStageFlags.TessellationEvaluationShader
+                    : VkPipelineStageFlags.VertexInput,
                 VkDependencyFlags.None,
                 1, ref barrier,
                 0, null,

@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net6.0</TargetFrameworks>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AssemblyName>opticfluorine.Veldrid.ImageSharp</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

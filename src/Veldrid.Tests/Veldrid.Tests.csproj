@@ -9,6 +9,7 @@
     <DefineConstants Condition="'$(IsLinux)' == 'true'">$(DefineConstants);TEST_VULKAN;TEST_OPENGL;TEST_OPENGLES</DefineConstants>
     <DefineConstants Condition="'$(IsMacOS)' == 'true'">$(DefineConstants);TEST_METAL;TEST_OPENGL</DefineConstants>
     <StartupObject>Program</StartupObject>
+    <AssemblyName>opticfluorine.Veldrid.Tests</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

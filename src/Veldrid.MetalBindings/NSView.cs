@@ -23,14 +23,9 @@ namespace Veldrid.MetalBindings
             set => objc_msgSend(NativePtr, "setLayer:", value);
         }
 
-        public CGRect frame
-        {
-            get
-            {
-                return RuntimeInformation.ProcessArchitecture == Architecture.Arm64
-                    ? CGRect_objc_msgSend(NativePtr, "frame")
-                    : objc_msgSend_stret<CGRect>(NativePtr, "frame");
-            }
-        }
+        public CGRect frame =>
+            RuntimeInformation.ProcessArchitecture == Architecture.Arm64
+                ? CGRect_objc_msgSend(NativePtr, "frame")
+                : objc_msgSend_stret<CGRect>(NativePtr, "frame");
     }
 }

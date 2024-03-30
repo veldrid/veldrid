@@ -461,7 +461,10 @@ namespace Veldrid.Vk
             }
 
             vkEndCommandBuffer(_cb);
-            _submittedCommandBuffers.Add(_cb);
+            lock (_commandBufferListLock)
+            {
+                _submittedCommandBuffers.Add(_cb);
+            }
         }
 
         protected override void SetFramebufferCore(Framebuffer fb)

@@ -4,6 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>8.0</LangVersion>
+    <AssemblyName>opticfluorine.Veldrid.VirtualReality</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
@@ -12,16 +13,8 @@
 
   <ItemGroup>
     <PackageReference Include="Veldrid.SPIRV" Version="$(VeldridSpirvVersion)" />
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(UseStableVersions)' == 'true'" >
-    <PackageReference Include="Veldrid" Version="4.5.0" />
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(UseStableVersions)' != 'true'" >
     <ProjectReference Include="..\Veldrid\Veldrid.csproj" />
   </ItemGroup>
-
 
   <ItemGroup>
     <Content Include="$(MSBuildThisFileDirectory)native\win-x64\openvr_api.dll">

@@ -4,6 +4,7 @@
     <PackageVersion>$(AssemblyVersion)</PackageVersion>
     <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AssemblyName>opticfluorine.Veldrid.Utilities</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

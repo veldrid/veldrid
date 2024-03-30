@@ -4,6 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Veldrid</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AssemblyName>opticfluorine.Veldrid.RenderDoc</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

@@ -755,10 +755,14 @@ namespace Veldrid.Vk
 
             vkCmdCopyBuffer(_cb, srcVkBuffer.DeviceBuffer, dstVkBuffer.DeviceBuffer, 1, ref region);
 
+            bool needToProtectUniform = destination.Usage.HasFlag(BufferUsage.UniformBuffer);
+
             VkMemoryBarrier barrier;
             barrier.sType = VkStructureType.MemoryBarrier;
             barrier.srcAccessMask = VkAccessFlags.TransferWrite;
-            barrier.dstAccessMask = VkAccessFlags.VertexAttributeRead;
+            barrier.dstAccessMask = needToProtectUniform
+                ? VkAccessFlags.VertexAttributeRead | VkAccessFlags.UniformRead
+                : VkAccessFlags.VertexAttributeRead;
             barrier.pNext = null;
             vkCmdPipelineBarrier(
                 _cb,
@@ -966,7 +970,7 @@ namespace Veldrid.Vk
                 VkImageAspectFlags aspect = (srcVkTexture.Usage & TextureUsage.DepthStencil) != 0
                     ? VkImageAspectFlags.Depth
                     : VkImageAspectFlags.Color;
-                
+
                 Util.GetMipDimensions(dstVkTexture, dstMipLevel, out uint mipWidth, out uint mipHeight, out uint mipDepth);
                 uint blockSize = FormatHelpers.IsCompressedFormat(srcVkTexture.Format) ? 4u : 1u;
                 uint bufferRowLength = Math.Max(mipWidth, blockSize);

@@ -413,14 +413,14 @@ namespace Veldrid.D3D11
                     case ResourceKind.TextureReadOnly:
                         TextureView texView = Util.GetTextureView(_gd, resource);
                         D3D11TextureView d3d11TexView = Util.AssertSubtype<TextureView, D3D11TextureView>(texView);
-                        UnbindUAVTexture(d3d11TexView.Target);
+                        UnbindUAVTexture(d3d11TexView.Target, d3d11TexView.BaseMipLevel, d3d11TexView.MipLevels);
                         BindTextureView(d3d11TexView, textureBase + rbi.Slot, rbi.Stages, slot);
                         break;
                     case ResourceKind.TextureReadWrite:
                         TextureView rwTexView = Util.GetTextureView(_gd, resource);
                         D3D11TextureView d3d11RWTexView = Util.AssertSubtype<TextureView, D3D11TextureView>(rwTexView);
-                        UnbindSRVTexture(d3d11RWTexView.Target);
-                        BindUnorderedAccessView(d3d11RWTexView.Target, null, d3d11RWTexView.UnorderedAccessView, uaBase + rbi.Slot, rbi.Stages, slot);
+                        UnbindSRVTexture(d3d11RWTexView.Target, d3d11RWTexView.BaseMipLevel, d3d11RWTexView.MipLevels);
+                        BindUnorderedAccessView(d3d11RWTexView, null, d3d11RWTexView.UnorderedAccessView, uaBase + rbi.Slot, rbi.Stages, slot);
                         break;
                     case ResourceKind.Sampler:
                         D3D11Sampler sampler = Util.AssertSubtype<BindableResource, D3D11Sampler>(resource);
@@ -450,12 +450,20 @@ namespace Veldrid.D3D11
             }
         }
 
-        private void UnbindSRVTexture(Texture target)
+        private void UnbindSRVTexture(Texture target, uint? baseMipLevel = null, uint? mipLevels = null)
         {
             if (_boundSRVs.TryGetValue(target, out List<BoundTextureInfo> btis))
             {
+                bool allRemoved = true;
+
                 foreach (BoundTextureInfo bti in btis)
                 {
+                    if ((bti.BaseMipLevel + bti.MipLevels) <= baseMipLevel || bti.BaseMipLevel >= (baseMipLevel + mipLevels))
+                    {
+                        allRemoved = false;
+                        continue;
+                    }
+
                     BindTextureView(null, bti.Slot, bti.Stages, 0);
 
                     if ((bti.Stages & ShaderStages.Compute) == ShaderStages.Compute)
@@ -467,6 +475,11 @@ namespace Veldrid.D3D11
                         _invalidatedGraphicsResourceSets[bti.ResourceSet] = true;
                     }
                 }
+
+                if (!allRemoved)
+                    // there's still bound SRV texture views with the same target,
+                    // those remain compatible even if a UAV was bound as long as the mip levels don't overlap.
+                    return;
 
                 bool result = _boundSRVs.Remove(target);
                 Debug.Assert(result);
@@ -481,12 +494,20 @@ namespace Veldrid.D3D11
             _boundTextureInfoPool.Add(btis);
         }
 
-        private void UnbindUAVTexture(Texture target)
+        private void UnbindUAVTexture(Texture target, uint? baseMipLevel = null, uint? mipLevels = null)
         {
             if (_boundUAVs.TryGetValue(target, out List<BoundTextureInfo> btis))
             {
+                bool allRemoved = true;
+
                 foreach (BoundTextureInfo bti in btis)
                 {
+                    if ((bti.BaseMipLevel + bti.MipLevels) <= baseMipLevel || bti.BaseMipLevel >= (baseMipLevel + mipLevels))
+                    {
+                        allRemoved = false;
+                        continue;
+                    }
+
                     BindUnorderedAccessView(null, null, null, bti.Slot, bti.Stages, bti.ResourceSet);
                     if ((bti.Stages & ShaderStages.Compute) == ShaderStages.Compute)
                     {
@@ -497,6 +518,11 @@ namespace Veldrid.D3D11
                         _invalidatedGraphicsResourceSets[bti.ResourceSet] = true;
                     }
                 }
+
+                if (!allRemoved)
+                    // there's still bound UAV texture views with the same target,
+                    // those remain compatible even if an SRV was bound as long as the mip levels don't overlap.
+                    return;
 
                 bool result = _boundUAVs.Remove(target);
                 Debug.Assert(result);
@@ -743,7 +769,7 @@ namespace Veldrid.D3D11
                     list = GetNewOrCachedBoundTextureInfoList();
                     _boundSRVs.Add(texView.Target, list);
                 }
-                list.Add(new BoundTextureInfo { Slot = slot, Stages = stages, ResourceSet = resourceSet });
+                list.Add(new BoundTextureInfo { Slot = slot, Stages = stages, ResourceSet = resourceSet, BaseMipLevel = texView.BaseMipLevel, MipLevels = texView.MipLevels });
             }
 
             if ((stages & ShaderStages.Vertex) == ShaderStages.Vertex)
@@ -991,7 +1017,7 @@ namespace Veldrid.D3D11
         }
 
         private void BindUnorderedAccessView(
-            Texture texture,
+            TextureView view,
             DeviceBuffer buffer,
             ID3D11UnorderedAccessView uav,
             int slot,
@@ -1000,16 +1026,23 @@ namespace Veldrid.D3D11
         {
             bool compute = stages == ShaderStages.Compute;
             Debug.Assert(compute || ((stages & ShaderStages.Compute) == 0));
-            Debug.Assert(texture == null || buffer == null);
+            Debug.Assert(view == null || buffer == null);
 
-            if (texture != null && uav != null)
+            if (view != null && uav != null)
             {
-                if (!_boundUAVs.TryGetValue(texture, out List<BoundTextureInfo> list))
+                if (!_boundUAVs.TryGetValue(view.Target, out List<BoundTextureInfo> list))
                 {
                     list = GetNewOrCachedBoundTextureInfoList();
-                    _boundUAVs.Add(texture, list);
+                    _boundUAVs.Add(view.Target, list);
                 }
-                list.Add(new BoundTextureInfo { Slot = slot, Stages = stages, ResourceSet = resourceSet });
+                list.Add(new BoundTextureInfo
+                {
+                    Slot = slot,
+                    Stages = stages,
+                    ResourceSet = resourceSet,
+                    BaseMipLevel = view.BaseMipLevel,
+                    MipLevels = view.MipLevels
+                });
             }
 
             int baseSlot = 0;
@@ -1392,6 +1425,8 @@ namespace Veldrid.D3D11
         {
             public int Slot;
             public ShaderStages Stages;
+            public uint BaseMipLevel;
+            public uint MipLevels;
             public uint ResourceSet;
         }
 

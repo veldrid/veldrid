@@ -47,10 +47,17 @@ namespace Veldrid.MTL
         public MTLCommandQueue CommandQueue => _commandQueue;
         public MTLFeatureSupport MetalFeatures { get; }
         public ResourceBindingModel ResourceBindingModel { get; }
+        public bool PreferMemorylessDepthTargets { get; }
+
+        public MTLGraphicsDevice(GraphicsDeviceOptions options, SwapchainDescription? swapchainDesc)
+            : this(options, swapchainDesc, new MetalDeviceOptions())
+        {
+        }
 
         public MTLGraphicsDevice(
             GraphicsDeviceOptions options,
-            SwapchainDescription? swapchainDesc)
+            SwapchainDescription? swapchainDesc,
+            MetalDeviceOptions metalOptions)
         {
             _device = MTLDevice.MTLCreateSystemDefaultDevice();
             _deviceName = _device.name;
@@ -81,6 +88,7 @@ namespace Veldrid.MTL
                 bufferRangeBinding: true,
                 shaderFloat64: false);
             ResourceBindingModel = options.ResourceBindingModel;
+            PreferMemorylessDepthTargets = metalOptions.PreferMemorylessDepthTargets;
 
             _libSystem = new NativeLibrary("libSystem.dylib");
             _concreteGlobalBlock = _libSystem.LoadFunction("_NSConcreteGlobalBlock");
@@ -304,9 +312,9 @@ namespace Veldrid.MTL
                     submitCB.presentDrawable(currentDrawablePtr);
                     submitCB.commit();
                 }
-            }
 
-            mtlSC.GetNextDrawable();
+                mtlSC.InvalidateDrawable();
+            }
         }
 
         private protected override void UpdateBufferCore(DeviceBuffer buffer, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)

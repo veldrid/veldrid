@@ -37,6 +37,7 @@ namespace Veldrid.MTL
         public override bool IsDisposed => _disposed;
         public MTLPixelFormat MTLPixelFormat { get; }
         public MTLTextureType MTLTextureType { get; }
+        public MTLStorageMode MTLStorageMode { get; }
 
         public MTLTexture(ref TextureDescription description, MTLGraphicsDevice _gd)
         {
@@ -57,8 +58,11 @@ namespace Veldrid.MTL
                     ArrayLayers,
                     SampleCount != TextureSampleCount.Count1,
                     (Usage & TextureUsage.Cubemap) != 0);
+
             if (Usage != TextureUsage.Staging)
             {
+                MTLStorageMode = isDepth && _gd.PreferMemorylessDepthTargets ? MTLStorageMode.Memoryless : MTLStorageMode.Private;
+
                 MTLTextureDescriptor texDescriptor = MTLTextureDescriptor.New();
                 texDescriptor.width = (UIntPtr)Width;
                 texDescriptor.height = (UIntPtr)Height;
@@ -69,7 +73,7 @@ namespace Veldrid.MTL
                 texDescriptor.textureType = MTLTextureType;
                 texDescriptor.pixelFormat = MTLPixelFormat;
                 texDescriptor.textureUsage = MTLFormats.VdToMTLTextureUsage(Usage);
-                texDescriptor.storageMode = MTLStorageMode.Private;
+                texDescriptor.storageMode = MTLStorageMode;
 
                 DeviceTexture = _gd.Device.newTextureWithDescriptor(texDescriptor);
                 ObjectiveCRuntime.release(texDescriptor.NativePtr);
@@ -116,6 +120,23 @@ namespace Veldrid.MTL
                     ArrayLayers,
                     SampleCount != TextureSampleCount.Count1,
                     (Usage & TextureUsage.Cubemap) != 0);
+        }
+
+        public MTLTexture(CAMetalDrawable drawable, CGSize size, PixelFormat format)
+        {
+            DeviceTexture = drawable.texture;
+            Width = (uint)size.width;
+            Height = (uint)size.height;
+            Depth = 1;
+            ArrayLayers = 1;
+            MipLevels = 1;
+            Format = format;
+            Usage = TextureUsage.RenderTarget;
+            Type = TextureType.Texture2D;
+            SampleCount = TextureSampleCount.Count1;
+
+            MTLPixelFormat = MTLFormats.VdToMTLPixelFormat(Format, false);
+            MTLTextureType = MTLTextureType.Type2D;
         }
 
         internal uint GetSubresourceSize(uint mipLevel, uint arrayLayer)

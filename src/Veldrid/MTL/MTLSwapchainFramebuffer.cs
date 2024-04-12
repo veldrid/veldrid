@@ -5,54 +5,46 @@ using Veldrid.MetalBindings;
 
 namespace Veldrid.MTL
 {
-    internal class MTLSwapchainFramebuffer : MTLFramebufferBase
+    internal class MTLSwapchainFramebuffer : MTLFramebuffer
     {
         private readonly MTLGraphicsDevice _gd;
-        private readonly MTLPlaceholderTexture _placeholderTexture;
+        private MTLTexture _colorTexture;
         private MTLTexture _depthTexture;
         private readonly MTLSwapchain _parentSwapchain;
-        private bool _disposed;
+        private readonly PixelFormat _colorFormat;
 
-        public override uint Width => _placeholderTexture.Width;
-        public override uint Height => _placeholderTexture.Height;
+        public override uint Width => _colorTexture.Width;
+        public override uint Height => _colorTexture.Height;
 
         public override OutputDescription OutputDescription { get; }
 
-        private readonly FramebufferAttachment[] _colorTargets;
-        private readonly FramebufferAttachment? _depthTarget;
+        private FramebufferAttachment[] _colorTargets;
+        private FramebufferAttachment? _depthTarget;
+
         private readonly PixelFormat? _depthFormat;
 
         public override IReadOnlyList<FramebufferAttachment> ColorTargets => _colorTargets;
         public override FramebufferAttachment? DepthTarget => _depthTarget;
 
-        public override bool IsDisposed => _disposed;
-
         public MTLSwapchainFramebuffer(
             MTLGraphicsDevice gd,
             MTLSwapchain parent,
-            uint width,
-            uint height,
             PixelFormat? depthFormat,
             PixelFormat colorFormat)
-            : base()
         {
             _gd = gd;
             _parentSwapchain = parent;
+            _colorFormat = colorFormat;
 
             OutputAttachmentDescription? depthAttachment = null;
             if (depthFormat != null)
             {
                 _depthFormat = depthFormat;
                 depthAttachment = new OutputAttachmentDescription(depthFormat.Value);
-                RecreateDepthTexture(width, height);
-                _depthTarget = new FramebufferAttachment(_depthTexture, 0);
             }
             OutputAttachmentDescription colorAttachment = new OutputAttachmentDescription(colorFormat);
 
             OutputDescription = new OutputDescription(depthAttachment, colorAttachment);
-            _placeholderTexture = new MTLPlaceholderTexture(colorFormat);
-            _placeholderTexture.Resize(width, height);
-            _colorTargets = new[] { new FramebufferAttachment(_placeholderTexture, 0) };
         }
 
         private void RecreateDepthTexture(uint width, uint height)
@@ -66,41 +58,24 @@ namespace Veldrid.MTL
             _depthTexture = Util.AssertSubtype<Texture, MTLTexture>(
                 _gd.ResourceFactory.CreateTexture(TextureDescription.Texture2D(
                     width, height, 1, 1, _depthFormat.Value, TextureUsage.DepthStencil)));
+            _depthTarget = new FramebufferAttachment(_depthTexture, 0);
         }
 
-        public void Resize(uint width, uint height)
+        public void UpdateTextures(CAMetalDrawable drawable, CGSize size)
         {
-            _placeholderTexture.Resize(width, height);
+            _colorTexture = new MTLTexture(drawable, size, _colorFormat);
+            _colorTargets = new[] { new FramebufferAttachment(_colorTexture, 0) };
 
             if (_depthFormat.HasValue)
-            {
-                RecreateDepthTexture(width, height);
-            }
+                RecreateDepthTexture((uint)size.width, (uint)size.height);
         }
 
-        public override bool IsRenderable => !_parentSwapchain.CurrentDrawable.IsNull;
-
-        public override MTLRenderPassDescriptor CreateRenderPassDescriptor()
-        {
-            MTLRenderPassDescriptor ret = MTLRenderPassDescriptor.New();
-            var color0 = ret.colorAttachments[0];
-            color0.texture = _parentSwapchain.CurrentDrawable.texture;
-            color0.loadAction = MTLLoadAction.Load;
-
-            if (_depthTarget != null)
-            {
-                var depthAttachment = ret.depthAttachment;
-                depthAttachment.texture = _depthTexture.DeviceTexture;
-                depthAttachment.loadAction = MTLLoadAction.Load;
-            }
-
-            return ret;
-        }
+        public bool EnsureDrawableAvailable() => _parentSwapchain.EnsureDrawableAvailable();
 
         public override void Dispose()
         {
             _depthTexture?.Dispose();
-            _disposed = true;
+            base.Dispose();
         }
     }
 }

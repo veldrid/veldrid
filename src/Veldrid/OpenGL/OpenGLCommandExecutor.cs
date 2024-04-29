@@ -94,28 +94,55 @@ namespace Veldrid.OpenGL
 
         public void ClearDepthStencil(float depth, byte stencil)
         {
-            glClearDepth_Compat(depth);
-            CheckLastError();
+            if (_graphicsPipeline != null)
+            {
+                if (!_graphicsPipeline.DepthStencilState.DepthWriteEnabled)
+                {
+                    glDepthMask(true);
+                    CheckLastError();
+                }
 
-            glStencilMask(~0u);
+                if (_graphicsPipeline.DepthStencilState.StencilWriteMask != 0xFF)
+                {
+                    glStencilMask(0xFF);
+                    CheckLastError();
+                }
+
+                if (_graphicsPipeline.RasterizerState.ScissorTestEnabled)
+                {
+                    glDisable(EnableCap.ScissorTest);
+                    CheckLastError();
+                }
+            }
+
+            glClearDepth_Compat(depth);
             CheckLastError();
 
             glClearStencil(stencil);
             CheckLastError();
 
-            if (_graphicsPipeline != null && _graphicsPipeline.RasterizerState.ScissorTestEnabled)
-            {
-                glDisable(EnableCap.ScissorTest);
-                CheckLastError();
-            }
-
-            glDepthMask(true);
             glClear(ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
             CheckLastError();
 
-            if (_graphicsPipeline != null && _graphicsPipeline.RasterizerState.ScissorTestEnabled)
+            if (_graphicsPipeline != null)
             {
-                glEnable(EnableCap.ScissorTest);
+                if (!_graphicsPipeline.DepthStencilState.DepthWriteEnabled)
+                {
+                    glDepthMask(false);
+                    CheckLastError();
+                }
+
+                if (_graphicsPipeline.DepthStencilState.StencilWriteMask != 0xFF)
+                {
+                    glStencilMask(_graphicsPipeline.DepthStencilState.StencilWriteMask);
+                    CheckLastError();
+                }
+
+                if (_graphicsPipeline.RasterizerState.ScissorTestEnabled)
+                {
+                    glEnable(EnableCap.ScissorTest);
+                    CheckLastError();
+                }
             }
         }
 

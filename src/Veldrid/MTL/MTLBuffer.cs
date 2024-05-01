@@ -35,9 +35,13 @@ namespace Veldrid.MTL
             uint roundFactor = (4 - (SizeInBytes % 4)) % 4;
             ActualCapacity = SizeInBytes + roundFactor;
             Usage = bd.Usage;
+
+            var sharedMemory = Usage == BufferUsage.Staging || (Usage & BufferUsage.Dynamic) == BufferUsage.Dynamic;
+            var bufferOptions = sharedMemory ? MTLResourceOptions.StorageModeShared : MTLResourceOptions.StorageModePrivate;
+
             DeviceBuffer = gd.Device.newBufferWithLengthOptions(
                 (UIntPtr)ActualCapacity,
-                0);
+                bufferOptions);
         }
 
         public override void Dispose()

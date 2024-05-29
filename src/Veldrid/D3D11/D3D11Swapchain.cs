@@ -145,6 +145,8 @@ namespace Veldrid.D3D11
             Resize(description.Width, description.Height);
         }
 
+        private ID3D11Texture2D backBufferTexture;
+
         public override void Resize(uint width, uint height)
         {
             lock (_referencedCLsLock)
@@ -167,6 +169,7 @@ namespace Veldrid.D3D11
                     _depthTexture.Dispose();
                 }
 
+                backBufferTexture.Dispose();
                 _framebuffer.Dispose();
             }
 
@@ -178,29 +181,28 @@ namespace Veldrid.D3D11
             }
 
             // Get the backbuffer from the swapchain
-            using (ID3D11Texture2D backBufferTexture = _dxgiSwapChain.GetBuffer<ID3D11Texture2D>(0))
+            backBufferTexture = _dxgiSwapChain.GetBuffer<ID3D11Texture2D>(0);
+
+            if (_depthFormat != null)
             {
-                if (_depthFormat != null)
-                {
-                    TextureDescription depthDesc = new TextureDescription(
-                        actualWidth, actualHeight, 1, 1, 1,
-                        _depthFormat.Value,
-                        TextureUsage.DepthStencil,
-                        TextureType.Texture2D);
-                    _depthTexture = new D3D11Texture(_gd.Device, ref depthDesc);
-                }
-
-                D3D11Texture backBufferVdTexture = new D3D11Texture(
-                    backBufferTexture,
-                    TextureType.Texture2D,
-                    D3D11Formats.ToVdFormat(_colorFormat));
-
-                FramebufferDescription desc = new FramebufferDescription(_depthTexture, backBufferVdTexture);
-                _framebuffer = new D3D11Framebuffer(_gd.Device, ref desc)
-                {
-                    Swapchain = this
-                };
+                TextureDescription depthDesc = new TextureDescription(
+                    actualWidth, actualHeight, 1, 1, 1,
+                    _depthFormat.Value,
+                    TextureUsage.DepthStencil,
+                    TextureType.Texture2D);
+                _depthTexture = new D3D11Texture(_gd.Device, ref depthDesc);
             }
+
+            D3D11Texture backBufferVdTexture = new D3D11Texture(
+                backBufferTexture,
+                TextureType.Texture2D,
+                D3D11Formats.ToVdFormat(_colorFormat));
+
+            FramebufferDescription desc = new FramebufferDescription(_depthTexture, backBufferVdTexture);
+            _framebuffer = new D3D11Framebuffer(_gd.Device, ref desc)
+            {
+                Swapchain = this
+            };
         }
 
         public void AddCommandListReference(D3D11CommandList cl)

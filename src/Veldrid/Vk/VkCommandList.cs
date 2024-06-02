@@ -1316,7 +1316,7 @@ namespace Veldrid.Vk
         private class StagingResourceInfo
         {
             public List<VkBuffer> BuffersUsed { get; } = new List<VkBuffer>();
-            public HashSet<ResourceRefCount> Resources { get; } = new HashSet<ResourceRefCount>();
+            public HashSet<ResourceRefCount> Resources { get; } = new HashSet<ResourceRefCount>(new ResourceRefCount.EqualityComparer());
             public void Clear()
             {
                 BuffersUsed.Clear();

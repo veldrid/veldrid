@@ -16,6 +16,8 @@ namespace Veldrid.MTL
         /// </summary>
         public MetalBindings.MTLBuffer StagingBuffer { get; }
 
+        public unsafe void* StagingBufferPointer { get; private set; }
+
         public override PixelFormat Format { get; }
 
         public override uint Width { get; }
@@ -93,6 +95,11 @@ namespace Veldrid.MTL
                 StagingBuffer = _gd.Device.newBufferWithLengthOptions(
                     (UIntPtr)totalStorageSize,
                     MTLResourceOptions.StorageModeShared);
+
+                unsafe
+                {
+                    StagingBufferPointer = StagingBuffer.contents();
+                }
             }
         }
 

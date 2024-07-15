@@ -64,6 +64,18 @@ namespace Veldrid
         /// <param name="height">The initial height of the rendering target. Can be resized.</param>
         /// <param name="colorSpaceHandling">Identifies how the renderer should treat vertex colors.</param>
         public ImGuiRenderer(GraphicsDevice gd, OutputDescription outputDescription, int width, int height, ColorSpaceHandling colorSpaceHandling)
+            : this(gd, outputDescription, width, height, ColorSpaceHandling.Legacy, callNewFrame: true) { }
+
+        /// <summary>
+        /// Constructs a new ImGuiRenderer.
+        /// </summary>
+        /// <param name="gd">The GraphicsDevice used to create and update resources.</param>
+        /// <param name="outputDescription">The output format.</param>
+        /// <param name="width">The initial width of the rendering target. Can be resized.</param>
+        /// <param name="height">The initial height of the rendering target. Can be resized.</param>
+        /// <param name="colorSpaceHandling">Identifies how the renderer should treat vertex colors.</param>
+        /// <param name="callNewFrame">Whether a new frame should be started. If false you have to call ManualNewFrame() yourself.</param>
+        public ImGuiRenderer(GraphicsDevice gd, OutputDescription outputDescription, int width, int height, ColorSpaceHandling colorSpaceHandling, bool callNewFrame)
         {
             _gd = gd;
             _assembly = typeof(ImGuiRenderer).GetTypeInfo().Assembly;
@@ -80,6 +92,19 @@ namespace Veldrid
             CreateDeviceResources(gd, outputDescription);
 
             SetPerFrameImGuiData(1f / 60f);
+
+            if (callNewFrame)
+            {
+                ManualNewFrame();
+            }
+        }
+
+        public void ManualNewFrame()
+        {
+            if (_frameBegun)
+            {
+                ImGui.EndFrame();
+            }
 
             ImGui.NewFrame();
             _frameBegun = true;

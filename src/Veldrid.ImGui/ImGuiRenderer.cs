@@ -708,12 +708,14 @@ namespace Veldrid
                             }
                         }
 
+                        float clipRectX = Math.Max(0, pcmd.ClipRect.X); // Vulkan validation requires positive scissor offsets
+                        float clipRectY = Math.Max(0, pcmd.ClipRect.Y);
                         cl.SetScissorRect(
                             0,
-                            (uint)pcmd.ClipRect.X,
-                            (uint)pcmd.ClipRect.Y,
-                            (uint)(pcmd.ClipRect.Z - pcmd.ClipRect.X),
-                            (uint)(pcmd.ClipRect.W - pcmd.ClipRect.Y));
+                            (uint)clipRectX,
+                            (uint)clipRectY,
+                            (uint)(pcmd.ClipRect.Z - clipRectX),
+                            (uint)(pcmd.ClipRect.W - clipRectY));
 
                         cl.DrawIndexed(pcmd.ElemCount, 1, pcmd.IdxOffset + (uint)idx_offset, (int)(pcmd.VtxOffset + vtx_offset), 0);
                     }

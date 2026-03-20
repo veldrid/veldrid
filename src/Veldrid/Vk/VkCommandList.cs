@@ -821,17 +821,23 @@ namespace Veldrid.Vk
 
             if (!sourceIsStaging && !destIsStaging)
             {
+                var srcAspect = (srcVkTexture.Usage & TextureUsage.DepthStencil) != 0
+                    ? VkImageAspectFlags.Depth | VkImageAspectFlags.Stencil
+                    : VkImageAspectFlags.Color;
                 VkImageSubresourceLayers srcSubresource = new VkImageSubresourceLayers
                 {
-                    aspectMask = VkImageAspectFlags.Color,
+                    aspectMask = srcAspect,
                     layerCount = layerCount,
                     mipLevel = srcMipLevel,
                     baseArrayLayer = srcBaseArrayLayer
                 };
 
+                var dstAspect = (dstVkTexture.Usage & TextureUsage.DepthStencil) != 0
+                    ? VkImageAspectFlags.Depth | VkImageAspectFlags.Stencil
+                    : VkImageAspectFlags.Color;
                 VkImageSubresourceLayers dstSubresource = new VkImageSubresourceLayers
                 {
-                    aspectMask = VkImageAspectFlags.Color,
+                    aspectMask = dstAspect,
                     layerCount = layerCount,
                     mipLevel = dstMipLevel,
                     baseArrayLayer = dstBaseArrayLayer
